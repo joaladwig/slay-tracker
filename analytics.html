@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats — Slay the Spire 2 Run Tracker</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117; --bg-secondary: #161b22; --bg-tertiary: #1c2333;
+      --bg-card: #21262d; --border: #30363d; --text-primary: #e6edf3;
+      --text-secondary: #8b949e; --text-muted: #6e7681;
+      --accent-green: #3fb950; --accent-red: #f85149; --accent-blue: #58a6ff;
+      --accent-yellow: #d29922; --accent-purple: #bc8cff; --accent-orange: #f0883e;
+      --accent-cyan: #39d2c0; --accent-pink: #f778ba;
+      --radius: 8px; --radius-lg: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; min-height: 100vh; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Header */
+    .app-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 16px 24px; height: 70px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+    .app-header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+    .app-header h1 span { color: var(--accent-yellow); }
+    .nav { display: flex; align-items: center; gap: 4px; margin-left: 24px; }
+    .nav a { padding: 6px 14px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; border-radius: var(--radius); transition: color 0.15s, background 0.15s; }
+    .nav a:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav a.active { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav-sep { width: 1px; height: 20px; background: var(--border); margin: 0 8px; }
+    .file-loader { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+    .file-loader label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 0.875rem; font-weight: 500; background: var(--accent-blue); border: none; border-radius: var(--radius); cursor: pointer; color: #fff; transition: opacity 0.15s; }
+    .file-loader label:hover { opacity: 0.85; }
+    .file-loader input { display: none; }
+    .file-count { font-size: 0.8rem; color: var(--text-secondary); }
+
+    /* Landing */
+    .landing { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; }
+    .landing-icon { font-size: 4rem; opacity: 0.2; }
+    .landing-text { color: var(--text-muted); text-align: center; }
+
+    /* Layout */
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .section { margin-bottom: 32px; }
+    .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+    /* Stat cards row */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .stat-value { font-size: 1.5rem; font-weight: 700; }
+    .stat-sub { font-size: 0.75rem; color: var(--text-secondary); }
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.red { color: var(--accent-red); }
+    .stat-value.blue { color: var(--accent-blue); }
+    .stat-value.yellow { color: var(--accent-yellow); }
+    .stat-value.purple { color: var(--accent-purple); }
+
+    /* Cards (containers) */
+    .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .card-header { padding: 12px 16px; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .card-body { padding: 16px; }
+
+    /* Charts */
+    .chart-container { height: 220px; position: relative; }
+    .chart-container.tall { height: 300px; }
+
+    /* Grid layouts */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+    /* Tables */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .data-table th { text-align: left; padding: 8px 12px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 500; }
+    .data-table td { padding: 7px 12px; border-bottom: 1px solid rgba(48,54,61,0.5); }
+    .data-table tr:hover td { background: rgba(88,166,255,0.04); }
+    .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .data-table .bar-cell { width: 100px; }
+    .mini-bar { height: 6px; border-radius: 3px; background: var(--bg-tertiary); overflow: hidden; }
+    .mini-bar-fill { height: 100%; border-radius: 3px; }
+    .wr-a { color: var(--accent-green); }
+    .wr-b { color: #6dd390; }
+    .wr-c { color: var(--accent-yellow); }
+    .wr-d { color: var(--accent-orange); }
+    .wr-f { color: var(--accent-red); }
+
+    /* Item row with icon */
+    .item-row { display: flex; align-items: center; gap: 8px; }
+    .item-row img { width: 22px; height: 22px; border-radius: 3px; object-fit: contain; flex-shrink: 0; }
+    .item-row img.card-thumb { object-fit: cover; }
+
+    /* Tabs */
+    .tab-bar { display: flex; gap: 2px; }
+    .tab-btn { padding: 6px 14px; font-size: 0.75rem; font-weight: 500; background: transparent; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .tab-btn:hover { color: var(--text-secondary); }
+    .tab-btn.active { background: var(--bg-secondary); border-color: var(--border); color: var(--text-primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Toggle */
+    .toggle-row { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .toggle-row label { font-size: 0.75rem; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .toggle-row input[type="checkbox"] { accent-color: var(--accent-blue); }
+    /* Mode filter bar */
+    .mode-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .mode-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-size: 0.85rem; font-weight: 500; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .mode-btn:hover { border-color: var(--accent-blue); color: var(--text-secondary); background: var(--bg-tertiary); }
+    .mode-btn.active { background: rgba(88,166,255,0.1); border-color: var(--accent-blue); color: var(--accent-blue); font-weight: 600; }
+    .mode-btn svg { opacity: 0.6; }
+    .mode-btn.active svg { opacity: 1; }
+    .mode-info { font-size: 0.75rem; color: var(--text-muted); margin-left: 4px; }
+
+    .search-box-sm { width: 150px; padding: 4px 10px; font-size: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-primary); outline: none; }
+    .search-box-sm::placeholder { color: var(--text-muted); }
+    .search-box-sm:focus { border-color: var(--accent-blue); }
+    .min-runs-input { width: 50px; padding: 3px 6px; font-size: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); text-align: center; }
+
+    /* Tooltip */
+    .item-tooltip { position: fixed; z-index: 1000; max-width: 320px; padding: 10px 14px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-secondary); font-size: 0.78rem; line-height: 1.5; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.4); display: none; }
+    .item-tooltip .tip-name { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .tip-trigger { cursor: help; }
+
+    /* Sortable table headers */
+    .data-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+    .data-table th.sortable:hover { color: var(--accent-blue); }
+    .data-table th.sorted { color: var(--accent-blue); }
+    .sort-arrow { font-size: 0.65rem; margin-left: 2px; opacity: 0.4; }
+    .data-table th.sorted .sort-arrow { opacity: 1; }
+
+    /* Scrollable table containers */
+    .scroll-body { max-height: 520px; overflow-y: auto; }
+    .scroll-body .data-table thead th { position: sticky; top: 0; background: var(--bg-secondary); z-index: 1; }
+
+    /* Clickable relic rows */
+    .data-table tr.clickable { cursor: pointer; }
+    .data-table tr.clickable:hover td { background: rgba(240,136,62,0.08); }
+    .data-table tr.selected td { background: rgba(240,136,62,0.15); }
+
+    /* Synergy filter banner */
+    .filter-banner { display: flex; align-items: center; gap: 10px; padding: 8px 14px; margin-bottom: 12px; background: rgba(240,136,62,0.1); border: 1px solid rgba(240,136,62,0.25); border-radius: var(--radius); font-size: 0.8rem; color: var(--accent-orange); }
+    .filter-banner img { width: 20px; height: 20px; object-fit: contain; }
+    .filter-banner .clear-btn { margin-left: auto; padding: 2px 10px; font-size: 0.7rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); cursor: pointer; }
+    .filter-banner .clear-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+    .site-footer { margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.7rem; line-height: 1.7; text-align: center; max-width: 720px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Slay the Spire 2 <span>Run Tracker</span></h1>
+  <nav class="nav">
+    <a href="index.html">Runs</a>
+    <a href="analytics.html" class="active">Stats</a>
+    <span class="nav-sep"></span>
+    <a href="cards.html">Cards</a>
+    <a href="relics.html">Relics</a>
+    <a href="potions.html">Potions</a>
+  </nav>
+  <div class="file-loader">
+    <label>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1A1.5 1.5 0 0 0 0 2.5V6h16V4.5A1.5 1.5 0 0 0 14.5 3H7.71l-.85-.85A.5.5 0 0 0 6.5 2H1.5zm0 1h4.79l.85.85a.5.5 0 0 0 .36.15h7a.5.5 0 0 1 .5.5V6H1V2.5a.5.5 0 0 1 .5-.5zM0 7v6.5A1.5 1.5 0 0 0 1.5 15h13a1.5 1.5 0 0 0 1.5-1.5V7H0z"/></svg>
+      Load folder
+      <input type="file" id="folderInput" webkitdirectory />
+    </label>
+    <span class="file-count" id="fileCount"></span>
+  </div>
+</header>
+
+<div class="container">
+  <div id="landing" class="landing">
+    <div class="landing-icon">&#128202;</div>
+    <div class="landing-text">
+      <div style="font-size:1.1rem;color:var(--text-primary);">Load your run files to see analytics</div>
+      <div style="margin-top:4px;">Use the buttons above to load a folder or individual .run files</div>
+    </div>
+  </div>
+
+  <div id="dashboard" style="display:none;">
+
+    <!-- Mode filter -->
+    <div class="section" style="margin-bottom:16px;">
+      <div class="mode-bar" id="modeFilters">
+        <button class="mode-btn active" data-mode="all">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm0 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM5 7h6v2H5V7z"/></svg>
+          All Runs
+        </button>
+        <button class="mode-btn" data-mode="solo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm5 6s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1h10z"/></svg>
+          Solo
+        </button>
+        <button class="mode-btn" data-mode="coop">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM5.2 14A6.5 6.5 0 0 1 5 13c0-1.2.5-2.3 1.4-3.1A4.2 4.2 0 0 0 5 9.5C1.5 9.5.5 11 .5 12s.5 2 .5 2h4.2zM5 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+          Co-op
+        </button>
+        <span id="modeInfo" class="mode-info"></span>
+        <span class="nav-sep" style="height:24px;margin:0 10px;"></span>
+        <div id="charFilters" class="mode-bar" style="gap:4px;"></div>
+      </div>
+    </div>
+
+    <!-- Section 1: Overview Stats -->
+    <div class="section">
+      <div class="stat-grid" id="statGrid"></div>
+    </div>
+
+    <!-- Section 2: Results Over Time -->
+    <div class="section">
+      <div class="card">
+        <div class="card-header">Results Over Time</div>
+        <div class="card-body"><div class="chart-container" id="timelineChartBox"><canvas id="timelineChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Section 3: Character Performance -->
+    <div class="section">
+      <div class="card">
+        <div class="card-header">Character Performance</div>
+        <div class="card-body" id="charTableBox"></div>
+      </div>
+    </div>
+
+    <!-- Section 4: Ascension Performance -->
+    <div class="section two-col">
+      <div class="card">
+        <div class="card-header">Win Rate by Ascension</div>
+        <div class="card-body"><div class="chart-container" id="ascChartBox"><canvas id="ascChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Ascension Breakdown</div>
+        <div class="card-body" id="ascTableBox"></div>
+      </div>
+    </div>
+
+    <!-- Section 5: Causes of Death -->
+    <div class="section">
+      <div class="section-title">Causes of Death</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">Top Killers</div>
+          <div class="card-body scroll-body" id="killersBox"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Deaths by Act</div>
+          <div class="card-body"><div class="chart-container" id="deathActChartBox"><canvas id="deathActChart"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6: HP & Deck Analysis -->
+    <div class="section two-col">
+      <div class="card">
+        <div class="card-header">Avg HP % by Floor (Wins vs Losses)</div>
+        <div class="card-body"><div class="chart-container tall" id="hpProgChartBox"><canvas id="hpProgChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Final Deck Size (Wins vs Losses)</div>
+        <div class="card-body"><div class="chart-container tall" id="deckSizeChartBox"><canvas id="deckSizeChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Section 7: Relics -->
+    <div class="section">
+      <div class="card">
+        <div class="card-header">
+          <span>Relics</span>
+          <div class="toggle-row">
+            <input type="text" class="search-box-sm" id="relicSearch" placeholder="Search relics..." />
+            <label><input type="checkbox" id="hideStarters" checked /> Hide starter relics</label>
+            <label>Min runs: <input type="number" class="min-runs-input" id="relicMinRuns" value="3" min="1" max="100" /></label>
+          </div>
+        </div>
+        <div class="card-body scroll-body" id="relicTableBox"></div>
+      </div>
+    </div>
+
+    <!-- Section 8: Cards -->
+    <div class="section">
+      <div class="card">
+        <div class="card-header">
+          <span>Cards</span>
+          <div class="toggle-row">
+            <input type="text" class="search-box-sm" id="cardSearch" placeholder="Search cards..." />
+            <label><input type="checkbox" id="hideStarterCards" checked /> Hide starter cards</label>
+            <label>Min runs: <input type="number" class="min-runs-input" id="cardMinRuns" value="3" min="1" max="100" /></label>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="cardFilterBanner"></div>
+          <div class="scroll-body" id="cardTableBox"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const STARTER_RELICS = new Set(["RELIC.BLACK_BLOOD","RELIC.BOUND_PHYLACTERY","RELIC.BURNING_BLOOD","RELIC.CRACKED_CORE","RELIC.DIVINE_DESTINY","RELIC.DIVINE_RIGHT","RELIC.INFUSED_CORE","RELIC.PHYLACTERY_UNBOUND","RELIC.RING_OF_THE_DRAKE","RELIC.RING_OF_THE_SNAKE"]);
+const STARTER_CARDS = new Set(["CARD.BASH","CARD.BODYGUARD","CARD.DEFEND_IRONCLAD","CARD.DEFEND_SILENT","CARD.DEFEND_REGENT","CARD.DEFEND_NECROBINDER","CARD.DEFEND_DEFECT","CARD.DUALCAST","CARD.FALLING_STAR","CARD.NEUTRALIZE","CARD.STRIKE_IRONCLAD","CARD.STRIKE_SILENT","CARD.STRIKE_REGENT","CARD.STRIKE_NECROBINDER","CARD.STRIKE_DEFECT","CARD.SURVIVOR","CARD.UNLEASH","CARD.VENERATE","CARD.ZAP"]);
+const CARD_TYPES = {"CARD.ABRASIVE":"power","CARD.ACCELERANT":"power","CARD.ACCURACY":"power","CARD.ACROBATICS":"skill","CARD.ADAPTIVE_STRIKE":"attack","CARD.ADRENALINE":"skill","CARD.AFTERIMAGE":"power","CARD.AFTERLIFE":"skill","CARD.AGGRESSION":"power","CARD.ALCHEMIZE":"skill","CARD.ALIGNMENT":"skill","CARD.ALL_FOR_ONE":"attack","CARD.ANGER":"attack","CARD.ANOINTED":"skill","CARD.ANTICIPATE":"skill","CARD.APOTHEOSIS":"skill","CARD.APPARITION":"skill","CARD.ARMAMENTS":"skill","CARD.ARSENAL":"power","CARD.ASCENDERS_BANE":"curse","CARD.ASHEN_STRIKE":"attack","CARD.ASSASSINATE":"attack","CARD.ASTRAL_PULSE":"attack","CARD.AUTOMATION":"power","CARD.BACKFLIP":"skill","CARD.BACKSTAB":"attack","CARD.BAD_LUCK":"curse","CARD.BALL_LIGHTNING":"attack","CARD.BANSHEES_CRY":"attack","CARD.BARRAGE":"attack","CARD.BARRICADE":"power","CARD.BASH":"attack","CARD.BATTLE_TRANCE":"skill","CARD.BEACON_OF_HOPE":"power","CARD.BEAM_CELL":"attack","CARD.BEAT_DOWN":"skill","CARD.BEAT_INTO_SHAPE":"attack","CARD.BECKON":"status","CARD.BEGONE":"attack","CARD.BELIEVE_IN_YOU":"skill","CARD.BIASED_COGNITION":"power","CARD.BIG_BANG":"skill","CARD.BLACK_HOLE":"power","CARD.BLADE_DANCE":"skill","CARD.BLADE_OF_INK":"skill","CARD.BLIGHT_STRIKE":"attack","CARD.BLOOD_WALL":"skill","CARD.BLOODLETTING":"skill","CARD.BLUDGEON":"attack","CARD.BLUR":"skill","CARD.BODY_SLAM":"attack","CARD.BODYGUARD":"skill","CARD.BOLAS":"attack","CARD.BOMBARDMENT":"attack","CARD.BONE_SHARDS":"attack","CARD.BOOST_AWAY":"skill","CARD.BOOT_SEQUENCE":"skill","CARD.BORROWED_TIME":"skill","CARD.BOUNCING_FLASK":"skill","CARD.BRAND":"skill","CARD.BREAK":"attack","CARD.BREAKTHROUGH":"attack","CARD.BRIGHTEST_FLAME":"skill","CARD.BUBBLE_BUBBLE":"skill","CARD.BUFFER":"power","CARD.BULK_UP":"power","CARD.BULLET_TIME":"skill","CARD.BULLY":"attack","CARD.BULWARK":"skill","CARD.BUNDLE_OF_JOY":"skill","CARD.BURN":"status","CARD.BURNING_PACT":"skill","CARD.BURST":"skill","CARD.BURY":"attack","CARD.BYRD_SWOOP":"attack","CARD.BYRDONIS_EGG":"quest","CARD.CALAMITY":"power","CARD.CALCIFY":"power","CARD.CALCULATED_GAMBLE":"skill","CARD.CALL_OF_THE_VOID":"power","CARD.CALTROPS":"power","CARD.CAPACITOR":"power","CARD.CAPTURE_SPIRIT":"skill","CARD.CASCADE":"skill","CARD.CATASTROPHE":"skill","CARD.CELESTIAL_MIGHT":"attack","CARD.CHAOS":"skill","CARD.CHARGE_BATTERY":"skill","CARD.CHARGE":"skill","CARD.CHILD_OF_THE_STARS":"power","CARD.CHILL":"skill","CARD.CINDER":"attack","CARD.CLASH":"attack","CARD.CLAW":"attack","CARD.CLEANSE":"skill","CARD.CLOAK_AND_DAGGER":"skill","CARD.CLOAK_OF_STARS":"skill","CARD.CLUMSY":"curse","CARD.COLD_SNAP":"attack","CARD.COLLISION_COURSE":"attack","CARD.COLOSSUS":"skill","CARD.COMET":"attack","CARD.COMPACT":"skill","CARD.COMPILE_DRIVER":"attack","CARD.CONFLAGRATION":"attack","CARD.CONQUEROR":"skill","CARD.CONSUMING_SHADOW":"power","CARD.CONVERGENCE":"skill","CARD.COOLANT":"power","CARD.COOLHEADED":"skill","CARD.COORDINATE":"skill","CARD.CORROSIVE_WAVE":"skill","CARD.CORRUPTION":"power","CARD.COSMIC_INDIFFERENCE":"skill","CARD.COUNTDOWN":"power","CARD.CRASH_LANDING":"attack","CARD.CREATIVE_AI":"power","CARD.CRESCENT_SPEAR":"attack","CARD.CRIMSON_MANTLE":"power","CARD.CRUELTY":"power","CARD.CRUSH_UNDER":"attack","CARD.CURSE_OF_THE_BELL":"curse","CARD.DAGGER_SPRAY":"attack","CARD.DAGGER_THROW":"attack","CARD.DANSE_MACABRE":"power","CARD.DARK_EMBRACE":"power","CARD.DARK_SHACKLES":"skill","CARD.DARKNESS":"skill","CARD.DASH":"attack","CARD.DAZED":"status","CARD.DEADLY_POISON":"skill","CARD.DEATH_MARCH":"attack","CARD.DEATHS_DOOR":"skill","CARD.DEATHBRINGER":"skill","CARD.DEBILITATE":"attack","CARD.DEBRIS":"status","CARD.DEBT":"curse","CARD.DECAY":"curse","CARD.DECISIONS_DECISIONS":"skill","CARD.DEFEND_IRONCLAD":"skill","CARD.DEFEND_SILENT":"skill","CARD.DEFEND_REGENT":"skill","CARD.DEFEND_NECROBINDER":"skill","CARD.DEFEND_DEFECT":"skill","CARD.DEFILE":"attack","CARD.DEFLECT":"skill","CARD.DEFRAGMENT":"power","CARD.DEFY":"skill","CARD.DELAY":"skill","CARD.DEMESNE":"power","CARD.DEMON_FORM":"power","CARD.DEMONIC_SHIELD":"skill","CARD.DEVASTATE":"attack","CARD.DEVOUR_LIFE":"power","CARD.DIRGE":"skill","CARD.DISCOVERY":"skill","CARD.DISINTEGRATION":"status","CARD.DISMANTLE":"attack","CARD.DISTRACTION":"skill","CARD.DODGE_AND_ROLL":"skill","CARD.DOMINATE":"skill","CARD.DOUBLE_ENERGY":"skill","CARD.DOUBT":"curse","CARD.DRAIN_POWER":"attack","CARD.DRAMATIC_ENTRANCE":"attack","CARD.DREDGE":"skill","CARD.DRUM_OF_BATTLE":"power","CARD.DUAL_WIELD":"skill","CARD.DUALCAST":"skill","CARD.DYING_STAR":"attack","CARD.ECHO_FORM":"power","CARD.ECHOING_SLASH":"attack","CARD.EIDOLON":"skill","CARD.END_OF_DAYS":"skill","CARD.ENERGY_SURGE":"skill","CARD.ENFEEBLING_TOUCH":"skill","CARD.ENLIGHTENMENT":"skill","CARD.ENTHRALLED":"curse","CARD.ENTRENCH":"skill","CARD.ENTROPY":"power","CARD.ENVENOM":"power","CARD.EQUILIBRIUM":"skill","CARD.ERADICATE":"attack","CARD.ESCAPE_PLAN":"skill","CARD.ETERNAL_ARMOR":"power","CARD.EVIL_EYE":"skill","CARD.EXPECT_A_FIGHT":"skill","CARD.EXPERTISE":"skill","CARD.EXPOSE":"skill","CARD.EXTERMINATE":"attack","CARD.FALLING_STAR":"attack","CARD.FAN_OF_KNIVES":"power","CARD.FASTEN":"power","CARD.FEAR":"attack","CARD.FEED":"attack","CARD.FEEDING_FRENZY":"skill","CARD.FEEL_NO_PAIN":"power","CARD.FERAL":"power","CARD.FETCH":"attack","CARD.FIEND_FIRE":"attack","CARD.FIGHT_ME":"attack","CARD.FIGHT_THROUGH":"skill","CARD.FINESSE":"skill","CARD.FINISHER":"attack","CARD.FISTICUFFS":"attack","CARD.FLAK_CANNON":"attack","CARD.FLAME_BARRIER":"skill","CARD.FLANKING":"skill","CARD.FLASH_OF_STEEL":"attack","CARD.FLATTEN":"attack","CARD.FLECHETTES":"attack","CARD.FLICK_FLACK":"attack","CARD.FOCUSED_STRIKE":"attack","CARD.FOLLOW_THROUGH":"attack","CARD.FOLLY":"curse","CARD.FOOTWORK":"power","CARD.FORBIDDEN_GRIMOIRE":"power","CARD.FOREGONE_CONCLUSION":"skill","CARD.FORGOTTEN_RITUAL":"skill","CARD.FRANTIC_ESCAPE":"status","CARD.FRIENDSHIP":"power","CARD.FTL":"attack","CARD.FUEL":"skill","CARD.FURNACE":"power","CARD.FUSION":"skill","CARD.GAMMA_BLAST":"attack","CARD.GANG_UP":"attack","CARD.GATHER_LIGHT":"skill","CARD.GENESIS":"power","CARD.GENETIC_ALGORITHM":"skill","CARD.GIANT_ROCK":"attack","CARD.GLACIER":"skill","CARD.GLASSWORK":"skill","CARD.GLIMMER":"skill","CARD.GLIMPSE_BEYOND":"skill","CARD.GLITTERSTREAM":"skill","CARD.GLOW":"skill","CARD.GO_FOR_THE_EYES":"attack","CARD.GOLD_AXE":"attack","CARD.GRAND_FINALE":"attack","CARD.GRAPPLE":"attack","CARD.GRAVE_WARDEN":"skill","CARD.GRAVEBLAST":"attack","CARD.GREED":"curse","CARD.GUARDS":"skill","CARD.GUIDING_STAR":"attack","CARD.GUILTY":"curse","CARD.GUNK_UP":"attack","CARD.HAILSTORM":"power","CARD.HAMMER_TIME":"power","CARD.HAND_OF_GREED":"attack","CARD.HAND_TRICK":"skill","CARD.HANG":"attack","CARD.HAUNT":"power","CARD.HAVOC":"skill","CARD.HAZE":"skill","CARD.HEADBUTT":"attack","CARD.HEAVENLY_DRILL":"attack","CARD.HEGEMONY":"attack","CARD.HEIRLOOM_HAMMER":"attack","CARD.HELIX_DRILL":"attack","CARD.HELLO_WORLD":"power","CARD.HELLRAISER":"power","CARD.HEMOKINESIS":"attack","CARD.HIDDEN_CACHE":"skill","CARD.HIDDEN_DAGGERS":"skill","CARD.HIDDEN_GEM":"skill","CARD.HIGH_FIVE":"attack","CARD.HOLOGRAM":"skill","CARD.HOTFIX":"skill","CARD.HOWL_FROM_BEYOND":"attack","CARD.HUDDLE_UP":"skill","CARD.HYPERBEAM":"attack","CARD.I_AM_INVINCIBLE":"skill","CARD.ICE_LANCE":"attack","CARD.IGNITION":"skill","CARD.IMPATIENCE":"skill","CARD.IMPERVIOUS":"skill","CARD.INFECTION":"status","CARD.INFERNAL_BLADE":"skill","CARD.INFERNO":"power","CARD.INFINITE_BLADES":"power","CARD.INFLAME":"power","CARD.INJURY":"curse","CARD.INTERCEPT":"skill","CARD.INVOKE":"skill","CARD.IRON_WAVE":"attack","CARD.ITERATION":"power","CARD.JACK_OF_ALL_TRADES":"skill","CARD.JACKPOT":"attack","CARD.JUGGERNAUT":"power","CARD.JUGGLING":"power","CARD.KINGLY_KICK":"attack","CARD.KINGLY_PUNCH":"attack","CARD.KNIFE_TRAP":"skill","CARD.KNOCKDOWN":"attack","CARD.KNOCKOUT_BLOW":"attack","CARD.KNOW_THY_PLACE":"skill","CARD.LANTERN_KEY":"quest","CARD.LARGESSE":"skill","CARD.LEADING_STRIKE":"attack","CARD.LEAP":"skill","CARD.LEG_SWEEP":"skill","CARD.LEGION_OF_BONE":"skill","CARD.LETHALITY":"power","CARD.LIFT":"skill","CARD.LIGHTNING_ROD":"skill","CARD.LOOP":"power","CARD.LUMINESCE":"skill","CARD.LUNAR_BLAST":"attack","CARD.MACHINE_LEARNING":"power","CARD.MAD_SCIENCE":"attack","CARD.MAKE_IT_SO":"attack","CARD.MALAISE":"skill","CARD.MANGLE":"attack","CARD.MANIFEST_AUTHORITY":"skill","CARD.MASTER_OF_STRATEGY":"skill","CARD.MASTER_PLANNER":"power","CARD.MAUL":"attack","CARD.MAYHEM":"power","CARD.MELANCHOLY":"skill","CARD.MEMENTO_MORI":"attack","CARD.METAMORPHOSIS":"skill","CARD.METEOR_SHOWER":"attack","CARD.METEOR_STRIKE":"attack","CARD.MIMIC":"skill","CARD.MIND_BLAST":"attack","CARD.MIND_ROT":"status","CARD.MINION_DIVE_BOMB":"attack","CARD.MINION_SACRIFICE":"skill","CARD.MINION_STRIKE":"attack","CARD.MIRAGE":"skill","CARD.MISERY":"attack","CARD.MODDED":"skill","CARD.MOLTEN_FIST":"attack","CARD.MOMENTUM_STRIKE":"attack","CARD.MONARCHS_GAZE":"power","CARD.MONOLOGUE":"skill","CARD.MULTI_CAST":"skill","CARD.MURDER":"attack","CARD.NECRO_MASTERY":"power","CARD.NEGATIVE_PULSE":"skill","CARD.NEOWS_FURY":"attack","CARD.NEUROSURGE":"power","CARD.NEUTRALIZE":"attack","CARD.NEUTRON_AEGIS":"power","CARD.NIGHTMARE":"skill","CARD.NO_ESCAPE":"skill","CARD.NORMALITY":"curse","CARD.NOSTALGIA":"power","CARD.NOXIOUS_FUMES":"power","CARD.NULL":"attack","CARD.OBLIVION":"skill","CARD.OFFERING":"skill","CARD.OMNISLICE":"attack","CARD.ONE_TWO_PUNCH":"skill","CARD.ORBIT":"power","CARD.OUTBREAK":"power","CARD.OUTMANEUVER":"skill","CARD.OVERCLOCK":"skill","CARD.PACTS_END":"attack","CARD.PAGESTORM":"power","CARD.PALE_BLUE_DOT":"power","CARD.PANACHE":"power","CARD.PANIC_BUTTON":"skill","CARD.PARRY":"power","CARD.PARSE":"skill","CARD.PARTICLE_WALL":"skill","CARD.PATTER":"skill","CARD.PECK":"attack","CARD.PERFECTED_STRIKE":"attack","CARD.PHANTOM_BLADES":"power","CARD.PHOTON_CUT":"attack","CARD.PIERCING_WAIL":"skill","CARD.PILLAGE":"attack","CARD.PILLAR_OF_CREATION":"power","CARD.PINPOINT":"attack","CARD.POISONED_STAB":"attack","CARD.POKE":"attack","CARD.POMMEL_STRIKE":"attack","CARD.POOR_SLEEP":"curse","CARD.POUNCE":"attack","CARD.PRECISE_CUT":"attack","CARD.PREDATOR":"attack","CARD.PREP_TIME":"power","CARD.PREPARED":"skill","CARD.PRIMAL_FORCE":"skill","CARD.PRODUCTION":"skill","CARD.PROLONG":"skill","CARD.PROPHESIZE":"skill","CARD.PROTECTOR":"attack","CARD.PROWESS":"power","CARD.PULL_AGGRO":"skill","CARD.PULL_FROM_BELOW":"attack","CARD.PURITY":"skill","CARD.PUTREFY":"skill","CARD.PYRE":"power","CARD.QUADCAST":"skill","CARD.QUASAR":"skill","CARD.RADIATE":"attack","CARD.RAGE":"skill","CARD.RAINBOW":"skill","CARD.RALLY":"skill","CARD.RAMPAGE":"attack","CARD.RATTLE":"attack","CARD.REANIMATE":"skill","CARD.REAP":"attack","CARD.REAPER_FORM":"power","CARD.REAVE":"attack","CARD.REBOOT":"skill","CARD.REBOUND":"attack","CARD.REFINE_BLADE":"skill","CARD.REFLECT":"skill","CARD.REFLEX":"skill","CARD.REFRACT":"attack","CARD.REGRET":"curse","CARD.RELAX":"skill","CARD.REND":"attack","CARD.RESONANCE":"skill","CARD.RESTLESSNESS":"skill","CARD.RICOCHET":"attack","CARD.RIGHT_HAND_HAND":"attack","CARD.RIP_AND_TEAR":"attack","CARD.ROCKET_PUNCH":"attack","CARD.ROLLING_BOULDER":"power","CARD.ROYAL_GAMBLE":"skill","CARD.ROYALTIES":"power","CARD.RUPTURE":"power","CARD.SACRIFICE":"skill","CARD.SALVO":"attack","CARD.SCAVENGE":"skill","CARD.SCOURGE":"skill","CARD.SCRAPE":"attack","CARD.SCRAWL":"skill","CARD.SCULPTING_STRIKE":"attack","CARD.SEANCE":"skill","CARD.SECOND_WIND":"skill","CARD.SECRET_TECHNIQUE":"skill","CARD.SECRET_WEAPON":"skill","CARD.SEEKER_STRIKE":"attack","CARD.SEEKING_EDGE":"power","CARD.SENTRY_MODE":"power","CARD.SERPENT_FORM":"power","CARD.SETUP_STRIKE":"attack","CARD.SEVEN_STARS":"attack","CARD.SEVERANCE":"attack","CARD.SHADOW_SHIELD":"skill","CARD.SHADOW_STEP":"skill","CARD.SHADOWMELD":"skill","CARD.SHAME":"curse","CARD.SHARED_FATE":"skill","CARD.SHATTER":"attack","CARD.SHINING_STRIKE":"attack","CARD.SHIV":"attack","CARD.SHOCKWAVE":"skill","CARD.SHROUD":"power","CARD.SHRUG_IT_OFF":"skill","CARD.SIC_EM":"attack","CARD.SIGNAL_BOOST":"skill","CARD.SKEWER":"attack","CARD.SKIM":"skill","CARD.SLEIGHT_OF_FLESH":"power","CARD.SLICE":"attack","CARD.SLIMED":"status","CARD.SLOTH":"status","CARD.SMOKESTACK":"power","CARD.SNAKEBITE":"skill","CARD.SNAP":"attack","CARD.SNEAKY":"power","CARD.SOLAR_STRIKE":"attack","CARD.SOOT":"status","CARD.SOUL":"skill","CARD.SOUL_STORM":"attack","CARD.SOVEREIGN_BLADE":"attack","CARD.SOW":"attack","CARD.SPECTRUM_SHIFT":"power","CARD.SPEEDSTER":"power","CARD.SPINNER":"power","CARD.SPIRIT_OF_ASH":"power","CARD.SPITE":"attack","CARD.SPLASH":"skill","CARD.SPOILS_MAP":"quest","CARD.SPOILS_OF_BATTLE":"skill","CARD.SPORE_MIND":"curse","CARD.SPUR":"skill","CARD.SQUASH":"attack","CARD.SQUEEZE":"attack","CARD.STACK":"skill","CARD.STAMPEDE":"power","CARD.STARDUST":"attack","CARD.STOKE":"skill","CARD.STOMP":"attack","CARD.STONE_ARMOR":"power","CARD.STORM":"power","CARD.STORM_OF_STEEL":"skill","CARD.STRANGLE":"attack","CARD.STRATAGEM":"power","CARD.STRIKE_IRONCLAD":"attack","CARD.STRIKE_SILENT":"attack","CARD.STRIKE_REGENT":"attack","CARD.STRIKE_NECROBINDER":"attack","CARD.STRIKE_DEFECT":"attack","CARD.SUBROUTINE":"power","CARD.SUCKER_PUNCH":"attack","CARD.SUMMON_FORTH":"skill","CARD.SUNDER":"attack","CARD.SUPERCRITICAL":"skill","CARD.SUPERMASSIVE":"attack","CARD.SUPPRESS":"attack","CARD.SURVIVOR":"skill","CARD.SWEEPING_BEAM":"attack","CARD.SWEEPING_GAZE":"attack","CARD.SWORD_BOOMERANG":"attack","CARD.SWORD_SAGE":"power","CARD.SYNCHRONIZE":"skill","CARD.SYNTHESIS":"attack","CARD.TACTICIAN":"skill","CARD.TAG_TEAM":"attack","CARD.TANK":"power","CARD.TAUNT":"skill","CARD.TEAR_ASUNDER":"attack","CARD.TEMPEST":"skill","CARD.TERRAFORMING":"skill","CARD.TESLA_COIL":"attack","CARD.THE_BOMB":"skill","CARD.THE_GAMBIT":"skill","CARD.THE_HUNT":"attack","CARD.THE_SCYTHE":"attack","CARD.THE_SEALED_THRONE":"power","CARD.THE_SMITH":"skill","CARD.THINKING_AHEAD":"skill","CARD.THRASH":"attack","CARD.THRUMMING_HATCHET":"attack","CARD.THUNDER":"power","CARD.THUNDERCLAP":"attack","CARD.TIMES_UP":"attack","CARD.TOOLS_OF_THE_TRADE":"power","CARD.TORIC_TOUGHNESS":"skill","CARD.TOXIC":"status","CARD.TRACKING":"power","CARD.TRANSFIGURE":"skill","CARD.TRASH_TO_TREASURE":"power","CARD.TREMBLE":"skill","CARD.TRUE_GRIT":"skill","CARD.TURBO":"skill","CARD.TWIN_STRIKE":"attack","CARD.TYRANNY":"power","CARD.ULTIMATE_DEFEND":"skill","CARD.ULTIMATE_STRIKE":"attack","CARD.UNDEATH":"skill","CARD.UNLEASH":"attack","CARD.UNMOVABLE":"power","CARD.UNRELENTING":"attack","CARD.UNTOUCHABLE":"skill","CARD.UP_MY_SLEEVE":"skill","CARD.UPPERCUT":"attack","CARD.UPROAR":"attack","CARD.VEILPIERCER":"attack","CARD.VENERATE":"skill","CARD.VICIOUS":"power","CARD.VOID":"status","CARD.VOID_FORM":"power","CARD.VOLLEY":"attack","CARD.VOLTAIC":"skill","CARD.WASTE_AWAY":"status","CARD.WELL_LAID_PLANS":"power","CARD.WHIRLWIND":"attack","CARD.WHISTLE":"attack","CARD.WHITE_NOISE":"skill","CARD.WISH":"skill","CARD.WISP":"skill","CARD.WOUND":"status","CARD.WRAITH_FORM":"power","CARD.WRITHE":"curse","CARD.WROUGHT_IN_WAR":"attack","CARD.ZAP":"skill"};
+const CARD_CHARS = {"CARD.ABRASIVE":"silent","CARD.ACCELERANT":"silent","CARD.ACCURACY":"silent","CARD.ACROBATICS":"silent","CARD.ADAPTIVE_STRIKE":"defect","CARD.ADRENALINE":"silent","CARD.AFTERIMAGE":"silent","CARD.AFTERLIFE":"necrobinder","CARD.AGGRESSION":"ironclad","CARD.ALCHEMIZE":"colorless","CARD.ALIGNMENT":"regent","CARD.ALL_FOR_ONE":"defect","CARD.ANGER":"ironclad","CARD.ANOINTED":"colorless","CARD.ANTICIPATE":"silent","CARD.APOTHEOSIS":"event","CARD.APPARITION":"event","CARD.ARMAMENTS":"ironclad","CARD.ARSENAL":"regent","CARD.ASCENDERS_BANE":"curse","CARD.ASHEN_STRIKE":"ironclad","CARD.ASSASSINATE":"silent","CARD.ASTRAL_PULSE":"regent","CARD.AUTOMATION":"colorless","CARD.BACKFLIP":"silent","CARD.BACKSTAB":"silent","CARD.BAD_LUCK":"curse","CARD.BALL_LIGHTNING":"defect","CARD.BANSHEES_CRY":"necrobinder","CARD.BARRAGE":"defect","CARD.BARRICADE":"ironclad","CARD.BASH":"ironclad","CARD.BATTLE_TRANCE":"ironclad","CARD.BEACON_OF_HOPE":"colorless","CARD.BEAM_CELL":"defect","CARD.BEAT_DOWN":"colorless","CARD.BEAT_INTO_SHAPE":"regent","CARD.BECKON":"status","CARD.BEGONE":"regent","CARD.BELIEVE_IN_YOU":"colorless","CARD.BIASED_COGNITION":"defect","CARD.BIG_BANG":"regent","CARD.BLACK_HOLE":"regent","CARD.BLADE_DANCE":"silent","CARD.BLADE_OF_INK":"silent","CARD.BLIGHT_STRIKE":"necrobinder","CARD.BLOOD_WALL":"ironclad","CARD.BLOODLETTING":"ironclad","CARD.BLUDGEON":"ironclad","CARD.BLUR":"silent","CARD.BODY_SLAM":"ironclad","CARD.BODYGUARD":"necrobinder","CARD.BOLAS":"colorless","CARD.BOMBARDMENT":"regent","CARD.BONE_SHARDS":"necrobinder","CARD.BOOST_AWAY":"defect","CARD.BOOT_SEQUENCE":"defect","CARD.BORROWED_TIME":"necrobinder","CARD.BOUNCING_FLASK":"silent","CARD.BRAND":"ironclad","CARD.BREAK":"ironclad","CARD.BREAKTHROUGH":"ironclad","CARD.BRIGHTEST_FLAME":"event","CARD.BUBBLE_BUBBLE":"silent","CARD.BUFFER":"defect","CARD.BULK_UP":"defect","CARD.BULLET_TIME":"silent","CARD.BULLY":"ironclad","CARD.BULWARK":"regent","CARD.BUNDLE_OF_JOY":"regent","CARD.BURN":"status","CARD.BURNING_PACT":"ironclad","CARD.BURST":"silent","CARD.BURY":"necrobinder","CARD.BYRD_SWOOP":"event","CARD.BYRDONIS_EGG":"quest","CARD.CALAMITY":"colorless","CARD.CALCIFY":"necrobinder","CARD.CALCULATED_GAMBLE":"silent","CARD.CALL_OF_THE_VOID":"necrobinder","CARD.CALTROPS":"event","CARD.CAPACITOR":"defect","CARD.CAPTURE_SPIRIT":"necrobinder","CARD.CASCADE":"ironclad","CARD.CATASTROPHE":"colorless","CARD.CELESTIAL_MIGHT":"regent","CARD.CHAOS":"defect","CARD.CHARGE_BATTERY":"defect","CARD.CHARGE":"regent","CARD.CHILD_OF_THE_STARS":"regent","CARD.CHILL":"defect","CARD.CINDER":"ironclad","CARD.CLASH":"event","CARD.CLAW":"defect","CARD.CLEANSE":"necrobinder","CARD.CLOAK_AND_DAGGER":"silent","CARD.CLOAK_OF_STARS":"regent","CARD.CLUMSY":"curse","CARD.COLD_SNAP":"defect","CARD.COLLISION_COURSE":"regent","CARD.COLOSSUS":"ironclad","CARD.COMET":"regent","CARD.COMPACT":"defect","CARD.COMPILE_DRIVER":"defect","CARD.CONFLAGRATION":"ironclad","CARD.CONQUEROR":"regent","CARD.CONSUMING_SHADOW":"defect","CARD.CONVERGENCE":"regent","CARD.COOLANT":"defect","CARD.COOLHEADED":"defect","CARD.COORDINATE":"colorless","CARD.CORROSIVE_WAVE":"silent","CARD.CORRUPTION":"ironclad","CARD.COSMIC_INDIFFERENCE":"regent","CARD.COUNTDOWN":"necrobinder","CARD.CRASH_LANDING":"regent","CARD.CREATIVE_AI":"defect","CARD.CRESCENT_SPEAR":"regent","CARD.CRIMSON_MANTLE":"ironclad","CARD.CRUELTY":"ironclad","CARD.CRUSH_UNDER":"regent","CARD.CURSE_OF_THE_BELL":"curse","CARD.DAGGER_SPRAY":"silent","CARD.DAGGER_THROW":"silent","CARD.DANSE_MACABRE":"necrobinder","CARD.DARK_EMBRACE":"ironclad","CARD.DARK_SHACKLES":"colorless","CARD.DARKNESS":"defect","CARD.DASH":"silent","CARD.DAZED":"status","CARD.DEADLY_POISON":"silent","CARD.DEATH_MARCH":"necrobinder","CARD.DEATHS_DOOR":"necrobinder","CARD.DEATHBRINGER":"necrobinder","CARD.DEBILITATE":"necrobinder","CARD.DEBRIS":"status","CARD.DEBT":"curse","CARD.DECAY":"curse","CARD.DECISIONS_DECISIONS":"regent","CARD.DEFEND_IRONCLAD":"ironclad","CARD.DEFEND_SILENT":"silent","CARD.DEFEND_REGENT":"regent","CARD.DEFEND_NECROBINDER":"necrobinder","CARD.DEFEND_DEFECT":"defect","CARD.DEFILE":"necrobinder","CARD.DEFLECT":"silent","CARD.DEFRAGMENT":"defect","CARD.DEFY":"necrobinder","CARD.DELAY":"necrobinder","CARD.DEMESNE":"necrobinder","CARD.DEMON_FORM":"ironclad","CARD.DEMONIC_SHIELD":"ironclad","CARD.DEVASTATE":"regent","CARD.DEVOUR_LIFE":"necrobinder","CARD.DIRGE":"necrobinder","CARD.DISCOVERY":"colorless","CARD.DISINTEGRATION":"token","CARD.DISMANTLE":"ironclad","CARD.DISTRACTION":"event","CARD.DODGE_AND_ROLL":"silent","CARD.DOMINATE":"ironclad","CARD.DOUBLE_ENERGY":"defect","CARD.DOUBT":"curse","CARD.DRAIN_POWER":"necrobinder","CARD.DRAMATIC_ENTRANCE":"colorless","CARD.DREDGE":"necrobinder","CARD.DRUM_OF_BATTLE":"ironclad","CARD.DUAL_WIELD":"event","CARD.DUALCAST":"defect","CARD.DYING_STAR":"regent","CARD.ECHO_FORM":"defect","CARD.ECHOING_SLASH":"silent","CARD.EIDOLON":"necrobinder","CARD.END_OF_DAYS":"necrobinder","CARD.ENERGY_SURGE":"defect","CARD.ENFEEBLING_TOUCH":"necrobinder","CARD.ENLIGHTENMENT":"event","CARD.ENTHRALLED":"curse","CARD.ENTRENCH":"event","CARD.ENTROPY":"colorless","CARD.ENVENOM":"silent","CARD.EQUILIBRIUM":"colorless","CARD.ERADICATE":"necrobinder","CARD.ESCAPE_PLAN":"silent","CARD.ETERNAL_ARMOR":"colorless","CARD.EVIL_EYE":"ironclad","CARD.EXPECT_A_FIGHT":"ironclad","CARD.EXPERTISE":"silent","CARD.EXPOSE":"silent","CARD.EXTERMINATE":"event","CARD.FALLING_STAR":"regent","CARD.FAN_OF_KNIVES":"silent","CARD.FASTEN":"colorless","CARD.FEAR":"necrobinder","CARD.FEED":"ironclad","CARD.FEEDING_FRENZY":"event","CARD.FEEL_NO_PAIN":"ironclad","CARD.FERAL":"defect","CARD.FETCH":"necrobinder","CARD.FIEND_FIRE":"ironclad","CARD.FIGHT_ME":"ironclad","CARD.FIGHT_THROUGH":"defect","CARD.FINESSE":"colorless","CARD.FINISHER":"silent","CARD.FISTICUFFS":"colorless","CARD.FLAK_CANNON":"defect","CARD.FLAME_BARRIER":"ironclad","CARD.FLANKING":"silent","CARD.FLASH_OF_STEEL":"colorless","CARD.FLATTEN":"necrobinder","CARD.FLECHETTES":"silent","CARD.FLICK_FLACK":"silent","CARD.FOCUSED_STRIKE":"defect","CARD.FOLLOW_THROUGH":"silent","CARD.FOLLY":"curse","CARD.FOOTWORK":"silent","CARD.FORBIDDEN_GRIMOIRE":"necrobinder","CARD.FOREGONE_CONCLUSION":"regent","CARD.FORGOTTEN_RITUAL":"ironclad","CARD.FRANTIC_ESCAPE":"status","CARD.FRIENDSHIP":"necrobinder","CARD.FTL":"defect","CARD.FUEL":"token","CARD.FURNACE":"regent","CARD.FUSION":"defect","CARD.GAMMA_BLAST":"regent","CARD.GANG_UP":"colorless","CARD.GATHER_LIGHT":"regent","CARD.GENESIS":"regent","CARD.GENETIC_ALGORITHM":"defect","CARD.GIANT_ROCK":"token","CARD.GLACIER":"defect","CARD.GLASSWORK":"defect","CARD.GLIMMER":"regent","CARD.GLIMPSE_BEYOND":"necrobinder","CARD.GLITTERSTREAM":"regent","CARD.GLOW":"regent","CARD.GO_FOR_THE_EYES":"defect","CARD.GOLD_AXE":"colorless","CARD.GRAND_FINALE":"silent","CARD.GRAPPLE":"ironclad","CARD.GRAVE_WARDEN":"necrobinder","CARD.GRAVEBLAST":"necrobinder","CARD.GREED":"curse","CARD.GUARDS":"regent","CARD.GUIDING_STAR":"regent","CARD.GUILTY":"curse","CARD.GUNK_UP":"defect","CARD.HAILSTORM":"defect","CARD.HAMMER_TIME":"regent","CARD.HAND_OF_GREED":"colorless","CARD.HAND_TRICK":"silent","CARD.HANG":"necrobinder","CARD.HAUNT":"necrobinder","CARD.HAVOC":"ironclad","CARD.HAZE":"silent","CARD.HEADBUTT":"ironclad","CARD.HEAVENLY_DRILL":"regent","CARD.HEGEMONY":"regent","CARD.HEIRLOOM_HAMMER":"regent","CARD.HELIX_DRILL":"defect","CARD.HELLO_WORLD":"event","CARD.HELLRAISER":"ironclad","CARD.HEMOKINESIS":"ironclad","CARD.HIDDEN_CACHE":"regent","CARD.HIDDEN_DAGGERS":"silent","CARD.HIDDEN_GEM":"colorless","CARD.HIGH_FIVE":"necrobinder","CARD.HOLOGRAM":"defect","CARD.HOTFIX":"defect","CARD.HOWL_FROM_BEYOND":"ironclad","CARD.HUDDLE_UP":"colorless","CARD.HYPERBEAM":"defect","CARD.I_AM_INVINCIBLE":"regent","CARD.ICE_LANCE":"defect","CARD.IGNITION":"defect","CARD.IMPATIENCE":"colorless","CARD.IMPERVIOUS":"ironclad","CARD.INFECTION":"status","CARD.INFERNAL_BLADE":"ironclad","CARD.INFERNO":"ironclad","CARD.INFINITE_BLADES":"silent","CARD.INFLAME":"ironclad","CARD.INJURY":"curse","CARD.INTERCEPT":"colorless","CARD.INVOKE":"necrobinder","CARD.IRON_WAVE":"ironclad","CARD.ITERATION":"defect","CARD.JACK_OF_ALL_TRADES":"colorless","CARD.JACKPOT":"colorless","CARD.JUGGERNAUT":"ironclad","CARD.JUGGLING":"ironclad","CARD.KINGLY_KICK":"regent","CARD.KINGLY_PUNCH":"regent","CARD.KNIFE_TRAP":"silent","CARD.KNOCKDOWN":"colorless","CARD.KNOCKOUT_BLOW":"regent","CARD.KNOW_THY_PLACE":"regent","CARD.LANTERN_KEY":"quest","CARD.LARGESSE":"regent","CARD.LEADING_STRIKE":"silent","CARD.LEAP":"defect","CARD.LEG_SWEEP":"silent","CARD.LEGION_OF_BONE":"necrobinder","CARD.LETHALITY":"necrobinder","CARD.LIFT":"colorless","CARD.LIGHTNING_ROD":"defect","CARD.LOOP":"defect","CARD.LUMINESCE":"token","CARD.LUNAR_BLAST":"regent","CARD.MACHINE_LEARNING":"defect","CARD.MAD_SCIENCE":"event","CARD.MAKE_IT_SO":"regent","CARD.MALAISE":"silent","CARD.MANGLE":"ironclad","CARD.MANIFEST_AUTHORITY":"regent","CARD.MASTER_OF_STRATEGY":"colorless","CARD.MASTER_PLANNER":"silent","CARD.MAUL":"event","CARD.MAYHEM":"colorless","CARD.MELANCHOLY":"necrobinder","CARD.MEMENTO_MORI":"silent","CARD.METAMORPHOSIS":"event","CARD.METEOR_SHOWER":"regent","CARD.METEOR_STRIKE":"defect","CARD.MIMIC":"colorless","CARD.MIND_BLAST":"colorless","CARD.MIND_ROT":"token","CARD.MINION_DIVE_BOMB":"token","CARD.MINION_SACRIFICE":"token","CARD.MINION_STRIKE":"token","CARD.MIRAGE":"silent","CARD.MISERY":"necrobinder","CARD.MODDED":"defect","CARD.MOLTEN_FIST":"ironclad","CARD.MOMENTUM_STRIKE":"defect","CARD.MONARCHS_GAZE":"regent","CARD.MONOLOGUE":"regent","CARD.MULTI_CAST":"defect","CARD.MURDER":"silent","CARD.NECRO_MASTERY":"necrobinder","CARD.NEGATIVE_PULSE":"necrobinder","CARD.NEOWS_FURY":"event","CARD.NEUROSURGE":"necrobinder","CARD.NEUTRALIZE":"silent","CARD.NEUTRON_AEGIS":"regent","CARD.NIGHTMARE":"silent","CARD.NO_ESCAPE":"necrobinder","CARD.NORMALITY":"curse","CARD.NOSTALGIA":"colorless","CARD.NOXIOUS_FUMES":"silent","CARD.NULL":"defect","CARD.OBLIVION":"necrobinder","CARD.OFFERING":"ironclad","CARD.OMNISLICE":"colorless","CARD.ONE_TWO_PUNCH":"ironclad","CARD.ORBIT":"regent","CARD.OUTBREAK":"silent","CARD.OUTMANEUVER":"event","CARD.OVERCLOCK":"defect","CARD.PACTS_END":"ironclad","CARD.PAGESTORM":"necrobinder","CARD.PALE_BLUE_DOT":"regent","CARD.PANACHE":"colorless","CARD.PANIC_BUTTON":"colorless","CARD.PARRY":"regent","CARD.PARSE":"necrobinder","CARD.PARTICLE_WALL":"regent","CARD.PATTER":"regent","CARD.PECK":"event","CARD.PERFECTED_STRIKE":"ironclad","CARD.PHANTOM_BLADES":"silent","CARD.PHOTON_CUT":"regent","CARD.PIERCING_WAIL":"silent","CARD.PILLAGE":"ironclad","CARD.PILLAR_OF_CREATION":"regent","CARD.PINPOINT":"silent","CARD.POISONED_STAB":"silent","CARD.POKE":"necrobinder","CARD.POMMEL_STRIKE":"ironclad","CARD.POOR_SLEEP":"curse","CARD.POUNCE":"silent","CARD.PRECISE_CUT":"silent","CARD.PREDATOR":"silent","CARD.PREP_TIME":"colorless","CARD.PREPARED":"silent","CARD.PRIMAL_FORCE":"ironclad","CARD.PRODUCTION":"colorless","CARD.PROLONG":"colorless","CARD.PROPHESIZE":"regent","CARD.PROTECTOR":"necrobinder","CARD.PROWESS":"colorless","CARD.PULL_AGGRO":"necrobinder","CARD.PULL_FROM_BELOW":"necrobinder","CARD.PURITY":"colorless","CARD.PUTREFY":"necrobinder","CARD.PYRE":"ironclad","CARD.QUADCAST":"defect","CARD.QUASAR":"regent","CARD.RADIATE":"regent","CARD.RAGE":"ironclad","CARD.RAINBOW":"defect","CARD.RALLY":"colorless","CARD.RAMPAGE":"ironclad","CARD.RATTLE":"necrobinder","CARD.REANIMATE":"necrobinder","CARD.REAP":"necrobinder","CARD.REAPER_FORM":"necrobinder","CARD.REAVE":"necrobinder","CARD.REBOOT":"defect","CARD.REBOUND":"event","CARD.REFINE_BLADE":"regent","CARD.REFLECT":"regent","CARD.REFLEX":"silent","CARD.REFRACT":"defect","CARD.REGRET":"curse","CARD.RELAX":"event","CARD.REND":"colorless","CARD.RESONANCE":"regent","CARD.RESTLESSNESS":"colorless","CARD.RICOCHET":"silent","CARD.RIGHT_HAND_HAND":"necrobinder","CARD.RIP_AND_TEAR":"event","CARD.ROCKET_PUNCH":"defect","CARD.ROLLING_BOULDER":"colorless","CARD.ROYAL_GAMBLE":"regent","CARD.ROYALTIES":"regent","CARD.RUPTURE":"ironclad","CARD.SACRIFICE":"necrobinder","CARD.SALVO":"colorless","CARD.SCAVENGE":"defect","CARD.SCOURGE":"necrobinder","CARD.SCRAPE":"defect","CARD.SCRAWL":"colorless","CARD.SCULPTING_STRIKE":"necrobinder","CARD.SEANCE":"necrobinder","CARD.SECOND_WIND":"ironclad","CARD.SECRET_TECHNIQUE":"colorless","CARD.SECRET_WEAPON":"colorless","CARD.SEEKER_STRIKE":"colorless","CARD.SEEKING_EDGE":"regent","CARD.SENTRY_MODE":"necrobinder","CARD.SERPENT_FORM":"silent","CARD.SETUP_STRIKE":"ironclad","CARD.SEVEN_STARS":"regent","CARD.SEVERANCE":"necrobinder","CARD.SHADOW_SHIELD":"defect","CARD.SHADOW_STEP":"silent","CARD.SHADOWMELD":"silent","CARD.SHAME":"curse","CARD.SHARED_FATE":"necrobinder","CARD.SHATTER":"defect","CARD.SHINING_STRIKE":"regent","CARD.SHIV":"token","CARD.SHOCKWAVE":"colorless","CARD.SHROUD":"necrobinder","CARD.SHRUG_IT_OFF":"ironclad","CARD.SIC_EM":"necrobinder","CARD.SIGNAL_BOOST":"defect","CARD.SKEWER":"silent","CARD.SKIM":"defect","CARD.SLEIGHT_OF_FLESH":"necrobinder","CARD.SLICE":"silent","CARD.SLIMED":"status","CARD.SLOTH":"token","CARD.SMOKESTACK":"defect","CARD.SNAKEBITE":"silent","CARD.SNAP":"necrobinder","CARD.SNEAKY":"silent","CARD.SOLAR_STRIKE":"regent","CARD.SOOT":"status","CARD.SOUL":"token","CARD.SOUL_STORM":"necrobinder","CARD.SOVEREIGN_BLADE":"token","CARD.SOW":"necrobinder","CARD.SPECTRUM_SHIFT":"regent","CARD.SPEEDSTER":"silent","CARD.SPINNER":"defect","CARD.SPIRIT_OF_ASH":"necrobinder","CARD.SPITE":"ironclad","CARD.SPLASH":"colorless","CARD.SPOILS_MAP":"quest","CARD.SPOILS_OF_BATTLE":"regent","CARD.SPORE_MIND":"curse","CARD.SPUR":"necrobinder","CARD.SQUASH":"event","CARD.SQUEEZE":"necrobinder","CARD.STACK":"event","CARD.STAMPEDE":"ironclad","CARD.STARDUST":"regent","CARD.STOKE":"ironclad","CARD.STOMP":"ironclad","CARD.STONE_ARMOR":"ironclad","CARD.STORM":"defect","CARD.STORM_OF_STEEL":"silent","CARD.STRANGLE":"silent","CARD.STRATAGEM":"colorless","CARD.STRIKE_IRONCLAD":"ironclad","CARD.STRIKE_SILENT":"silent","CARD.STRIKE_REGENT":"regent","CARD.STRIKE_NECROBINDER":"necrobinder","CARD.STRIKE_DEFECT":"defect","CARD.SUBROUTINE":"defect","CARD.SUCKER_PUNCH":"silent","CARD.SUMMON_FORTH":"regent","CARD.SUNDER":"defect","CARD.SUPERCRITICAL":"defect","CARD.SUPERMASSIVE":"regent","CARD.SUPPRESS":"silent","CARD.SURVIVOR":"silent","CARD.SWEEPING_BEAM":"defect","CARD.SWEEPING_GAZE":"token","CARD.SWORD_BOOMERANG":"ironclad","CARD.SWORD_SAGE":"regent","CARD.SYNCHRONIZE":"defect","CARD.SYNTHESIS":"defect","CARD.TACTICIAN":"silent","CARD.TAG_TEAM":"colorless","CARD.TANK":"ironclad","CARD.TAUNT":"ironclad","CARD.TEAR_ASUNDER":"ironclad","CARD.TEMPEST":"defect","CARD.TERRAFORMING":"regent","CARD.TESLA_COIL":"defect","CARD.THE_BOMB":"colorless","CARD.THE_GAMBIT":"colorless","CARD.THE_HUNT":"silent","CARD.THE_SCYTHE":"necrobinder","CARD.THE_SEALED_THRONE":"regent","CARD.THE_SMITH":"regent","CARD.THINKING_AHEAD":"colorless","CARD.THRASH":"ironclad","CARD.THRUMMING_HATCHET":"colorless","CARD.THUNDER":"defect","CARD.THUNDERCLAP":"ironclad","CARD.TIMES_UP":"necrobinder","CARD.TOOLS_OF_THE_TRADE":"silent","CARD.TORIC_TOUGHNESS":"event","CARD.TOXIC":"status","CARD.TRACKING":"silent","CARD.TRANSFIGURE":"necrobinder","CARD.TRASH_TO_TREASURE":"defect","CARD.TREMBLE":"ironclad","CARD.TRUE_GRIT":"ironclad","CARD.TURBO":"defect","CARD.TWIN_STRIKE":"ironclad","CARD.TYRANNY":"regent","CARD.ULTIMATE_DEFEND":"colorless","CARD.ULTIMATE_STRIKE":"colorless","CARD.UNDEATH":"necrobinder","CARD.UNLEASH":"necrobinder","CARD.UNMOVABLE":"ironclad","CARD.UNRELENTING":"ironclad","CARD.UNTOUCHABLE":"silent","CARD.UP_MY_SLEEVE":"silent","CARD.UPPERCUT":"ironclad","CARD.UPROAR":"defect","CARD.VEILPIERCER":"necrobinder","CARD.VENERATE":"regent","CARD.VICIOUS":"ironclad","CARD.VOID":"status","CARD.VOID_FORM":"regent","CARD.VOLLEY":"colorless","CARD.VOLTAIC":"defect","CARD.WASTE_AWAY":"token","CARD.WELL_LAID_PLANS":"silent","CARD.WHIRLWIND":"ironclad","CARD.WHISTLE":"event","CARD.WHITE_NOISE":"defect","CARD.WISH":"event","CARD.WISP":"necrobinder","CARD.WOUND":"status","CARD.WRAITH_FORM":"silent","CARD.WRITHE":"curse","CARD.WROUGHT_IN_WAR":"regent","CARD.ZAP":"defect"};
+const TYPE_COLORS = { attack: '#f85149', skill: '#58a6ff', power: '#d29922', status: '#6e7681', curse: '#f85149' };
+
+function prettyId(id) {
+  if (!id) return '';
+  const name = id.includes('.') ? id.split('.').slice(1).join('.') : id;
+  return name.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+const CHAR_COLORS = {
+  ironclad: '#f85149', silent: '#3fb950', defect: '#58a6ff',
+  necrobinder: '#bc8cff', regent: '#d29922'
+};
+function charColor(name) {
+  return CHAR_COLORS[(name || '').toLowerCase().replace(/^character\./, '')] || '';
+}
+function coloredChar(name) {
+  const c = charColor(name);
+  const display = prettyId(name);
+  return c ? '<span style="color:' + c + '">' + display + '</span>' : display;
+}
+function idToSlug(id) {
+  if (!id) return '';
+  return (id.includes('.') ? id.split('.').slice(1).join('.') : id).toLowerCase();
+}
+function prettyTime(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+}
+function pct(n, d) { return d > 0 ? (n / d * 100).toFixed(1) + '%' : '—'; }
+// A-F grading: A=90%+, B=80-89%, C=70-79%, D=60-69%, F=<60%
+function wrClass(rate) {
+  if (rate >= 0.9) return 'wr-a';
+  if (rate >= 0.8) return 'wr-b';
+  if (rate >= 0.7) return 'wr-c';
+  if (rate >= 0.6) return 'wr-d';
+  return 'wr-f';
+}
+function wrBarColor(rate) {
+  if (rate >= 0.9) return '#3fb950';
+  if (rate >= 0.8) return '#6dd390';
+  if (rate >= 0.7) return '#d29922';
+  if (rate >= 0.6) return '#f0883e';
+  return '#f85149';
+}
+
+const RELIC_TIPS = {"RELIC.AKABEKO":"Uncommon Relic — At the start of each combat, gain 8 Vigor.","RELIC.ALCHEMICAL_COFFER":"Ancient Relic — Upon pickup, gain 4 potion slots filled with random potions.","RELIC.AMETHYST_AUBERGINE":"Common Relic — Enemies drop 10 additional Gold.","RELIC.ANCHOR":"Common Relic — Start each combat with 10 Block.","RELIC.FAKE_ANCHOR":"Event Relic — Start each combat with 4 Block.","RELIC.ARCANE_SCROLL":"Ancient Relic — Upon pickup, obtain a random Rare Card to add to your Deck.","RELIC.ARCHAIC_TOOTH":"Ancient Relic — Upon pickup, Transform a starter card with an ancient version.","RELIC.ART_OF_WAR":"Rare Relic — If you do not play any Attacks during your turn, gain an additional energy next turn.","RELIC.ASTROLABE":"Ancient Relic — Upon pickup, Transform 3 cards, then Upgrade them.","RELIC.BAG_OF_MARBLES":"Uncommon Relic — At the start of each combat, apply 1 Vulnerable to ALL enemies.","RELIC.BAG_OF_PREPARATION":"Common Relic — At the start of each combat, draw 2 additional cards.","RELIC.BEATING_REMNANT":"Rare Relic — You cannot lose more than 20 HP in a single turn.","RELIC.BEAUTIFUL_BRACELET":"Ancient Relic — Upon pickup, choose 3 cards in your Deck. Enchant them with Swift 3.","RELIC.BELLOWS":"Uncommon Relic — The first Hand you draw each combat is Upgraded.","RELIC.BELT_BUCKLE":"Shop Relic — While you have no potions, you have 2 additional Dexterity.","RELIC.BIG_HAT":"Rare Relic — At the start of each combat, add 2 random Ethereal cards into your Hand.","RELIC.BIG_MUSHROOM":"Event Relic — Upon pickup, raise your Max HP by 20. At the start of each combat, draw 2 fewer cards.","RELIC.BIIIG_HUG":"Ancient Relic — Upon pickup, remove 4 cards from your Deck. Whenever you shuffle your Draw Pile, add a Soot into your Draw Pile.","RELIC.BING_BONG":"Event Relic — Whenever you add a card to your Deck, add one additional copy.","RELIC.BLACK_BLOOD":"Starter Relic — At the end of combat, heal 12 HP.","RELIC.BLACK_STAR":"Ancient Relic — Elites drop an additional Relic when defeated.","RELIC.BLESSED_ANTLER":"Ancient Relic — Gain energy at the start of each turn. At the start of each combat, shuffle 3 Dazed into your Draw Pile.","RELIC.BLOOD_VIAL":"Common Relic — At the start of each combat, heal 2 HP.","RELIC.FAKE_BLOOD_VIAL":"Event Relic — At the start of each combat, heal 1 HP.","RELIC.BLOOD_SOAKED_ROSE":"Ancient Relic — Upon pickup, add 1 Enthralled to your Deck. Gain energy at the start of each turn.","RELIC.BONE_FLUTE":"Common Relic — Whenever Osty attacks, gain 2 Block.","RELIC.BONE_TEA":"Event Relic — At the start of the next 2 combats, Upgrade your starting hand.","RELIC.BOOK_OF_FIVE_RINGS":"Common Relic — Every 5 cards you add to your Deck, heal 15 HP.","RELIC.BOOK_REPAIR_KNIFE":"Uncommon Relic — Whenever a non-Minion enemy dies to Doom, heal 3 HP.","RELIC.BOOKMARK":"Rare Relic — At the end of each turn, lower the cost of a random Retained card by 1 until played.","RELIC.BOOMING_CONCH":"Ancient Relic — At the start of Elite combats, draw 2 additional cards.","RELIC.BOUND_PHYLACTERY":"Starter Relic — At the start of your turn, Summon 1.","RELIC.BOWLER_HAT":"Uncommon Relic — Gain 20% additional Gold.","RELIC.BREAD":"Shop Relic — At the start of your first turn, lose energy. At the start of all other turns, gain energy.","RELIC.BRILLIANT_SCARF":"Ancient Relic — The 5th card you play each turn is free.","RELIC.BRIMSTONE":"Shop Relic — At the start of your turn, gain 2 Strength and ALL enemies gain 1 Strength.","RELIC.BRONZE_SCALES":"Common Relic — Start each combat with 3 Thorns.","RELIC.BURNING_BLOOD":"Starter Relic — At the end of combat, heal 6 HP.","RELIC.BURNING_STICKS":"Shop Relic — The first time each combat you Exhaust a Skill, add a copy of it into your Hand.","RELIC.BYRDPIP":"Event Relic — Upon pickup, gain the card Byrd Swoop. A Byrdpip will accompany you in battles.","RELIC.CALLING_BELL":"Ancient Relic — Upon pickup, obtain a unique Curse and 3 Relics.","RELIC.CANDELABRA":"Uncommon Relic — At the start of your 2nd turn, gain energy.","RELIC.CAPTAINS_WHEEL":"Rare Relic — At the start of your 3rd turn, gain 18 Block.","RELIC.CAULDRON":"Shop Relic — Upon pickup, brews 5 random potions.","RELIC.CENTENNIAL_PUZZLE":"Common Relic — The first time you lose HP each combat, draw 3 cards.","RELIC.CHANDELIER":"Rare Relic — At the start of your 3rd turn, gain energy.","RELIC.CHARONS_ASHES":"Rare Relic — Whenever you Exhaust a card, deal 3 damage to ALL enemies.","RELIC.CHEMICAL_X":"Shop Relic — The effects of your cost X cards are increased by 2.","RELIC.CHOICES_PARADOX":"Ancient Relic — At the start of each combat, add 1 of 5 random cards into your Hand. Add Retain to the chosen card.","RELIC.CIRCLET":"None — It's a circlet.","RELIC.CLAWS":"Ancient Relic — Upon pickup, Transform up to 6 cards into Maul.","RELIC.CLOAK_CLASP":"Rare Relic — At the end of your turn, gain 1 Block for each card in your Hand.","RELIC.CRACKED_CORE":"Starter Relic — At the start of each combat, Channel 1 Lightning.","RELIC.CROSSBOW":"Ancient Relic — At the start of your turn, add a random Attack into your Hand. It costs 0 energy this turn.","RELIC.CURSED_PEARL":"Ancient Relic — Upon pickup, receive Greed. Gain 333 Gold.","RELIC.DARKSTONE_PERIAPT":"Event Relic — Whenever you obtain a Curse, raise your Max HP by 6.","RELIC.DATA_DISK":"Common Relic — Start each combat with 1 Focus.","RELIC.DAUGHTER_OF_THE_WIND":"Event Relic — Whenever you play an Attack, gain 1 Block.","RELIC.DELICATE_FROND":"Ancient Relic — At the start of each combat, fill all empty potion slots with random potions.","RELIC.DEMON_TONGUE":"Rare Relic — The first time you lose HP on your turn, heal HP equal to the amount lost.","RELIC.DIAMOND_DIADEM":"Ancient Relic — Whenever you play 2 or fewer cards in a turn, take half damage from enemies.","RELIC.DINGY_RUG":"Shop Relic — Card rewards can now contain Colorless cards.","RELIC.DISTINGUISHED_CAPE":"Ancient Relic — Upon pickup, lose 9 Max HP. Add 3 Apparitions to your Deck.","RELIC.DIVINE_DESTINY":"Starter Relic — At the start of each combat, gain 6 stars.","RELIC.DIVINE_RIGHT":"Starter Relic — At the start of each combat, gain 3 stars.","RELIC.DOLLYS_MIRROR":"Shop Relic — Upon pickup, obtain an additional copy of a card in your Deck.","RELIC.DRAGON_FRUIT":"Shop Relic — Whenever you gain Gold, raise your Max HP by 1.","RELIC.DREAM_CATCHER":"Event Relic — Whenever you Rest, you may add a card to your Deck.","RELIC.DRIFTWOOD":"Ancient Relic — You may reroll each card reward once.","RELIC.DUSTY_TOME":"Ancient Relic — Upon pickup, obtain an Ancient Card.","RELIC.ECTOPLASM":"Ancient Relic — You can no longer gain Gold. Gain energy at the start of each turn.","RELIC.ELECTRIC_SHRYMP":"Ancient Relic — Upon pickup, Enchant a Skill with Imbued.","RELIC.EMBER_TEA":"Event Relic — At the start of the next 2 combats, gain 2 Strength.","RELIC.EMOTION_CHIP":"Rare Relic — If you lost HP during the previous turn, trigger the passive ability of all Orbs at the start of your turn.","RELIC.EMPTY_CAGE":"Ancient Relic — Upon pickup, remove 2 cards from your Deck.","RELIC.ETERNAL_FEATHER":"Uncommon Relic — For every 5 cards in your Deck, heal 3 HP whenever you enter a Rest Site.","RELIC.FENCING_MANUAL":"Common Relic — At the start of each combat, Forge 10.","RELIC.FESTIVE_POPPER":"Common Relic — At the start of each combat, deal 9 damage to ALL enemies.","RELIC.FIDDLE":"Ancient Relic — At the start of each turn, draw 2 additional cards. You may not draw cards during your turn.","RELIC.FORGOTTEN_SOUL":"Event Relic — Whenever you Exhaust a card, deal 1 damage to a random enemy.","RELIC.FRAGRANT_MUSHROOM":"Event Relic — Upon pickup, lose 15 HP and Upgrade 3 random cards.","RELIC.FRESNEL_LENS":"Event Relic — Whenever you add a card that gains Block to your Deck, Enchant it with Nimble 2.","RELIC.FROZEN_EGG":"Rare Relic — Whenever you add a Power into your Deck, Upgrade it.","RELIC.FUNERARY_MASK":"Uncommon Relic — At the start of each combat, add 3 Souls into your Draw Pile.","RELIC.FUR_COAT":"Ancient Relic — Upon pickup, mark 7 random combats. Enemies in those rooms have 1 HP.","RELIC.GALACTIC_DUST":"Uncommon Relic — For every 10 stars spent, gain 10 Block.","RELIC.GAMBLING_CHIP":"Rare Relic — At the start of each combat, discard any number of cards then draw that many.","RELIC.GAME_PIECE":"Rare Relic — Whenever you play a Power, draw 1 card.","RELIC.GHOST_SEED":"Shop Relic — Strikes and Defends gain Ethereal.","RELIC.GIRYA":"Rare Relic — You can now gain Strength at Rest Sites. (3 times max)","RELIC.GLASS_EYE":"Ancient Relic — Upon pickup, obtain 2 Common cards, 2 Uncommon cards, and 1 Rare card.","RELIC.GLITTER":"Ancient Relic — Enchant all card rewards with Glam.","RELIC.GNARLED_HAMMER":"Shop Relic — Upon pickup, Enchant up to 3 Attacks with Sharp 3.","RELIC.GOLD_PLATED_CABLES":"Uncommon Relic — Your rightmost Orb triggers its passive an additional time.","RELIC.GOLDEN_COMPASS":"Ancient Relic — Upon pickup, replace the Act 2 Map with a single special path.","RELIC.GOLDEN_PEARL":"Ancient Relic — Upon pickup, gain 150 Gold.","RELIC.GORGET":"Common Relic — At the start of each combat, gain 4 Plating.","RELIC.GREMLIN_HORN":"Uncommon Relic — Whenever an enemy dies, gain energy and draw 1 card.","RELIC.HAND_DRILL":"Event Relic — Whenever you break an enemy's Block, apply 2 Vulnerable.","RELIC.HAPPY_FLOWER":"Common Relic — Every 3 turns, gain energy.","RELIC.FAKE_HAPPY_FLOWER":"Event Relic — Every 5 turns, gain energy.","RELIC.HELICAL_DART":"Rare Relic — Whenever you play a Shiv, gain 1 Dexterity this turn.","RELIC.HISTORY_COURSE":"Event Relic — At the start of your turn, play a copy of your last played Attack or Skill.","RELIC.HORN_CLEAT":"Uncommon Relic — At the start of your 2nd turn, gain 14 Block.","RELIC.ICE_CREAM":"Rare Relic — Energy is now conserved between turns.","RELIC.INFUSED_CORE":"Starter Relic — At the start of each combat, Channel 3 Lightning.","RELIC.INTIMIDATING_HELMET":"Rare Relic — Whenever you play a card that costs 2 or more, gain 4 Block.","RELIC.IRON_CLUB":"Ancient Relic — Every 4 cards you play, draw 1 card.","RELIC.IVORY_TILE":"Rare Relic — Whenever you play a card that costs 3 or more, gain energy.","RELIC.JEWELED_MASK":"Ancient Relic — At the start of combat put a random Power from your Draw Pile into your Hand, it's free to play.","RELIC.JEWELRY_BOX":"Ancient Relic — Upon pickup, add 1 Apotheosis to your Deck.","RELIC.JOSS_PAPER":"Uncommon Relic — Every 5 times you Exhaust a card, draw 1 card.","RELIC.JUZU_BRACELET":"Common Relic — Regular enemy combats are no longer encountered in ? rooms.","RELIC.KIFUDA":"Shop Relic — Upon pickup, Enchant up to 3 cards with Adroit.","RELIC.KUNAI":"Rare Relic — Every time you play 3 Attacks in a single turn, gain 1 Dexterity.","RELIC.KUSARIGAMA":"Uncommon Relic — Every time you play 3 Attacks in a single turn, deal 6 damage to a random enemy.","RELIC.LANTERN":"Common Relic — Start each combat with an additional energy.","RELIC.LARGE_CAPSULE":"Ancient Relic — Upon pickup, obtain 2 random Relics. Add an additional Strike and Defend to your Deck.","RELIC.LASTING_CANDY":"Rare Relic — Every other combat, your card rewards gain an additional Power.","RELIC.LAVA_LAMP":"Shop Relic — At the end of combat, Upgrade all card rewards if you took no damage.","RELIC.LAVA_ROCK":"Ancient Relic — The Act 1 Boss drops 2 Relics.","RELIC.LEAD_PAPERWEIGHT":"Ancient Relic — Upon pickup, choose 1 of 2 Colorless cards to add to your Deck.","RELIC.LEAFY_POULTICE":"Ancient Relic — Upon pickup, Transform 1 of your Strikes and 1 of your Defends and lose 10 Max HP.","RELIC.LEES_WAFFLE":"Shop Relic — Upon pickup, raise your Max HP by 7 and heal all of your HP.","RELIC.FAKE_LEES_WAFFLE":"Event Relic — Upon pickup, heal 10% of your HP.","RELIC.LETTER_OPENER":"Uncommon Relic — Every time you play 3 Skills in a single turn, deal 5 damage to ALL enemies.","RELIC.LIZARD_TAIL":"Rare Relic — When you would die, heal to 50% of your Max HP instead (works once).","RELIC.LOOMING_FRUIT":"Ancient Relic — Upon pickup, raise your Max HP by 31.","RELIC.LORDS_PARASOL":"Ancient Relic — When you encounter the Merchant, immediately obtain EVERYTHING he sells.","RELIC.LOST_COFFER":"Ancient Relic — Upon pickup, gain 1 card reward and procure 1 random potion.","RELIC.LOST_WISP":"Event Relic — Whenever you play a Power, deal 8 damage to ALL enemies.","RELIC.LUCKY_FYSH":"Uncommon Relic — Whenever you add a card to your Deck, gain 15 Gold.","RELIC.LUNAR_PASTRY":"Rare Relic — At the end of your turn, gain 1 star.","RELIC.MANGO":"Rare Relic — Upon pickup, raise your Max HP by 14.","RELIC.FAKE_MANGO":"Event Relic — Upon pickup, raise your Max HP by 3.","RELIC.MASSIVE_SCROLL":"Ancient Relic — Upon pickup, choose 1 of 3 Multiplayer Colorless Cards to add to your Deck.","RELIC.MAW_BANK":"Event Relic — Whenever you climb a floor, gain 12 Gold. No longer works when you spend any Gold at the shop.","RELIC.MEAL_TICKET":"Common Relic — Whenever you enter a shop room, heal 15 HP.","RELIC.MEAT_CLEAVER":"Ancient Relic — You may Cook at Rest Sites.","RELIC.MEAT_ON_THE_BONE":"Rare Relic — If your HP is at or below 50% at the end of combat, heal 12 HP.","RELIC.MEMBERSHIP_CARD":"Shop Relic — 50% discount on all products!","RELIC.MERCURY_HOURGLASS":"Uncommon Relic — At the start of your turn, deal 3 damage to ALL enemies.","RELIC.METRONOME":"Rare Relic — The first time you Channel 7 Orbs each combat, deal 30 damage to ALL enemies.","RELIC.MINI_REGENT":"Rare Relic — The first time you spend stars each turn, gain 1 Strength.","RELIC.MINIATURE_CANNON":"Uncommon Relic — Upgraded Attacks deal 3 additional damage.","RELIC.MINIATURE_TENT":"Shop Relic — You may choose any number of options at Rest Sites.","RELIC.MOLTEN_EGG":"Rare Relic — Whenever you add an Attack card to your Deck, Upgrade it.","RELIC.MR_STRUGGLES":"Event Relic — At the start of your turn, deal damage equal to the turn number to ALL enemies.","RELIC.MUMMIFIED_HAND":"Rare Relic — Whenever you play a Power, a random card in your Hand is free to play that turn.","RELIC.MUSIC_BOX":"Ancient Relic — Create an Ethereal copy of the first Attack you play each turn.","RELIC.MYSTIC_LIGHTER":"Shop Relic — Enchanted Attacks deal 9 additional damage.","RELIC.NEOWS_TORMENT":"Ancient Relic — Upon pickup, add 1 Neow's Fury to your Deck.","RELIC.NEW_LEAF":"Ancient Relic — Upon pickup, Transform 1 card.","RELIC.NINJA_SCROLL":"Shop Relic — At the start of each combat, add 3 Shivs into your Hand.","RELIC.NUNCHAKU":"Uncommon Relic — Every time you play 10 Attacks, gain energy.","RELIC.NUTRITIOUS_OYSTER":"Ancient Relic — Upon pickup, raise your Max HP by 11.","RELIC.NUTRITIOUS_SOUP":"Ancient Relic — Upon pickup, Enchant all Strikes in your Deck with Tezcatara's Ember.","RELIC.ODDLY_SMOOTH_STONE":"Common Relic — Start each combat with 1 Dexterity.","RELIC.OLD_COIN":"Rare Relic — Upon pickup, gain 300 Gold.","RELIC.ORANGE_DOUGH":"Rare Relic — At the start of each combat, add 2 random Colorless cards into your Hand.","RELIC.ORICHALCUM":"Uncommon Relic — If you end your turn without Block, gain 6 Block.","RELIC.FAKE_ORICHALCUM":"Event Relic — If you end your turn without Block, gain 3 Block.","RELIC.ORNAMENTAL_FAN":"Uncommon Relic — Every time you play 3 Attacks in a single turn, gain 4 Block.","RELIC.ORRERY":"Shop Relic — Upon pickup, gain 5 card rewards.","RELIC.PAELS_BLOOD":"Ancient Relic — At the start of your turn, draw 1 additional card.","RELIC.PAELS_CLAW":"Ancient Relic — Upon pickup, Enchant all Defends with .","RELIC.PAELS_EYE":"Ancient Relic — The first time each combat you end your turn without playing cards, Exhaust your Hand, and take an extra turn.","RELIC.PAELS_FLESH":"Ancient Relic — Gain an additional energy at the start of your 3rd turn, and every turn after that.","RELIC.PAELS_GROWTH":"Ancient Relic — Upon pickup, Enchant a card with .","RELIC.PAELS_HORN":"Ancient Relic — Upon pickup, add 2 Relax to your Deck.","RELIC.PAELS_LEGION":"Ancient Relic — Doubles Block gained from a card, then goes to sleep for 2 turns.","RELIC.PAELS_TEARS":"Ancient Relic — If you end your turn with unspent energy, gain an additional energy next turn.","RELIC.PAELS_TOOTH":"Ancient Relic — Upon pickup, remove 5 cards from your Deck. After each combat, randomly add 1 back Upgraded.","RELIC.PAELS_WING":"Ancient Relic — You may sacrifice card rewards to Pael. Every 2 sacrifices, obtain a Relic.","RELIC.PANDORAS_BOX":"Ancient Relic — Transform ALL Strikes and Defends.","RELIC.PANTOGRAPH":"Uncommon Relic — At the start of each Boss combat, heal 25 HP.","RELIC.PAPER_KRANE":"Rare Relic — Enemies with Weak deal 40% less damage to you rather than 25%.","RELIC.PAPER_PHROG":"Uncommon Relic — Enemies with Vulnerable take 75% more damage rather than 50%.","RELIC.PARRYING_SHIELD":"Uncommon Relic — If you end a turn with at least 10 Block, deal 6 damage to a random enemy.","RELIC.PEAR":"Uncommon Relic — Upon pickup, raise your Max HP by 10.","RELIC.PEN_NIB":"Uncommon Relic — Every 10th Attack you play deals double damage.","RELIC.PENDULUM":"Common Relic — Whenever you shuffle your Draw Pile, draw a card.","RELIC.PERMAFROST":"Common Relic — The first time you play a Power each combat, gain 6 Block.","RELIC.PETRIFIED_TOAD":"Uncommon Relic — At the start of each combat, procure a Potion-Shaped Rock.","RELIC.PHILOSOPHERS_STONE":"Ancient Relic — Gain energy at the start of each turn. ALL enemies start combat with 1 Strength.","RELIC.PHYLACTERY_UNBOUND":"Starter Relic — At the start of each combat, Summon 5. At the start of your turn, Summon 2.","RELIC.PLANISPHERE":"Uncommon Relic — Whenever you enter a ? room, heal 4 HP.","RELIC.POCKETWATCH":"Rare Relic — Whenever you play 3 or fewer cards during your turn, draw 3 additional cards at the start of your next turn.","RELIC.POLLINOUS_CORE":"Event Relic — Every 4 turns, draw 2 additional cards.","RELIC.POMANDER":"Ancient Relic — Upon pickup, Upgrade a card.","RELIC.POTION_BELT":"Common Relic — Upon pickup, gain 2 potion slots.","RELIC.POWER_CELL":"Rare Relic — At the start of each combat, add 2 zero-cost cards from your Draw Pile into your Hand.","RELIC.PRAYER_WHEEL":"Rare Relic — Normal enemies drop an additional card reward.","RELIC.PRECARIOUS_SHEARS":"Ancient Relic — Upon pickup, remove 2 cards from your Deck and take 13 damage.","RELIC.PRECISE_SCISSORS":"Ancient Relic — Upon pickup, remove 1 card from your Deck.","RELIC.PRESERVED_FOG":"Ancient Relic — Upon pickup, remove 5 cards from your Deck. Add Folly to your Deck.","RELIC.PRISMATIC_GEM":"Ancient Relic — Gain energy at the start of each turn. Card rewards now contain cards from other colors.","RELIC.PUMPKIN_CANDLE":"Ancient Relic — Gain energy at the start of each turn. Extinguishes at the start of Act 3.","RELIC.PUNCH_DAGGER":"Shop Relic — Upon pickup, Enchant an Attack with Momentum 5.","RELIC.RADIANT_PEARL":"Ancient Relic — At the start of each combat, add 1 Luminesce into your Hand.","RELIC.RAINBOW_RING":"Rare Relic — The first time you play an Attack, Skill, and Power each turn, gain 1 Strength and 1 Dexterity.","RELIC.RAZOR_TOOTH":"Rare Relic — Every time you play an Attack or Skill, Upgrade it for the remainder of combat.","RELIC.RED_MASK":"Uncommon Relic — At the start of each combat, apply 1 Weak to ALL enemies.","RELIC.RED_SKULL":"Common Relic — While your HP is at or below 50%, you have 3 additional Strength.","RELIC.REGAL_PILLOW":"Common Relic — Whenever you Rest, heal an additional 15 HP.","RELIC.REGALITE":"Uncommon Relic — Whenever you create a Colorless card, gain 2 Block.","RELIC.REPTILE_TRINKET":"Uncommon Relic — Whenever you use a potion, gain 3 Strength this turn.","RELIC.RING_OF_THE_DRAKE":"Starter Relic — At the start of your first 3 turns, draw 2 additional cards.","RELIC.RING_OF_THE_SNAKE":"Starter Relic — At the start of each combat, draw 2 additional cards.","RELIC.RINGING_TRIANGLE":"Shop Relic — Retain your Hand on the first turn of combat.","RELIC.RIPPLE_BASIN":"Uncommon Relic — If you did not play any Attacks during your turn, gain 4 Block.","RELIC.ROYAL_POISON":"Event Relic — At the start of each combat, lose 4 HP.","RELIC.ROYAL_STAMP":"Shop Relic — Upon pickup, choose an Attack or Skill in your Deck to Enchant with .","RELIC.RUINED_HELMET":"Rare Relic — The first time you gain Strength each combat, double the amount gained.","RELIC.RUNIC_CAPACITOR":"Shop Relic — Start each combat with 3 additional Orb Slots.","RELIC.RUNIC_PYRAMID":"Ancient Relic — At the end of your turn, you no longer discard your Hand.","RELIC.SAI":"Ancient Relic — At the start of your turn, gain 7 Block.","RELIC.SAND_CASTLE":"Ancient Relic — Upon pickup, Upgrade 6 random cards.","RELIC.SCREAMING_FLAGON":"Shop Relic — If you end your turn with no cards in your Hand, deal 20 damage to ALL enemies.","RELIC.SCROLL_BOXES":"Ancient Relic — Upon pickup, lose all Gold and choose 1 of 2 packs of cards to add to your Deck.","RELIC.SEA_GLASS":"Ancient Relic — See 15 cards from another character. Choose any number of them to add to your Deck.","RELIC.SEAL_OF_GOLD":"Ancient Relic — At the start of your turn, spend 5 Gold to gain energy.","RELIC.SELF_FORMING_CLAY":"Uncommon Relic — Whenever you lose HP in combat, gain 3 Block next turn.","RELIC.SERE_TALON":"Ancient Relic — Upon pickup, add 2 random Curses and 3 Wishes to your Deck.","RELIC.SHOVEL":"Rare Relic — You can now dig at Rest Sites to obtain a random Relic.","RELIC.SHURIKEN":"Rare Relic — Every time you play 3 Attacks in a single turn, gain 1 Strength.","RELIC.SIGNET_RING":"Ancient Relic — Upon pickup, gain 999 Gold.","RELIC.SILVER_CRUCIBLE":"Ancient Relic — The first 3 card rewards you see are Upgraded. The first Treasure Chest you open is empty.","RELIC.SLING_OF_COURAGE":"Shop Relic — Start each Elite combat with 2 Strength.","RELIC.SMALL_CAPSULE":"Ancient Relic — Upon pickup, obtain a random Relic.","RELIC.SNECKO_EYE":"Ancient Relic — At the start of your turn, draw 2 additional cards. Start each combat Confused.","RELIC.FAKE_SNECKO_EYE":"Event Relic — Start each combat Confused.","RELIC.SNECKO_SKULL":"Common Relic — Whenever you apply Poison, apply an additional 1 Poison.","RELIC.SOZU":"Ancient Relic — Gain energy at the start of each turn. You can no longer obtain potions.","RELIC.SPARKLING_ROUGE":"Uncommon Relic — At the start of your 3rd turn, gain 1 Strength and 1 Dexterity.","RELIC.SPIKED_GAUNTLETS":"Ancient Relic — Gain energy at the start of each turn. Powers cost 1 more energy.","RELIC.STONE_CALENDAR":"Rare Relic — At the end of turn 7, deal 52 damage to ALL enemies.","RELIC.STONE_CRACKER":"Uncommon Relic — At the start of Boss combats, Upgrade 3 random cards in your Draw Pile for the rest of combat.","RELIC.STONE_HUMIDIFIER":"Ancient Relic — Whenever you Rest at a Rest Site, raise your Max HP by 5.","RELIC.STORYBOOK":"Ancient Relic — Upon pickup, add 1 Brightest Flame to your Deck.","RELIC.STRAWBERRY":"Common Relic — Upon pickup, raise your Max HP by 7.","RELIC.STRIKE_DUMMY":"Common Relic — Cards containing \"Strike\" deal 3 additional damage.","RELIC.FAKE_STRIKE_DUMMY":"Event Relic — Cards containing \"Strike\" deal 1 additional damage.","RELIC.STURDY_CLAMP":"Rare Relic — Up to 10 Block persists across turns.","RELIC.SWORD_OF_JADE":"Event Relic — Start each combat with 3 Strength.","RELIC.SWORD_OF_STONE":"Event Relic — Transforms into a powerful Relic after defeating 5 Elites.","RELIC.SYMBIOTIC_VIRUS":"Uncommon Relic — At the start of each combat, Channel 1 Dark.","RELIC.TANXS_WHISTLE":"Ancient Relic — Upon pickup, add 1 Whistle to your Deck.","RELIC.TEA_OF_DISCOURTESY":"Event Relic — At the start of the next combat, shuffle 2 Dazed into your Draw Pile.","RELIC.THE_ABACUS":"Shop Relic — Whenever you shuffle your Draw Pile, gain 6 Block.","RELIC.THE_BOOT":"Event Relic — Whenever you would deal 4 or less unblocked attack damage, increase it to 5.","RELIC.CHOSEN_CHEESE":"Event Relic — At the end of combat, gain 1 Max HP.","RELIC.THE_COURIER":"Rare Relic — The merchant no longer runs out of cards, relics, or potions and his prices are reduced by 20%.","RELIC.FAKE_MERCHANTS_RUG":"Event Relic — Poor imitation. Does nothing.","RELIC.THROWING_AXE":"Ancient Relic — The first card you play each combat is played an extra time.","RELIC.TINGSHA":"Uncommon Relic — Whenever you discard a card during your turn, deal 3 damage to a random enemy for each card discarded.","RELIC.TINY_MAILBOX":"Common Relic — Whenever you Rest, procure a random potion.","RELIC.TOASTY_MITTENS":"Ancient Relic — At the start of your turn, Exhaust the top card of your Draw Pile and gain 1 Strength.","RELIC.TOOLBOX":"Shop Relic — At the start of each combat, choose 1 of 3 random Colorless cards and add the chosen card into your Hand.","RELIC.TOUCH_OF_OROBAS":"Ancient Relic — Upon pickup, replace your starter Relic with an Ancient version.","RELIC.TOUGH_BANDAGES":"Rare Relic — Whenever you discard a card during your turn, gain 3 Block.","RELIC.TOXIC_EGG":"Rare Relic — Whenever you add a Skill into your Deck, Upgrade it.","RELIC.TOY_BOX":"Ancient Relic — Upon pickup, obtain 4 Wax Relics. Every 3 combats, your left-most Wax Relic will melt away.","RELIC.TRI_BOOMERANG":"Ancient Relic — Choose 3 Attacks in your Deck. Enchant them with Instinct.","RELIC.TUNGSTEN_ROD":"Rare Relic — Whenever you would lose HP, lose 1 less.","RELIC.TUNING_FORK":"Uncommon Relic — Every time you play 10 Skills, gain 7 Block.","RELIC.TWISTED_FUNNEL":"Uncommon Relic — At the start of each combat, apply 4 Poison to ALL enemies.","RELIC.UNCEASING_TOP":"Rare Relic — Whenever you have no cards in Hand during your turn, draw a card.","RELIC.UNDYING_SIGIL":"Shop Relic — Enemies with at least as much Doom as HP deal 50% less damage.","RELIC.UNSETTLING_LAMP":"Rare Relic — Each combat, the first time you play a card that Debuffs an enemy, double its effect.","RELIC.VAJRA":"Common Relic — Start each combat with 1 Strength.","RELIC.VAMBRACE":"Uncommon Relic — The first time you gain Block from a card each combat, double the amount gained.","RELIC.VELVET_CHOKER":"Ancient Relic — Gain energy at the start of each turn. You cannot play more than 6 cards per turn.","RELIC.VENERABLE_TEA_SET":"Common Relic — Whenever you enter a Rest Site, start the next combat with an additional energy.","RELIC.FAKE_VENERABLE_TEA_SET":"Event Relic — Whenever you enter a Rest Site, start the next combat with an additional energy.","RELIC.VERY_HOT_COCOA":"Ancient Relic — Start each combat with an additional energy.","RELIC.VEXING_PUZZLEBOX":"Rare Relic — At the start of each combat, add a random card into your Hand. It costs 0 energy.","RELIC.VITRUVIAN_MINION":"Shop Relic — Cards containing \"Minion\" deal double damage and gain double Block.","RELIC.WAR_HAMMER":"Ancient Relic — Whenever you kill an Elite, Upgrade 4 random cards.","RELIC.WAR_PAINT":"Common Relic — Upon pickup, Upgrade 2 random Skills.","RELIC.WHETSTONE":"Common Relic — Upon pickup, Upgrade 2 random Attacks.","RELIC.WHISPERING_EARRING":"Ancient Relic — Gain energy at the start of each turn. Vakuu plays your first turn for you.","RELIC.WHITE_BEAST_STATUE":"Rare Relic — Potions always appear in combat rewards.","RELIC.WHITE_STAR":"Rare Relic — Elites drop an additional Rare card reward.","RELIC.WING_CHARM":"Shop Relic — A random card in each card reward is Enchanted with Swift 1.","RELIC.WONGO_CUSTOMER_APPRECIATION_BADGE":"Event Relic — Does nothing.","RELIC.WONGOS_MYSTERY_TICKET":"Event Relic — Receive 3 random Relics after 5 combats.","RELIC.YUMMY_COOKIE":"Ancient Relic — Upon pickup, Upgrade 4 cards."};
+const CARD_TIPS = {"CARD.ABRASIVE":"power · rare · Cost 3 · Sly — Gain 1 Dexterity. Gain 4 Thorns.","CARD.ACCELERANT":"power · rare · Cost 1 — Poison is triggered 1 additional time.","CARD.ACCURACY":"power · uncommon · Cost 1 — Shivs deal 4 additional damage.","CARD.ACROBATICS":"skill · common · Cost 1 — Draw 3 cards. Discard 1 card.","CARD.ADAPTIVE_STRIKE":"attack · rare · Cost 2 — Deal 18 damage. Add a 0[E] copy of this card into your Discard Pile.","CARD.ADRENALINE":"skill · rare · Cost 0 · Exhaust — Gain [E]. Draw 2 cards.","CARD.AFTERIMAGE":"power · rare · Cost 1 — Whenever you play a card, gain 1 Block.","CARD.AFTERLIFE":"skill · common · Cost 1 · Exhaust — Summon 6.","CARD.AGGRESSION":"power · rare · Cost 1 — At the start of your turn, put a random Attack from your Discard Pile into your Hand and Upgrade it.","CARD.ALCHEMIZE":"skill · rare · Cost 1 · Exhaust — Procure a random potion.","CARD.ALIGNMENT":"skill · uncommon · Cost 0 — Gain [E][E].","CARD.ALL_FOR_ONE":"attack · rare · Cost X — Deal 10 damage. Put ALL 0[E] cards from your Discard Pile into your Hand.","CARD.ANGER":"attack · common · Cost 0 — Deal 6 damage. Add a copy of this card into your Discard Pile.","CARD.ANOINTED":"skill · rare · Cost 1 · Exhaust — Put every Rare card from your Draw Pile into your Hand.","CARD.ANTICIPATE":"skill · common · Cost 0 — Gain 3 Dexterity this turn.","CARD.APOTHEOSIS":"skill · ancient · Cost 2 · Exhaust, Innate — Upgrade ALL your cards.","CARD.APPARITION":"skill · ancient · Cost 1 · Exhaust, Ethereal — Gain 1 Intangible.","CARD.ARMAMENTS":"skill · common · Cost 1 — Gain 5 Block. Upgrade a card in your Hand.","CARD.ARSENAL":"power · rare · Cost 1 — Whenever you play a Colorless card, gain 1 Strength.","CARD.ASCENDERS_BANE":"curse · curse · Cost -1 · Ethereal, Unplayable, Eternal","CARD.ASHEN_STRIKE":"attack · uncommon · Cost 1 — Deal 9 damage. Deals 3 additional damage for each card in your Exhaust Pile.","CARD.ASSASSINATE":"attack · rare · Cost 0 · Exhaust, Innate — Deal 10 damage. Apply 1 Vulnerable.","CARD.ASTRAL_PULSE":"attack · common · Cost 0 — Deal 14 damage to ALL enemies.","CARD.AUTOMATION":"power · uncommon · Cost 1 — Every 10 cards you draw, gain [E].","CARD.BACKFLIP":"skill · common · Cost 1 — Gain 5 Block. Draw 2 cards.","CARD.BACKSTAB":"attack · uncommon · Cost 0 · Exhaust, Innate — Deal 11 damage.","CARD.BAD_LUCK":"curse · curse · Cost -1 · Unplayable, Eternal — At the end of your turn, if this is in your Hand, lose 13 HP.","CARD.BALL_LIGHTNING":"attack · common · Cost 1 — Deal 7 damage. Channel 1 Lightning.","CARD.BANSHEES_CRY":"attack · rare · Cost 6 — Deal 33 damage to ALL enemies. Costs [E][E] less for each Ethereal card played this combat.","CARD.BARRAGE":"attack · common · Cost 1 — Deal 5 damage for each Channeled Orb.","CARD.BARRICADE":"power · rare · Cost 3 — Block is not removed at the start of your turn.","CARD.BASH":"attack · basic · Cost 2 — Deal 8 damage. Apply 2 Vulnerable.","CARD.BATTLE_TRANCE":"skill · uncommon · Cost 0 — Draw 3 cards. You cannot draw additional cards this turn.","CARD.BEACON_OF_HOPE":"power · rare · Cost 1 — Whenever you gain Block on your turn, other players gain half that much Block.","CARD.BEAM_CELL":"attack · common · Cost 0 — Deal 3 damage. Apply 1 Vulnerable.","CARD.BEAT_DOWN":"skill · rare · Cost 3 — Play 3 random Attacks from your Discard Pile.","CARD.BEAT_INTO_SHAPE":"attack · rare · Cost 1 — Deal 5 damage. Forge X. Forges an additional 5 for every other time you&#x27;ve hit the enemy this turn.","CARD.BECKON":"status · status · Cost 1 — At the end of your turn, if this is in your Hand, lose 6 HP.","CARD.BEGONE":"attack · common · Cost 1 — Deal 4 damage. Choose a card in your Hand to Transform into Minion Dive Bomb.","CARD.BELIEVE_IN_YOU":"skill · uncommon · Cost 0 — Another player gains [E][E][E].","CARD.BIASED_COGNITION":"power · ancient · Cost 1 — Gain 4 Focus. At the start of your turn, lose 1 Focus.","CARD.BIG_BANG":"skill · rare · Cost 0 · Exhaust — Draw 1 card. Gain [E]. Gain [S]. Forge 5.","CARD.BLACK_HOLE":"power · uncommon · Cost 1 — Whenever you spend or gain [S], deal 3 damage to ALL enemies.","CARD.BLADE_DANCE":"skill · common · Cost 1 · Exhaust — Add 3 Shivs into your Hand.","CARD.BLADE_OF_INK":"skill · rare · Cost 1 — This turn, whenever you play an Attack, gain 2 Strength this turn.","CARD.BLIGHT_STRIKE":"attack · common · Cost 1 — Deal 8 damage. Apply Doom equal to damage dealt.","CARD.BLOOD_WALL":"skill · common · Cost 2 — Lose 2 HP. Gain 16 Block.","CARD.BLOODLETTING":"skill · common · Cost 0 — Lose 3 HP. Gain [E][E].","CARD.BLUDGEON":"attack · uncommon · Cost 3 — Deal 32 damage.","CARD.BLUR":"skill · uncommon · Cost 1 — Gain 5 Block. Block is not removed at the start of your next turn.","CARD.BODY_SLAM":"attack · common · Cost 1 — Deal damage equal to your Block.","CARD.BODYGUARD":"skill · basic · Cost 1 — Summon 5.","CARD.BOLAS":"attack · rare · Cost 0 — Deal 3 damage. At the start of your next turn, return this to your Hand.","CARD.BOMBARDMENT":"attack · rare · Cost 3 · Exhaust — Deal 18 damage. At the start of your turn, plays from the Exhaust Pile.","CARD.BONE_SHARDS":"attack · uncommon · Cost 1 — If Osty is alive, he deals 9 damage to ALL enemies and you gain 9 Block. Osty dies.","CARD.BOOST_AWAY":"skill · common · Cost 0 — Gain 6 Block. Add a Dazed into your Discard Pile.","CARD.BOOT_SEQUENCE":"skill · uncommon · Cost 0 · Exhaust, Innate — Gain 10 Block.","CARD.BORROWED_TIME":"skill · uncommon · Cost 0 — Apply 3 Doom to yourself. Gain [E].","CARD.BOUNCING_FLASK":"skill · uncommon · Cost 2 — Apply 3 Poison to a random enemy 3 times.","CARD.BRAND":"skill · rare · Cost 0 — Lose 1 HP. Exhaust 1 card. Gain 1 Strength.","CARD.BREAK":"attack · ancient · Cost 2 — Deal 20 damage. Apply 5 Vulnerable.","CARD.BREAKTHROUGH":"attack · common · Cost 1 — Lose 1 HP. Deal 9 damage to ALL enemies.","CARD.BRIGHTEST_FLAME":"skill · ancient · Cost 0 — Gain [E][E]. Draw 2 cards. Lose 1 Max HP.","CARD.BUBBLE_BUBBLE":"skill · uncommon · Cost 1 — If the enemy has Poison, apply 9 Poison.","CARD.BUFFER":"power · rare · Cost 2 — Prevent the next time you would lose HP.","CARD.BULK_UP":"power · uncommon · Cost 2 — Lose 1 Orb Slot. Gain 2 Strength. Gain 2 Dexterity.","CARD.BULLET_TIME":"skill · rare · Cost X — You cannot draw additional cards this turn. ALL cards in your Hand are free to play this turn.","CARD.BULLY":"attack · uncommon · Cost 0 — Deal 6 damage. Deals 2 additional damage for each Vulnerable on the enemy.","CARD.BULWARK":"skill · uncommon · Cost 2 — Gain 13 Block. Forge 10.","CARD.BUNDLE_OF_JOY":"skill · rare · Cost 2 · Exhaust — Add 3 random Colorless cards into your Hand.","CARD.BURN":"status · status · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, take 2 damage.","CARD.BURNING_PACT":"skill · uncommon · Cost 1 — Exhaust 1 card. Draw 2 cards.","CARD.BURST":"skill · rare · Cost 1 — This turn, your next Skill is played an extra time.","CARD.BURY":"attack · uncommon · Cost 4 — Deal 52 damage.","CARD.BYRD_SWOOP":"attack · event · Cost 0 — Deal 14 damage.","CARD.BYRDONIS_EGG":"quest · quest · Cost -1 · Unplayable — Can be hatched at a Rest Site.","CARD.CALAMITY":"power · rare · Cost 3 — Whenever you play an Attack, add a random Attack into your Hand.","CARD.CALCIFY":"power · uncommon · Cost 1 — Osty&#x27;s attacks deal 4 additional damage.","CARD.CALCULATED_GAMBLE":"skill · uncommon · Cost 0 · Exhaust — Discard your Hand, then draw that many cards.","CARD.CALL_OF_THE_VOID":"power · rare · Cost 1 — At the start of your turn, add 1 random card into your Hand. It gains Ethereal.","CARD.CALTROPS":"power · event · Cost 1 — Whenever you are attacked, deal 3 damage back.","CARD.CAPACITOR":"power · uncommon · Cost 1 — Gain 2 Orb Slots.","CARD.CAPTURE_SPIRIT":"skill · uncommon · Cost 1 — Enemy loses 3 HP. Add 3 Souls into your Draw Pile.","CARD.CASCADE":"skill · rare · Cost X — Play the top X cards of your Draw Pile.","CARD.CATASTROPHE":"skill · uncommon · Cost 2 — Play 2 random cards from your Draw Pile.","CARD.CELESTIAL_MIGHT":"attack · common · Cost 2 — Deal 6 damage 3 times.","CARD.CHAOS":"skill · uncommon · Cost 1 — Channel 1 random Orb.","CARD.CHARGE_BATTERY":"skill · common · Cost 1 — Gain 7 Block. Next turn, gain [E].","CARD.CHARGE":"skill · uncommon · Cost 1 — Choose 2 cards in your Draw Pile to Transform into Minion Strikes.","CARD.CHILD_OF_THE_STARS":"power · uncommon · Cost 1 — Whenever you spend [S], gain 2 Block for each [S] spent.","CARD.CHILL":"skill · uncommon · Cost 0 · Exhaust — Channel 1 Frost for each enemy.","CARD.CINDER":"attack · common · Cost 2 — Deal 17 damage. Exhaust the top card of your Draw Pile.","CARD.CLASH":"attack · event · Cost 0 — Can only be played if every card in your Hand is an Attack. Deal 14 damage.","CARD.CLAW":"attack · common · Cost 0 — Deal 3 damage. Increase the damage of ALL Claw cards by 2 this combat.","CARD.CLEANSE":"skill · uncommon · Cost 1 — Summon 3. Exhaust 1 card from your Draw Pile.","CARD.CLOAK_AND_DAGGER":"skill · common · Cost 1 — Gain 6 Block. Add 1 Shiv into your Hand.","CARD.CLOAK_OF_STARS":"skill · common · Cost 0 — Gain 7 Block.","CARD.CLUMSY":"curse · curse · Cost -1 · Ethereal, Unplayable","CARD.COLD_SNAP":"attack · common · Cost 1 — Deal 6 damage. Channel 1 Frost.","CARD.COLLISION_COURSE":"attack · common · Cost 0 — Deal 9 damage. Add a Debris into your Hand.","CARD.COLOSSUS":"skill · rare · Cost 1 — Gain 5 Block. You receive 50% less damage from Vulnerable enemies this turn.","CARD.COMET":"attack · rare · Cost 0 — Deal 33 damage. Apply 3 Weak. Apply 3 Vulnerable.","CARD.COMPACT":"skill · uncommon · Cost 1 — Gain 6 Block. Transform all Status cards in your Hand into Fuel.","CARD.COMPILE_DRIVER":"attack · common · Cost 1 — Deal 7 damage. Draw 1 card for each unique Orb you have.","CARD.CONFLAGRATION":"attack · rare · Cost 1 — Deal 10 damage to ALL enemies. Deals 2 additional damage for each other Attack you&#x27;ve played this turn.","CARD.CONQUEROR":"skill · uncommon · Cost 1 — Forge 3. Sovereign Blade deals double damage to the enemy this turn.","CARD.CONSUMING_SHADOW":"power · rare · Cost 2 — Channel 2 Dark. At the end of your turn, Evoke your leftmost Orb.","CARD.CONVERGENCE":"skill · uncommon · Cost 1 — Next turn, gain [E] and [S]. Retain your Hand this turn.","CARD.COOLANT":"power · rare · Cost 1 — At the start of your turn, gain 2 Block for each unique Orb you have.","CARD.COOLHEADED":"skill · common · Cost 1 — Channel 1 Frost. Draw 1 card.","CARD.COORDINATE":"skill · uncommon · Cost 1 — Give another player 5 Strength this turn.","CARD.CORROSIVE_WAVE":"skill · rare · Cost 1 — Whenever you draw a card this turn, apply 3 Poison to ALL enemies.","CARD.CORRUPTION":"power · ancient · Cost 3 — Skills cost 0 [E]. Whenever you play a Skill, Exhaust it.","CARD.COSMIC_INDIFFERENCE":"skill · common · Cost 1 — Gain 6 Block. Put a card from your Discard Pile on top of your Draw Pile.","CARD.COUNTDOWN":"power · uncommon · Cost 1 — At the start of your turn, apply 6 Doom to a random enemy.","CARD.CRASH_LANDING":"attack · rare · Cost 1 — Deal 21 damage to ALL enemies. Fill your Hand with Debris.","CARD.CREATIVE_AI":"power · rare · Cost 3 — At the start of your turn, add a random Power into your Hand.","CARD.CRESCENT_SPEAR":"attack · common · Cost 1 — Deal 8 damage. Deals 2 additional damage for ALL your cards that have a [S] cost.","CARD.CRIMSON_MANTLE":"power · rare · Cost 1 — At the start of your turn, lose 1 HP and gain 8 Block.","CARD.CRUELTY":"power · rare · Cost 1 — Vulnerable enemies take an additional 25% damage.","CARD.CRUSH_UNDER":"attack · common · Cost 1 — Deal 7 damage to ALL enemies. All enemies lose 1 Strength this turn.","CARD.CURSE_OF_THE_BELL":"curse · curse · Cost -1 · Unplayable, Eternal","CARD.DAGGER_SPRAY":"attack · common · Cost 1 — Deal 4 damage to ALL enemies twice.","CARD.DAGGER_THROW":"attack · common · Cost 1 — Deal 9 damage. Draw 1 card. Discard 1 card.","CARD.DANSE_MACABRE":"power · uncommon · Cost 1 — Whenever you play a card that costs [E][E] or more, gain 3 Block.","CARD.DARK_EMBRACE":"power · rare · Cost 2 — Whenever a card is Exhausted, draw 1 card.","CARD.DARK_SHACKLES":"skill · uncommon · Cost 0 · Exhaust — Enemy loses 9 Strength this turn.","CARD.DARKNESS":"skill · uncommon · Cost 1 — Channel 1 Dark. Trigger the passive ability of all Dark Orbs.","CARD.DASH":"attack · uncommon · Cost 2 — Gain 10 Block. Deal 10 damage.","CARD.DAZED":"status · status · Cost -1 · Ethereal, Unplayable","CARD.DEADLY_POISON":"skill · common · Cost 1 — Apply 5 Poison.","CARD.DEATH_MARCH":"attack · uncommon · Cost 1 — Deal 11 damage. Deals 3 additional damage for each card drawn during your turn.","CARD.DEATHS_DOOR":"skill · uncommon · Cost 1 — Gain 6 Block. If you applied Doom this turn, gain Block 2 additional times.","CARD.DEATHBRINGER":"skill · uncommon · Cost 2 — Apply 21 Doom and 1 Weak to ALL enemies.","CARD.DEBILITATE":"attack · uncommon · Cost 1 — Deal 7 damage. Vulnerable and Weak are twice as effective against the enemy for the next 3 turns.","CARD.DEBRIS":"status · status · Cost 1 · Exhaust","CARD.DEBT":"curse · curse · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, lose 10 Gold.","CARD.DECAY":"curse · curse · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, take 2 damage.","CARD.DECISIONS_DECISIONS":"skill · rare · Cost 0 · Exhaust — Draw 3 cards. Choose a Skill in your Hand and play it 3 times.","CARD.DEFEND_IRONCLAD":"skill · basic · Cost 1 — Gain 5 Block.","CARD.DEFEND_SILENT":"skill · basic · Cost 1 — Gain 5 Block.","CARD.DEFEND_REGENT":"skill · basic · Cost 1 — Gain 5 Block.","CARD.DEFEND_NECROBINDER":"skill · basic · Cost 1 — Gain 5 Block.","CARD.DEFEND_DEFECT":"skill · basic · Cost 1 — Gain 5 Block.","CARD.DEFILE":"attack · common · Cost 1 · Ethereal — Deal 13 damage.","CARD.DEFLECT":"skill · common · Cost 0 — Gain 4 Block.","CARD.DEFRAGMENT":"power · rare · Cost 1 — Gain 1 Focus.","CARD.DEFY":"skill · common · Cost 1 · Ethereal — Gain 6 Block. Apply 1 Weak.","CARD.DELAY":"skill · uncommon · Cost 2 — Gain 11 Block. Next turn, gain [E].","CARD.DEMESNE":"power · rare · Cost 3 · Ethereal — At the start of your turn, gain [E] and draw 1 additional card.","CARD.DEMON_FORM":"power · rare · Cost 3 — At the start of your turn, gain 2 Strength.","CARD.DEMONIC_SHIELD":"skill · uncommon · Cost 0 · Exhaust — Lose 1 HP. Give another player Block equal to your Block.","CARD.DEVASTATE":"attack · uncommon · Cost 1 — Deal 30 damage.","CARD.DEVOUR_LIFE":"power · rare · Cost 1 — Whenever you play a Soul, Summon 1.","CARD.DIRGE":"skill · uncommon · Cost X — Summon 3 X times. Add X Souls into your Draw Pile.","CARD.DISCOVERY":"skill · uncommon · Cost 1 · Exhaust — Choose 1 of 3 random cards to add into your Hand. It costs 0 [E] this turn.","CARD.DISINTEGRATION":"status · status · Cost -1 — At the end of your turn, take 6 damage.","CARD.DISMANTLE":"attack · uncommon · Cost 1 — Deal 8 damage. If the enemy is Vulnerable, hits twice.","CARD.DISTRACTION":"skill · event · Cost 1 · Exhaust — Add a random Skill into your Hand. It&#x27;s free to play this turn.","CARD.DODGE_AND_ROLL":"skill · common · Cost 1 — Gain 4 Block. Next turn, gain 4 Block.","CARD.DOMINATE":"skill · uncommon · Cost 1 · Exhaust — Gain 1 Strength for each Vulnerable on the enemy.","CARD.DOUBLE_ENERGY":"skill · uncommon · Cost 1 · Exhaust — Double your Energy.","CARD.DOUBT":"curse · curse · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, gain 1 Weak.","CARD.DRAIN_POWER":"attack · common · Cost 1 — Deal 10 damage. Upgrade 2 random cards in your Discard Pile.","CARD.DRAMATIC_ENTRANCE":"attack · uncommon · Cost 0 · Exhaust, Innate — Deal 11 damage to ALL enemies.","CARD.DREDGE":"skill · uncommon · Cost 1 · Exhaust — Put 3 cards from your Discard Pile into your Hand.","CARD.DRUM_OF_BATTLE":"power · uncommon · Cost 0 — Draw 2 cards. At the start of your turn, Exhaust the top card of your Draw Pile.","CARD.DUAL_WIELD":"skill · event · Cost 1 — Choose an Attack or Power card. Add copies|a copy} of that card into your Hand.","CARD.DUALCAST":"skill · basic · Cost 1 — Evoke your rightmost Orb twice.","CARD.DYING_STAR":"attack · rare · Cost 1 · Ethereal — Deal 9 damage to ALL enemies. ALL enemies lose 9 Strength this turn.","CARD.ECHO_FORM":"power · rare · Cost 3 · Ethereal — The first card you play each turn is played an extra time.","CARD.ECHOING_SLASH":"attack · rare · Cost 1 — Deal 10 damage to ALL enemies. Repeat this effect for each enemy killed.","CARD.EIDOLON":"skill · rare · Cost 2 — Exhaust your Hand. If 9 cards were Exhausted this way, gain 1 Intangible.","CARD.END_OF_DAYS":"skill · rare · Cost 3 — Apply 29 Doom to ALL enemies. Kill enemies with at least as much Doom as HP.","CARD.ENERGY_SURGE":"skill · uncommon · Cost 1 · Exhaust — ALL players gain [E][E].","CARD.ENFEEBLING_TOUCH":"skill · uncommon · Cost 1 · Ethereal — Enemy loses 8 Strength this turn.","CARD.ENLIGHTENMENT":"skill · event · Cost 0 · Exhaust — Reduce the cost of ALL cards in your Hand to 1 this turn.","CARD.ENTHRALLED":"curse · curse · Cost 2 · Eternal — If this is in your Hand, it must be played before other cards.","CARD.ENTRENCH":"skill · event · Cost 2 — Double your Block.","CARD.ENTROPY":"power · rare · Cost 1 — At the start of your turn, Transform 1 card in your Hand.","CARD.ENVENOM":"power · rare · Cost 2 — Whenever an Attack deals unblocked damage, apply 1 Poison.","CARD.EQUILIBRIUM":"skill · uncommon · Cost 2 — Gain 13 Block. Retain your Hand this turn.","CARD.ERADICATE":"attack · rare · Cost X · Retain — Deal 11 damage X times.","CARD.ESCAPE_PLAN":"skill · uncommon · Cost 0 — Draw 1 card. If you draw a Skill, gain 3 Block.","CARD.ETERNAL_ARMOR":"power · rare · Cost 3 — Gain 7 Plating.","CARD.EVIL_EYE":"skill · uncommon · Cost 1 — Gain 8 Block. Gain another 8 Block if you have Exhausted a card this turn.","CARD.EXPECT_A_FIGHT":"skill · uncommon · Cost 2 — Gain [E] for each Attack in your Hand.","CARD.EXPERTISE":"skill · uncommon · Cost 1 — Draw cards until you have 6 in your Hand.","CARD.EXPOSE":"skill · uncommon · Cost 0 · Exhaust — Remove all Artifact and Block from the enemy. Apply 2 Vulnerable.","CARD.EXTERMINATE":"attack · event · Cost 1 — Deal 3 damage 4 times to ALL enemies.","CARD.FALLING_STAR":"attack · basic · Cost 0 — Deal 7 damage. Apply 1 Weak. Apply 1 Vulnerable.","CARD.FAN_OF_KNIVES":"power · rare · Cost 2 — Shivs now hit ALL enemies. Add 4 Shivs into your Hand.","CARD.FASTEN":"power · uncommon · Cost 1 — Gain an additional 5 Block from Defend cards.","CARD.FEAR":"attack · common · Cost 1 · Ethereal — Deal 7 damage. Apply 1 Vulnerable.","CARD.FEED":"attack · rare · Cost 1 · Exhaust — Deal 10 damage. If Fatal, raise your Max HP by 3.","CARD.FEEDING_FRENZY":"skill · event · Cost 0 — Gain 5 Strength this turn.","CARD.FEEL_NO_PAIN":"power · uncommon · Cost 1 — Whenever a card is Exhausted, gain 3 Block.","CARD.FERAL":"power · uncommon · Cost 2 — The first time you play a 0[E] Attack each turn, return it to your Hand.","CARD.FETCH":"attack · uncommon · Cost 0 — Osty deals 3 damage. If this is the first time this card has been played this turn, draw 1 card.","CARD.FIEND_FIRE":"attack · rare · Cost 2 · Exhaust — Exhaust your Hand. Deal 7 damage for each card Exhausted.","CARD.FIGHT_ME":"attack · uncommon · Cost 2 — Deal 5 damage twice. Gain 2 Strength. The enemy gains 1 Strength.","CARD.FIGHT_THROUGH":"skill · uncommon · Cost 1 — Gain 13 Block. Add 2 Wounds into your Discard Pile.","CARD.FINESSE":"skill · uncommon · Cost 0 — Gain 4 Block. Draw 1 card.","CARD.FINISHER":"attack · uncommon · Cost 1 — Deal 6 damage for each Attack already played this turn.","CARD.FISTICUFFS":"attack · uncommon · Cost 1 — Deal 7 damage. Gain Block equal to damage dealt.","CARD.FLAK_CANNON":"attack · rare · Cost 2 — Exhaust ALL your Status cards. Deal 8 damage to a random enemy for each card Exhausted.","CARD.FLAME_BARRIER":"skill · uncommon · Cost 2 — Gain 12 Block. Whenever you are attacked this turn, deal 4 damage back.","CARD.FLANKING":"skill · uncommon · Cost 2 — The enemy takes double damage from other players this turn.","CARD.FLASH_OF_STEEL":"attack · uncommon · Cost 0 — Deal 5 damage. Draw 1 card.","CARD.FLATTEN":"attack · common · Cost 2 — Osty deals 12 damage. This card costs 0 [E] if Osty has attacked this turn.","CARD.FLECHETTES":"attack · uncommon · Cost 1 — Deal 5 damage for each Skill in your Hand.","CARD.FLICK_FLACK":"attack · common · Cost 1 · Sly — Deal 7 damage to ALL enemies.","CARD.FOCUSED_STRIKE":"attack · common · Cost 1 — Deal 9 damage. Gain 1 Focus this turn.","CARD.FOLLOW_THROUGH":"attack · uncommon · Cost 1 — Deal 6 damage to ALL enemies. If the last card you played this turn was a Skill, apply 1 Weak to ALL enemies.","CARD.FOLLY":"curse · curse · Cost -1 · Innate, Unplayable, Eternal","CARD.FOOTWORK":"power · uncommon · Cost 1 — Gain 2 Dexterity.","CARD.FORBIDDEN_GRIMOIRE":"power · ancient · Cost 2 · Eternal — At the end of combat, you may remove a card from your Deck.","CARD.FOREGONE_CONCLUSION":"skill · rare · Cost 1 — Next turn, put 2 cards from your Draw Pile into your Hand.","CARD.FORGOTTEN_RITUAL":"skill · uncommon · Cost 1 — If you Exhausted a card this turn, gain [E][E][E].","CARD.FRANTIC_ESCAPE":"status · status · Cost 1 — Get farther away. Increase Sandpit by 1. Increase the cost of this card by 1.","CARD.FRIENDSHIP":"power · uncommon · Cost 1 — Lose inverseDiff() Strength. Gain [E] at the start of each turn.","CARD.FTL":"attack · uncommon · Cost 0 — Deal 5 damage. If you have played fewer than 3 cards this turn, draw 1 card.","CARD.FUEL":"skill · token · Cost 0 · Exhaust — Gain [E]. Draw 1 card.","CARD.FURNACE":"power · uncommon · Cost 1 — At the start of your turn, Forge 4.","CARD.FUSION":"skill · uncommon · Cost 2 — Channel 1 Plasma.","CARD.GAMMA_BLAST":"attack · uncommon · Cost 0 — Deal 13 damage. Apply 2 Weak. Apply 2 Vulnerable.","CARD.GANG_UP":"attack · uncommon · Cost 1 — Deal 10 damage. Deals 5 additional damage for each time another player has attacked the enemy this turn.","CARD.GATHER_LIGHT":"skill · common · Cost 1 — Gain 7 Block. Gain [S].","CARD.GENESIS":"power · rare · Cost 2 — At the start of your turn, gain [S][S].","CARD.GENETIC_ALGORITHM":"skill · rare · Cost 1 · Exhaust — Gain 1 Block. Permanently increase this card&#x27;s Block by 3.","CARD.GIANT_ROCK":"attack · token · Cost 1 — Deal 16 damage.","CARD.GLACIER":"skill · uncommon · Cost 2 — Gain 6 Block. Channel 2 Frost.","CARD.GLASSWORK":"skill · uncommon · Cost 1 — Gain 5 Block. Channel 1 Glass.","CARD.GLIMMER":"skill · uncommon · Cost 1 — Draw 3 cards. Put 1 card from your Hand on top of your Draw Pile.","CARD.GLIMPSE_BEYOND":"skill · rare · Cost 1 · Exhaust — ALL players add 3 Souls into their Draw Pile.","CARD.GLITTERSTREAM":"skill · common · Cost 2 — Gain 11 Block. Next turn, gain 4 Block.","CARD.GLOW":"skill · common · Cost 1 — Gain [S]. Draw 2 cards.","CARD.GO_FOR_THE_EYES":"attack · common · Cost 0 — Deal 3 damage. If the enemy intends to attack, apply 1 Weak.","CARD.GOLD_AXE":"attack · rare · Cost 1 — Deal damage equal to the number of cards played this combat.","CARD.GRAND_FINALE":"attack · rare · Cost 0 — Can only be played if there are no cards in your Draw Pile. Deal 50 damage to ALL enemies.","CARD.GRAPPLE":"attack · uncommon · Cost 1 — Deal 7 damage. Whenever you gain Block this turn, deal 5 damage to the enemy.","CARD.GRAVE_WARDEN":"skill · common · Cost 1 — Gain 8 Block. Add a Soul into your Draw Pile.","CARD.GRAVEBLAST":"attack · common · Cost 1 · Exhaust — Deal 4 damage. Put a card from your Discard Pile into your Hand.","CARD.GREED":"curse · curse · Cost -1 · Unplayable, Eternal","CARD.GUARDS":"skill · rare · Cost 2 · Exhaust — Transform any number of cards in your Hand into Minion Sacrifice.","CARD.GUIDING_STAR":"attack · common · Cost 1 — Deal 12 damage. Next turn, draw 2 cards.","CARD.GUILTY":"curse · curse · Cost -1 · Unplayable — Removed from your Deck after 5 combats.","CARD.GUNK_UP":"attack · common · Cost 1 — Deal 4 damage 3 times. Add a Slimed into your Discard Pile.","CARD.HAILSTORM":"power · uncommon · Cost 1 — At the end of your turn, if you have Frost, deal 6 damage to ALL enemies.","CARD.HAMMER_TIME":"power · rare · Cost 2 — Whenever you Forge, all allies Forge as well.","CARD.HAND_OF_GREED":"attack · rare · Cost 2 — Deal 20 damage. If Fatal, gain 20 Gold.","CARD.HAND_TRICK":"skill · uncommon · Cost 1 — Gain 7 Block. Add Sly to a Skill in your Hand this turn.","CARD.HANG":"attack · rare · Cost 1 — Deal 10 damage. Double the damage ALL Hang cards deal to this enemy.","CARD.HAUNT":"power · uncommon · Cost 1 — Whenever you play a Soul, a random enemy loses 6 HP.","CARD.HAVOC":"skill · common · Cost 1 — Play the top card of your Draw Pile and Exhaust it.","CARD.HAZE":"skill · uncommon · Cost 3 · Sly — Apply 4 Poison to ALL enemies.","CARD.HEADBUTT":"attack · common · Cost 1 — Deal 9 damage. Put a card from your Discard Pile on top of your Draw Pile.","CARD.HEAVENLY_DRILL":"attack · rare · Cost X — Deal 8 damage X times. Double X if it&#x27;s 4 or more.","CARD.HEGEMONY":"attack · uncommon · Cost 2 — Deal 15 damage. Next turn, gain [E][E].","CARD.HEIRLOOM_HAMMER":"attack · rare · Cost 2 — Deal 17 damage. Choose a Colorless card in your Hand. Add a copy of that card into your Hand.","CARD.HELIX_DRILL":"attack · rare · Cost 0 — Deal 3 damage for each [E] previously spent this turn.","CARD.HELLO_WORLD":"power · event · Cost 1 — At the start of your turn, add a random Common card into your Hand.","CARD.HELLRAISER":"power · rare · Cost 2 — Whenever you draw a card containing 'Strike', it is played against a random enemy.","CARD.HEMOKINESIS":"attack · uncommon · Cost 1 — Lose 2 HP. Deal 14 damage.","CARD.HIDDEN_CACHE":"skill · common · Cost 1 — Gain [S]. Next turn, gain [S][S][S].","CARD.HIDDEN_DAGGERS":"skill · uncommon · Cost 0 — Discard 2 cards. Add 2 Shivs into your Hand.","CARD.HIDDEN_GEM":"skill · rare · Cost 1 — A random card in your Draw Pile gains Replay 2.","CARD.HIGH_FIVE":"attack · uncommon · Cost 2 — Osty deals 11 damage and applies 2 Vulnerable to ALL enemies.","CARD.HOLOGRAM":"skill · common · Cost 1 · Exhaust — Gain 3 Block. Put a card from your Discard Pile into your Hand.","CARD.HOTFIX":"skill · common · Cost 0 — Gain 2 Focus this turn.","CARD.HOWL_FROM_BEYOND":"attack · uncommon · Cost 3 — Deal 16 damage to ALL enemies. At the start of your turn, plays from the Exhaust Pile.","CARD.HUDDLE_UP":"skill · uncommon · Cost 1 — ALL allies draw 2 cards.","CARD.HYPERBEAM":"attack · rare · Cost 2 — Deal 26 damage to ALL enemies. Lose 3 Focus.","CARD.I_AM_INVINCIBLE":"skill · rare · Cost 1 — Gain 9 Block. At the end of your turn, if this is on top of your Draw Pile, play it.","CARD.ICE_LANCE":"attack · rare · Cost 3 — Deal 19 damage. Channel 3 Frost.","CARD.IGNITION":"skill · rare · Cost 1 · Exhaust — Another player Channels Plasma.","CARD.IMPATIENCE":"skill · uncommon · Cost 0 — If you have no Attacks in your Hand, draw 2 cards.","CARD.IMPERVIOUS":"skill · rare · Cost 2 · Exhaust — Gain 30 Block.","CARD.INFECTION":"status · status · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, take 3 damage.","CARD.INFERNAL_BLADE":"skill · uncommon · Cost 1 · Exhaust — Add a random Attack into your Hand. It&#x27;s free to play this turn.","CARD.INFERNO":"power · uncommon · Cost 1 — At the start of your turn, lose 1 HP. Whenever you lose HP on your turn, deal 6 damage to ALL enemies.","CARD.INFINITE_BLADES":"power · uncommon · Cost 1 — At the start of your turn, add 1 Shiv into your Hand.","CARD.INFLAME":"power · uncommon · Cost 1 — Gain 2 Strength.","CARD.INJURY":"curse · curse · Cost -1 · Unplayable","CARD.INTERCEPT":"skill · uncommon · Cost 1 — Gain 9 Block. Redirect all incoming attacks that would be dealt to another player this turn to you.","CARD.INVOKE":"skill · common · Cost 1 — Next turn, Summon 2 and gain [E][E].","CARD.IRON_WAVE":"attack · common · Cost 1 — Gain 5 Block. Deal 5 damage.","CARD.ITERATION":"power · uncommon · Cost 1 — The first time you draw a Status card each turn, draw 2 cards.","CARD.JACK_OF_ALL_TRADES":"skill · uncommon · Cost 0 · Exhaust — Add 1 random Colorless card into your Hand.","CARD.JACKPOT":"attack · rare · Cost X — Deal 25 damage. Add 3 random 0[E] cards into your Hand.","CARD.JUGGERNAUT":"power · rare · Cost 2 — Whenever you gain Block, deal 5 damage to a random enemy.","CARD.JUGGLING":"power · uncommon · Cost 1 — Add a copy of the third Attack you play each turn into your Hand.","CARD.KINGLY_KICK":"attack · uncommon · Cost 4 — Deal 24 damage. Whenever you draw this card, reduce its cost by 1.","CARD.KINGLY_PUNCH":"attack · uncommon · Cost 1 — Deal 8 damage. Whenever you draw this card, increase its damage by 3 this combat.","CARD.KNIFE_TRAP":"skill · rare · Cost 2 — Play every Shiv in your Exhaust Pile on the enemy.","CARD.KNOCKDOWN":"attack · rare · Cost 3 — Deal 10 damage. The enemy takes double damage from other players this turn.","CARD.KNOCKOUT_BLOW":"attack · uncommon · Cost 3 — Deal 30 damage. If this kills an enemy, gain [S][S][S][S][S].","CARD.KNOW_THY_PLACE":"skill · common · Cost 0 · Exhaust — Apply 1 Weak. Apply 1 Vulnerable.","CARD.LANTERN_KEY":"quest · quest · Cost -1 · Unplayable — Unlocks a special event in the next Act.","CARD.LARGESSE":"skill · uncommon · Cost 0 — Another player adds 1 random Colorless card to their Hand.","CARD.LEADING_STRIKE":"attack · common · Cost 1 — Deal 7 damage. Add 1 Shiv into your Hand.","CARD.LEAP":"skill · common · Cost 1 — Gain 9 Block.","CARD.LEG_SWEEP":"skill · uncommon · Cost 2 — Apply 2 Weak. Gain 11 Block.","CARD.LEGION_OF_BONE":"skill · uncommon · Cost 2 · Exhaust — ALL players Summon 6.","CARD.LETHALITY":"power · uncommon · Cost 1 · Ethereal — The first Attack each turn deals 50% additional damage.","CARD.LIFT":"skill · uncommon · Cost 1 — Give another player 11 Block.","CARD.LIGHTNING_ROD":"skill · common · Cost 1 — Gain 4 Block. At the start of the next 2 turns, Channel 1 Lightning.","CARD.LOOP":"power · uncommon · Cost 1 — At the start of your turn, trigger the passive ability of your rightmost Orb.","CARD.LUMINESCE":"skill · token · Cost 0 · Exhaust, Retain — Gain [E][E].","CARD.LUNAR_BLAST":"attack · uncommon · Cost 0 — Deal 4 damage for each Skill already played this turn.","CARD.MACHINE_LEARNING":"power · rare · Cost 1 — At the start of your turn, draw 1 additional card.","CARD.MAD_SCIENCE":"attack · event · Cost 1 — Deal 12 damage.","CARD.MAKE_IT_SO":"attack · rare · Cost 0 — Deal 6 damage. Every 3 Skills you play in a turn, put this into your Hand.","CARD.MALAISE":"skill · rare · Cost X · Exhaust — Enemy loses X Strength. Apply X Weak.","CARD.MANGLE":"attack · rare · Cost 3 — Deal 15 damage. Enemy loses 10 Strength this turn.","CARD.MANIFEST_AUTHORITY":"skill · uncommon · Cost 1 — Gain 7 Block. Add 1 random Colorless card into your Hand.","CARD.MASTER_OF_STRATEGY":"skill · rare · Cost 0 · Exhaust — Draw 3 cards.","CARD.MASTER_PLANNER":"power · rare · Cost 2 — When you play a Skill, it gains Sly.","CARD.MAUL":"attack · ancient · Cost 1 — Deal 5 damage twice. Increase the damage of ALL Maul cards by 1 this combat.","CARD.MAYHEM":"power · rare · Cost 2 — At the start of your turn, play the top card of your Draw Pile.","CARD.MELANCHOLY":"skill · uncommon · Cost 3 — Gain 13 Block. Reduce this card&#x27;s cost by [E] whenever ANYONE dies.","CARD.MEMENTO_MORI":"attack · uncommon · Cost 1 — Deal 12 damage. Deals 4 additional damage for each card discarded this turn.","CARD.METAMORPHOSIS":"skill · event · Cost 2 · Exhaust — Add 3 random Attacks into your Draw Pile. They&#x27;re free to play this combat.","CARD.METEOR_SHOWER":"attack · ancient · Cost 0 — Deal 14 damage to ALL enemies. Apply 2 Weak and Vulnerable to ALL enemies.","CARD.METEOR_STRIKE":"attack · rare · Cost 5 — Deal 24 damage. Channel 3 Plasma.","CARD.MIMIC":"skill · rare · Cost 1 · Exhaust — Gain Block equal to the Block on another player.","CARD.MIND_BLAST":"attack · uncommon · Cost 1 · Innate — Deal damage equal to the number of cards in your Draw Pile.","CARD.MIND_ROT":"status · status · Cost -1 — Draw 1 fewer card each turn.","CARD.MINION_DIVE_BOMB":"attack · token · Cost 1 · Exhaust — Deal 13 damage.","CARD.MINION_SACRIFICE":"skill · token · Cost 0 · Exhaust — Gain 9 Block.","CARD.MINION_STRIKE":"attack · token · Cost 0 · Exhaust — Deal 7 damage. Draw 1 card.","CARD.MIRAGE":"skill · uncommon · Cost 1 · Exhaust — Gain Block equal to Poison on ALL enemies.","CARD.MISERY":"attack · rare · Cost 0 — Deal 7 damage. Apply any debuffs on the enemy to ALL other enemies.","CARD.MODDED":"skill · rare · Cost 0 — Gain 1 Orb Slot. Draw 1 card. Increase this card&#x27;s cost by 1.","CARD.MOLTEN_FIST":"attack · common · Cost 1 · Exhaust — Deal 10 damage. Double the enemy&#x27;s Vulnerable.","CARD.MOMENTUM_STRIKE":"attack · common · Cost 1 — Deal 10 damage. Reduce this card&#x27;s cost to 0 [E].","CARD.MONARCHS_GAZE":"power · rare · Cost 3 — Whenever you attack an enemy, it loses 1 Strength this turn.","CARD.MONOLOGUE":"skill · uncommon · Cost 0 — Whenever you play a card this turn, gain 1 Strength this turn.","CARD.MULTI_CAST":"skill · rare · Cost X — Evoke your rightmost Orb X times.","CARD.MURDER":"attack · rare · Cost 3 — Deal 2 damage. Deals 1 additional damage for each card drawn this combat.","CARD.NECRO_MASTERY":"power · rare · Cost 2 — Summon 5. Whenever Osty loses HP, ALL enemies lose that much HP as well.","CARD.NEGATIVE_PULSE":"skill · common · Cost 1 — Gain 5 Block. Apply 7 Doom to ALL enemies.","CARD.NEOWS_FURY":"attack · ancient · Cost 1 · Exhaust — Deal 10 damage. Put 2 random cards from your Discard Pile into your Hand.","CARD.NEUROSURGE":"power · rare · Cost 0 — Gain [E][E][E]. Draw 2 cards. At the start of your turn, apply 3 Doom to yourself.","CARD.NEUTRALIZE":"attack · basic · Cost 0 — Deal 3 damage. Apply 1 Weak.","CARD.NEUTRON_AEGIS":"power · rare · Cost 1 — Gain 8 Plating.","CARD.NIGHTMARE":"skill · rare · Cost 3 · Exhaust — Choose a card. Next turn, add 3 copies of that card into your Hand.","CARD.NO_ESCAPE":"skill · uncommon · Cost 1 — Apply 10 Doom, plus an additional 5 Doom for every 10 Doom already on this enemy.","CARD.NORMALITY":"curse · curse · Cost -1 · Unplayable — You cannot play more than 3 cards this turn.","CARD.NOSTALGIA":"power · rare · Cost 1 — The first Attack or Skill you play each turn is placed on top of your Draw Pile.","CARD.NOXIOUS_FUMES":"power · uncommon · Cost 1 — At the start of your turn, apply 2 Poison to ALL enemies.","CARD.NULL":"attack · uncommon · Cost 2 — Deal 10 damage. Apply 2 Weak. Channel 1 Dark.","CARD.OBLIVION":"skill · rare · Cost 0 — Whenever you play a card this turn, apply 3 Doom to the enemy.","CARD.OFFERING":"skill · rare · Cost 0 · Exhaust — Lose 6 HP. Gain [E][E]. Draw 3 cards.","CARD.OMNISLICE":"attack · uncommon · Cost 0 — Deal 8 damage. Damage ALL other enemies equal to the damage dealt.","CARD.ONE_TWO_PUNCH":"skill · rare · Cost 1 — This turn, your next Attack is played an extra time.","CARD.ORBIT":"power · uncommon · Cost 2 — Every [E][E][E][E] you spend, gain [E].","CARD.OUTBREAK":"power · uncommon · Cost 1 — Every 3 times you apply Poison, deal 11 damage to ALL enemies.","CARD.OUTMANEUVER":"skill · event · Cost 1 — Next turn, gain [E][E].","CARD.OVERCLOCK":"skill · uncommon · Cost 0 — Draw 2 cards. Add a Burn into your Discard Pile.","CARD.PACTS_END":"attack · rare · Cost 0 — Can only be played if you have 3 or more cards in your Exhaust Pile. Deal 17 damage to ALL enemies.","CARD.PAGESTORM":"power · uncommon · Cost 1 — Whenever you draw an Ethereal card, draw 1 card.","CARD.PALE_BLUE_DOT":"power · uncommon · Cost 1 — If you play 5 or more cards in a turn, draw 1 card at the start of your next turn.","CARD.PANACHE":"power · uncommon · Cost 0 — Every time you play 5 cards in a single turn, deal 10 damage to ALL enemies.","CARD.PANIC_BUTTON":"skill · uncommon · Cost 0 · Exhaust — Gain 30 Block. You cannot gain Block from cards for 2 turns.","CARD.PARRY":"power · uncommon · Cost 1 — Whenever you play Sovereign Blade, gain 6 Block.","CARD.PARSE":"skill · uncommon · Cost 1 · Ethereal — Draw 3 cards.","CARD.PARTICLE_WALL":"skill · uncommon · Cost 0 — Gain 9 Block. Return this card to your Hand.","CARD.PATTER":"skill · common · Cost 1 — Gain 8 Block. Gain 2 Vigor.","CARD.PECK":"attack · event · Cost 1 — Deal 2 damage 3 times.","CARD.PERFECTED_STRIKE":"attack · common · Cost 2 — Deal 8 damage. Deals 2 additional damage for ALL your cards containing 'Strike'.","CARD.PHANTOM_BLADES":"power · uncommon · Cost 1 — Shivs gain Retain. The first Shiv you play each turn deals 9 additional damage.","CARD.PHOTON_CUT":"attack · common · Cost 1 — Deal 10 damage. Draw 1 card. Put 1 card from your Hand on top of your Draw Pile.","CARD.PIERCING_WAIL":"skill · common · Cost 1 · Exhaust — ALL enemies lose 6 Strength this turn.","CARD.PILLAGE":"attack · uncommon · Cost 1 — Deal 6 damage. Draw cards until you draw a non-Attack card.","CARD.PILLAR_OF_CREATION":"power · uncommon · Cost 1 — Whenever you create a card, gain 3 Block.","CARD.PINPOINT":"attack · uncommon · Cost 3 — Deal 17 damage. Costs 1 less [E] for each Skill played this turn.","CARD.POISONED_STAB":"attack · common · Cost 1 — Deal 6 damage. Apply 3 Poison.","CARD.POKE":"attack · common · Cost 0 — Osty deals 6 damage.","CARD.POMMEL_STRIKE":"attack · common · Cost 1 — Deal 9 damage. Draw 1 card.","CARD.POOR_SLEEP":"curse · curse · Cost -1 · Retain, Unplayable","CARD.POUNCE":"attack · uncommon · Cost 2 — Deal 12 damage. The next Skill you play costs 0 [E].","CARD.PRECISE_CUT":"attack · uncommon · Cost 0 — Deal 15 damage. Deals inverseDiff() less damage for each other card in your Hand.","CARD.PREDATOR":"attack · uncommon · Cost 2 — Deal 15 damage. Next turn, draw 2 cards.","CARD.PREP_TIME":"power · uncommon · Cost 1 — At the start of your turn, gain 4 Vigor.","CARD.PREPARED":"skill · common · Cost 0 — Draw 1 card. Discard 1 card.","CARD.PRIMAL_FORCE":"skill · rare · Cost 0 — Transform all Attacks in your Hand into Giant Rock.","CARD.PRODUCTION":"skill · uncommon · Cost 0 · Exhaust — Gain [E][E].","CARD.PROLONG":"skill · uncommon · Cost 0 · Exhaust — Next turn, gain Block equal to your current Block.","CARD.PROPHESIZE":"skill · uncommon · Cost 2 — Draw 6 cards.","CARD.PROTECTOR":"attack · ancient · Cost 1 — Osty deals 11 damage. Deals additional damage equal to Osty&#x27;s Max HP.","CARD.PROWESS":"power · uncommon · Cost 1 — Gain 1 Strength. Gain 1 Dexterity.","CARD.PULL_AGGRO":"skill · common · Cost 2 — Summon 4. Gain 7 Block.","CARD.PULL_FROM_BELOW":"attack · uncommon · Cost 1 — Deal 5 damage for each Ethereal card played this combat.","CARD.PURITY":"skill · uncommon · Cost 0 · Exhaust, Retain — Exhaust up to 3 cards in your Hand.","CARD.PUTREFY":"skill · uncommon · Cost 1 · Exhaust — Apply 2 Weak. Apply 2 Vulnerable.","CARD.PYRE":"power · rare · Cost 2 — Gain [E] at the start of each turn.","CARD.QUADCAST":"skill · ancient · Cost 1 — Evoke your rightmost Orb 4 times.","CARD.QUASAR":"skill · uncommon · Cost 0 — Choose 1 of 3 random Colorless cards to add into your Hand.","CARD.RADIATE":"attack · uncommon · Cost 0 — Deal 3 damage to ALL enemies for each [S] gained this turn.","CARD.RAGE":"skill · uncommon · Cost 0 — Whenever you play an Attack this turn, gain 3 Block.","CARD.RAINBOW":"skill · rare · Cost 2 · Exhaust — Channel 1 Lightning. Channel 1 Frost. Channel 1 Dark.","CARD.RALLY":"skill · rare · Cost 2 — ALL players gain 12 Block.","CARD.RAMPAGE":"attack · uncommon · Cost 1 — Deal 9 damage. Increase this card&#x27;s damage by 5 this combat.","CARD.RATTLE":"attack · uncommon · Cost 1 — Osty deals 7 damage. Hits an additional time for each other time he has attacked this turn.","CARD.REANIMATE":"skill · rare · Cost 3 · Exhaust — Summon 20.","CARD.REAP":"attack · common · Cost 3 · Retain — Deal 27 damage.","CARD.REAPER_FORM":"power · rare · Cost 3 — Whenever Attacks deal damage, they also apply that much Doom.","CARD.REAVE":"attack · common · Cost 1 — Deal 9 damage. Add a Soul into your Draw Pile.","CARD.REBOOT":"skill · rare · Cost 0 · Exhaust — Shuffle ALL your cards into your Draw Pile. Draw 4 cards.","CARD.REBOUND":"attack · event · Cost 1 — Deal 9 damage. Put the next card you play this turn on top of your Draw Pile.","CARD.REFINE_BLADE":"skill · common · Cost 1 — Forge 6. Next turn, gain [E].","CARD.REFLECT":"skill · uncommon · Cost 1 — Gain 17 Block. Blocked attack damage is reflected to your attacker this turn.","CARD.REFLEX":"skill · uncommon · Cost 3 · Sly — Draw 2 cards.","CARD.REFRACT":"attack · uncommon · Cost 3 — Deal 9 damage twice. Channel 2 Glass.","CARD.REGRET":"curse · curse · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, lose 1 HP for each card in your Hand.","CARD.RELAX":"skill · ancient · Cost 3 · Exhaust — Gain 15 Block. Next turn, draw 2 cards and gain [E][E].","CARD.REND":"attack · rare · Cost 2 — Deal 20 damage. Deals 5 additional damage for each unique debuff on the enemy.","CARD.RESONANCE":"skill · uncommon · Cost 1 — Gain 1 Strength. ALL enemies lose 1 Strength.","CARD.RESTLESSNESS":"skill · uncommon · Cost 0 · Retain — If your Hand is empty, draw 2 cards and gain [E][E].","CARD.RICOCHET":"attack · common · Cost 2 · Sly — Deal 3 damage to a random enemy 4 times.","CARD.RIGHT_HAND_HAND":"attack · uncommon · Cost 0 — Osty deals 4 damage. Whenever you play a card that costs [E][E] or more, return this to your Hand from the Discard Pile.","CARD.RIP_AND_TEAR":"attack · uncommon · Cost 1 — Deal 7 damage to a random enemy twice.","CARD.ROCKET_PUNCH":"attack · uncommon · Cost 2 — Deal 13 damage. Draw 1 card. When a Status card is created, reduce this card&#x27;s cost to 0 [E] this turn.","CARD.ROLLING_BOULDER":"power · rare · Cost 3 — At the start of your turn, deal 5 damage to ALL enemies and increase this damage by 5.","CARD.ROYAL_GAMBLE":"skill · uncommon · Cost 0 · Exhaust — Gain 9 [S].","CARD.ROYALTIES":"power · rare · Cost 1 — At the end of combat, gain 30 Gold.","CARD.RUPTURE":"power · uncommon · Cost 1 — Whenever you lose HP on your turn, gain 1 Strength.","CARD.SACRIFICE":"skill · rare · Cost 1 · Retain — If Osty is alive, he dies and you gain Block equal to double his Max HP.","CARD.SALVO":"attack · rare · Cost 1 — Deal 12 damage. Retain your Hand this turn.","CARD.SCAVENGE":"skill · uncommon · Cost 1 — Exhaust a card. Next turn, gain [E][E].","CARD.SCOURGE":"skill · common · Cost 1 — Apply 13 Doom. Draw 1 card.","CARD.SCRAPE":"attack · uncommon · Cost X — Deal 7 damage. Draw 4 cards. Discard all cards drawn this way that do not cost 0 [E].","CARD.SCRAWL":"skill · rare · Cost 1 · Exhaust — Draw cards until your Hand is full.","CARD.SCULPTING_STRIKE":"attack · common · Cost 1 — Deal 8 damage. Add Ethereal to a card in your Hand.","CARD.SEANCE":"skill · rare · Cost 0 · Ethereal — Transform a card in your Draw Pile into Soul.","CARD.SECOND_WIND":"skill · uncommon · Cost 1 — Exhaust all non-Attack cards in your Hand. Gain 5 Block for each card Exhausted.","CARD.SECRET_TECHNIQUE":"skill · rare · Cost 0 · Exhaust — Put a Skill from your Draw Pile into your Hand.","CARD.SECRET_WEAPON":"skill · rare · Cost 0 · Exhaust — Put an Attack from your Draw Pile into your Hand.","CARD.SEEKER_STRIKE":"attack · uncommon · Cost 1 — Deal 6 damage. Choose 1 of 3 cards in your Draw Pile to add into your Hand.","CARD.SEEKING_EDGE":"power · rare · Cost 1 — Forge 7. Sovereign Blade now deals damage to ALL enemies.","CARD.SENTRY_MODE":"power · rare · Cost 2 — At the start of your turn, add 1 Sweeping Gaze into your Hand.","CARD.SERPENT_FORM":"power · rare · Cost 3 — Whenever you play a card, deal 4 damage to a random enemy.","CARD.SETUP_STRIKE":"attack · common · Cost 1 — Deal 7 damage. Gain 2 Strength this turn.","CARD.SEVEN_STARS":"attack · rare · Cost 2 — Deal 7 damage to ALL enemies 7 times.","CARD.SEVERANCE":"attack · uncommon · Cost 2 — Deal 13 damage. Add a Soul into your Draw Pile, Hand, and Discard Pile.","CARD.SHADOW_SHIELD":"skill · uncommon · Cost 2 — Gain 11 Block. Channel 1 Dark.","CARD.SHADOW_STEP":"skill · rare · Cost 1 — Discard your Hand. Next turn, Attacks deal double damage.","CARD.SHADOWMELD":"skill · rare · Cost 1 — Double your Block gain this turn.","CARD.SHAME":"curse · curse · Cost -1 · Unplayable — At the end of your turn, if this is in your Hand, gain 1 Frail.","CARD.SHARED_FATE":"skill · rare · Cost 0 · Exhaust — Lose 2 Strength. Enemy loses 2 Strength.","CARD.SHATTER":"attack · rare · Cost 1 — Deal 11 damage to ALL enemies. Evoke all of your Orbs.","CARD.SHINING_STRIKE":"attack · uncommon · Cost 1 — Deal 8 damage. Gain [S][S]. Put this card on top of your Draw Pile.","CARD.SHIV":"attack · token · Cost 0 · Exhaust — Deal 4 damage.","CARD.SHOCKWAVE":"skill · uncommon · Cost 2 · Exhaust — Apply 3 Weak and Vulnerable to ALL enemies.","CARD.SHROUD":"power · uncommon · Cost 1 — Whenever you apply Doom, gain 2 Block.","CARD.SHRUG_IT_OFF":"skill · common · Cost 1 — Gain 8 Block. Draw 1 card.","CARD.SIC_EM":"attack · uncommon · Cost 1 — Osty deals 5 damage. Whenever Osty hits this enemy this turn, Summon 2.","CARD.SIGNAL_BOOST":"skill · rare · Cost 1 · Exhaust — The next Power you play is played an additional time.","CARD.SKEWER":"attack · uncommon · Cost X — Deal 7 damage X times.","CARD.SKIM":"skill · uncommon · Cost 1 — Draw 3 cards.","CARD.SLEIGHT_OF_FLESH":"power · uncommon · Cost 2 — Whenever you apply a debuff to an enemy, they take 9 damage.","CARD.SLICE":"attack · common · Cost 0 — Deal 6 damage.","CARD.SLIMED":"status · status · Cost 1 · Exhaust — Draw 1 card.","CARD.SLOTH":"status · status · Cost -1 — You cannot play more than 3 cards each turn.","CARD.SMOKESTACK":"power · uncommon · Cost 1 — Whenever you create a Status, deal 5 damage to ALL enemies.","CARD.SNAKEBITE":"skill · common · Cost 2 · Retain — Apply 7 Poison.","CARD.SNAP":"attack · common · Cost 1 — Osty deals 7 damage. Add Retain to a card in your Hand.","CARD.SNEAKY":"power · rare · Cost 2 · Sly — Whenever another player attacks an enemy, gain 1 Block.","CARD.SOLAR_STRIKE":"attack · common · Cost 1 — Deal 8 damage. Gain [S].","CARD.SOOT":"status · status · Cost -1 · Unplayable","CARD.SOUL":"skill · token · Cost 0 · Exhaust — Draw 2 cards.","CARD.SOUL_STORM":"attack · rare · Cost 1 — Deal 11 damage. Deals 2 additional damage for each Soul in your Exhaust Pile.","CARD.SOVEREIGN_BLADE":"attack · token · Cost 2 · Retain — Deal 10 damage.","CARD.SOW":"attack · common · Cost 1 · Retain — Deal 8 damage to ALL enemies.","CARD.SPECTRUM_SHIFT":"power · uncommon · Cost 2 — At the start of your turn, add 1 random Colorless card into your Hand.","CARD.SPEEDSTER":"power · uncommon · Cost 2 — Whenever you draw a card during your turn, deal 2 damage to ALL enemies.","CARD.SPINNER":"power · rare · Cost 1 — At the start of your turn, Channel 1 Glass.","CARD.SPIRIT_OF_ASH":"power · rare · Cost 1 — Whenever you play an Ethereal card, gain 4 Block.","CARD.SPITE":"attack · uncommon · Cost 0 — Deal 6 damage. If you lost HP this turn, draw 1 card.","CARD.SPLASH":"skill · uncommon · Cost 1 — Choose 1 of 3 random Attacks from another character to add into your Hand. It&#x27;s free to play this turn.","CARD.SPOILS_MAP":"quest · quest · Cost -1 · Unplayable — Marks a site of 600 extra Gold in the next Act.","CARD.SPOILS_OF_BATTLE":"skill · common · Cost 1 — Forge 10.","CARD.SPORE_MIND":"curse · curse · Cost 1 · Exhaust","CARD.SPUR":"skill · uncommon · Cost 1 · Retain — Summon 3. Osty heals 5 HP.","CARD.SQUASH":"attack · event · Cost 1 — Deal 10 damage. Apply 2 Vulnerable.","CARD.SQUEEZE":"attack · rare · Cost 3 — Osty deals 30 damage. Deals 5 additional damage for ALL your other Osty Attacks.","CARD.STACK":"skill · event · Cost 1 — Gain Block equal to the number of cards in your Discard Pile|}.","CARD.STAMPEDE":"power · uncommon · Cost 2 — At the end of your turn, 1 random Attack in your Hand is played against a random enemy.","CARD.STARDUST":"attack · uncommon · Cost 0 — Deal 5 damage to a random enemy X times.","CARD.STOKE":"skill · rare · Cost 1 · Exhaust — Exhaust your Hand. Draw a card for each card Exhausted.","CARD.STOMP":"attack · uncommon · Cost 3 — Deal 12 damage to ALL enemies. Costs 1 less [E] for each Attack played this turn.","CARD.STONE_ARMOR":"power · uncommon · Cost 1 — Gain 4 Plating.","CARD.STORM":"power · uncommon · Cost 1 — Whenever you play a Power, Channel 1 Lightning.","CARD.STORM_OF_STEEL":"skill · rare · Cost 1 — Discard your Hand. Add 1 Shiv into your Hand for each card discarded.","CARD.STRANGLE":"attack · uncommon · Cost 1 — Deal 8 damage. Whenever you play a card this turn, the enemy loses 2 HP.","CARD.STRATAGEM":"power · uncommon · Cost 1 — Whenever you shuffle your Draw Pile, choose a card from it to put into your Hand.","CARD.STRIKE_IRONCLAD":"attack · basic · Cost 1 — Deal 6 damage.","CARD.STRIKE_SILENT":"attack · basic · Cost 1 — Deal 6 damage.","CARD.STRIKE_REGENT":"attack · basic · Cost 1 — Deal 6 damage.","CARD.STRIKE_NECROBINDER":"attack · basic · Cost 1 — Deal 6 damage.","CARD.STRIKE_DEFECT":"attack · basic · Cost 1 — Deal 6 damage.","CARD.SUBROUTINE":"power · uncommon · Cost 1 — Whenever you play a Power, gain [E].","CARD.SUCKER_PUNCH":"attack · common · Cost 1 — Deal 8 damage. Apply 1 Weak.","CARD.SUMMON_FORTH":"skill · uncommon · Cost 1 — Forge 8. Put Sovereign Blade into your Hand from anywhere.","CARD.SUNDER":"attack · uncommon · Cost 3 — Deal 24 damage. If this kills an enemy, gain [E][E][E].","CARD.SUPERCRITICAL":"skill · rare · Cost 0 · Exhaust — Gain [E][E][E][E].","CARD.SUPERMASSIVE":"attack · uncommon · Cost 1 — Deal 8 damage. Deals 3 additional damage for each card you created this combat.","CARD.SUPPRESS":"attack · ancient · Cost 0 · Innate — Deal 11 damage. Apply 3 Weak.","CARD.SURVIVOR":"skill · basic · Cost 1 — Gain 8 Block. Discard 1 card.","CARD.SWEEPING_BEAM":"attack · common · Cost 1 — Deal 6 damage to ALL enemies. Draw 1 card.","CARD.SWEEPING_GAZE":"attack · token · Cost 0 · Exhaust, Ethereal — Osty deals 10 damage to a random enemy.","CARD.SWORD_BOOMERANG":"attack · common · Cost 1 — Deal 3 damage to a random enemy 3 times.","CARD.SWORD_SAGE":"power · rare · Cost 2 — Increase the cost of Sovereign Blade by 1. Sovereign Blade now hits an additional time.","CARD.SYNCHRONIZE":"skill · uncommon · Cost 1 · Exhaust — Gain 2 Focus this turn for each unique Orb you have.","CARD.SYNTHESIS":"attack · uncommon · Cost 2 — Deal 12 damage. The next Power you play costs 0 [E].","CARD.TACTICIAN":"skill · uncommon · Cost 3 · Sly — Gain [E].","CARD.TAG_TEAM":"attack · uncommon · Cost 2 — Deal 11 damage. The next Attack another player plays on the enemy is played an extra time.","CARD.TANK":"power · rare · Cost 1 — Take double damage from enemies. Allies take half damage from enemies.","CARD.TAUNT":"skill · uncommon · Cost 1 — Gain 7 Block. Apply 1 Vulnerable.","CARD.TEAR_ASUNDER":"attack · rare · Cost 2 — Deal 5 damage. Hits an additional time for each time you lost HP this combat.","CARD.TEMPEST":"skill · uncommon · Cost X — Channel X Lightning.","CARD.TERRAFORMING":"skill · uncommon · Cost 1 — Gain 6 Vigor.","CARD.TESLA_COIL":"attack · uncommon · Cost 0 — Deal 3 damage. Trigger all Lightning against the enemy.","CARD.THE_BOMB":"skill · uncommon · Cost 2 — At the end of 3 turns, deal 40 damage to ALL enemies.","CARD.THE_GAMBIT":"skill · rare · Cost 0 — Gain 50 Block. If you take unblocked attack damage this combat, die.","CARD.THE_HUNT":"attack · rare · Cost 1 · Exhaust — Deal 10 damage. If Fatal, gain an additional card reward.","CARD.THE_SCYTHE":"attack · rare · Cost 2 · Exhaust — Deal 13 damage. Permanently increase this card&#x27;s damage by 3.","CARD.THE_SEALED_THRONE":"power · ancient · Cost 1 — Whenever you play a card, gain [S].","CARD.THE_SMITH":"skill · rare · Cost 1 — Forge 30.","CARD.THINKING_AHEAD":"skill · uncommon · Cost 0 · Exhaust — Draw 2 cards. Put 1 card from your Hand on top of your Draw Pile.","CARD.THRASH":"attack · rare · Cost 1 — Deal 4 damage twice. Exhaust a random Attack in your Hand and add its damage to this card.","CARD.THRUMMING_HATCHET":"attack · uncommon · Cost 1 — Deal 11 damage. At the start of your next turn, return this to your Hand.","CARD.THUNDER":"power · uncommon · Cost 1 — Whenever you Evoke Lightning, deal 6 damage to each enemy hit.","CARD.THUNDERCLAP":"attack · common · Cost 1 — Deal 4 damage and apply 1 Vulnerable to ALL enemies.","CARD.TIMES_UP":"attack · rare · Cost 2 · Exhaust — Deal damage equal to the enemy&#x27;s Doom.","CARD.TOOLS_OF_THE_TRADE":"power · rare · Cost 1 — At the start of your turn, draw 1 card and discard 1 card.","CARD.TORIC_TOUGHNESS":"skill · event · Cost 2 — Gain 5 Block. Gain 5 Block at the start of the next 2 turns.","CARD.TOXIC":"status · status · Cost 1 · Exhaust — At the end of your turn, if this is in your Hand, take 5 damage.","CARD.TRACKING":"power · rare · Cost 2 — Weak enemies take double damage from Attacks.","CARD.TRANSFIGURE":"skill · rare · Cost X · Exhaust — Add Replay to a card in your Hand. It costs an extra [E].","CARD.TRASH_TO_TREASURE":"power · rare · Cost 1 — Whenever you create a Status card, Channel 1 random Orb.","CARD.TREMBLE":"skill · common · Cost 1 — Apply 2 Vulnerable.","CARD.TRUE_GRIT":"skill · common · Cost 1 — Gain 7 Block. Exhaust 1 card at random.","CARD.TURBO":"skill · common · Cost 0 — Gain [E][E]. Add a Void into your Discard Pile.","CARD.TWIN_STRIKE":"attack · common · Cost 1 — Deal 5 damage twice.","CARD.TYRANNY":"power · rare · Cost 1 · Exhaust — At the start of your turn, draw 1 card and Exhaust 1 card from your Hand.","CARD.ULTIMATE_DEFEND":"skill · uncommon · Cost 1 — Gain 11 Block.","CARD.ULTIMATE_STRIKE":"attack · uncommon · Cost 1 — Deal 14 damage.","CARD.UNDEATH":"skill · rare · Cost 0 — Gain 7 Block. Add a copy of this card into your Discard Pile.","CARD.UNLEASH":"attack · basic · Cost 1 — Osty deals 7 damage. Deals additional damage equal to Osty&#x27;s current HP.","CARD.UNMOVABLE":"power · rare · Cost 2 — The first time you gain Block from a card each turn, double the amount gained.","CARD.UNRELENTING":"attack · uncommon · Cost 2 — Deal 12 damage. The next Attack you play costs 0 [E].","CARD.UNTOUCHABLE":"skill · common · Cost 2 · Sly — Gain 9 Block.","CARD.UP_MY_SLEEVE":"skill · uncommon · Cost 2 — Add 3 Shivs into your Hand. Reduce this card&#x27;s cost by 1.","CARD.UPPERCUT":"attack · uncommon · Cost 2 — Deal 13 damage. Apply 1 Weak. Apply 1 Vulnerable.","CARD.UPROAR":"attack · common · Cost 2 — Deal 5 damage twice. Play a random Attack from your Draw Pile.","CARD.VEILPIERCER":"attack · uncommon · Cost 1 — Deal 10 damage. The next Ethereal card you play costs 0 [E].","CARD.VENERATE":"skill · basic · Cost 1 — Gain [S][S].","CARD.VICIOUS":"power · uncommon · Cost 1 — Whenever you apply Vulnerable, draw 1 card.","CARD.VOID":"status · status · Cost -1 · Ethereal, Unplayable — Whenever you draw this card, lose [E].","CARD.VOID_FORM":"power · rare · Cost 3 — End your turn. The first 2 cards you play each turn are free to play.","CARD.VOLLEY":"attack · uncommon · Cost X — Deal 10 damage to a random enemy X times.","CARD.VOLTAIC":"skill · rare · Cost 2 · Exhaust — Channel Lightning equal to the Lightning already Channeled this combat.","CARD.WASTE_AWAY":"status · status · Cost -1 — Gain 1 less [E] per turn.","CARD.WELL_LAID_PLANS":"power · uncommon · Cost 1 — At the end of your turn, Retain up to 1 card.","CARD.WHIRLWIND":"attack · uncommon · Cost X — Deal 5 damage to ALL enemies X times.","CARD.WHISTLE":"attack · ancient · Cost 3 · Exhaust — Deal 33 damage. Stun the enemy.","CARD.WHITE_NOISE":"skill · uncommon · Cost 1 · Exhaust — Add a random Power into your Hand. It&#x27;s free to play this turn.","CARD.WISH":"skill · ancient · Cost 0 · Exhaust — Put a card from your Draw Pile into your Hand.","CARD.WISP":"skill · common · Cost 0 · Exhaust — Gain [E].","CARD.WOUND":"status · status · Cost -1 · Unplayable","CARD.WRAITH_FORM":"power · ancient · Cost 3 — Gain 2 Intangible. At the start of your turn, lose 1 Dexterity.","CARD.WRITHE":"curse · curse · Cost -1 · Innate, Unplayable","CARD.WROUGHT_IN_WAR":"attack · common · Cost 1 — Deal 7 damage. Forge 5.","CARD.ZAP":"skill · basic · Cost 1 — Channel 1 Lightning."};
+
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function cardImgTag(id) {
+  const s = idToSlug(id);
+  const tip = CARD_TIPS[id] || '';
+  return s ? '<img class="card-thumb tip-trigger" src="assets/cards/' + s + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'" data-tip="' + esc(tip) + '" />' : '';
+}
+function relicImgTag(id) {
+  const s = idToSlug(id);
+  const tip = RELIC_TIPS[id] || '';
+  return s ? '<img class="tip-trigger" src="assets/relics/' + s + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'" data-tip="' + esc(tip) + '" />' : '';
+}
+
+// ─── Canvas Drawing Utilities ────────────────────────────────────────────────
+
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, w: rect.width, h: rect.height };
+}
+
+const CHART_COLORS = {
+  green: '#3fb950', red: '#f85149', blue: '#58a6ff', yellow: '#d29922',
+  purple: '#bc8cff', orange: '#f0883e', cyan: '#39d2c0', muted: '#6e7681',
+  grid: 'rgba(48,54,61,0.6)', text: '#8b949e'
+};
+
+function drawGridAndLabels(ctx, w, h, pad, yMax, ySteps, yFormat) {
+  ctx.strokeStyle = CHART_COLORS.grid;
+  ctx.lineWidth = 0.5;
+  ctx.fillStyle = CHART_COLORS.text;
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const val = (yMax / ySteps) * i;
+    const y = pad.top + (h - pad.top - pad.bottom) * (1 - i / ySteps);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+    ctx.fillText(yFormat ? yFormat(val) : Math.round(val), pad.left - 4, y + 3);
+  }
+}
+
+// ─── IndexedDB (session-scoped) ────────────────────────────────────────────
+
+let runs = [];
+
+function openRunsDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('sts2_tracker', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('data');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function saveRunsToDB(data) {
+  try {
+    const db = await openRunsDB();
+    const tx = db.transaction('data', 'readwrite');
+    tx.objectStore('data').put(data, 'runs');
+    sessionStorage.setItem('sts2_session', '1');
+  } catch (e) { console.warn('Could not save to IndexedDB:', e.message); }
+}
+async function loadRunsFromDB() {
+  try {
+    if (!sessionStorage.getItem('sts2_session')) {
+      const db = await openRunsDB();
+      const tx = db.transaction('data', 'readwrite');
+      tx.objectStore('data').delete('runs');
+      return null;
+    }
+    const db = await openRunsDB();
+    const tx = db.transaction('data', 'readonly');
+    const req = tx.objectStore('data').get('runs');
+    return new Promise(resolve => { req.onsuccess = () => resolve(req.result || null); req.onerror = () => resolve(null); });
+  } catch (e) { return null; }
+}
+
+// ─── File Loading ────────────────────────────────────────────────────────────
+
+async function loadRunFiles(files) {
+  if (files.length === 0) return;
+  runs = [];
+  let skipped = 0;
+  for (const file of files) {
+    if (!file.name.endsWith('.run')) continue;
+    try {
+      const text = await file.text();
+      if (!text || text.length < 2) { skipped++; continue; }
+      const data = JSON.parse(text);
+      if (!data || !data.players || typeof data.win === 'undefined') { skipped++; continue; }
+      data._filename = file.name;
+      runs.push(data);
+    } catch (err) { skipped++; console.warn('Skipped ' + file.name + ':', err.message || err); }
+  }
+  if (skipped) console.log('Skipped ' + skipped + ' file(s) (in-progress or corrupt)');
+  onRunsLoaded();
+  saveRunsToDB(runs);
+}
+
+function onRunsLoaded() {
+  runs = runs.filter(r => r.players && Array.isArray(r.players) && r.players.length > 0);
+  runs.sort((a, b) => (a.start_time || 0) - (b.start_time || 0));
+  document.getElementById('fileCount').textContent = runs.length + ' run' + (runs.length !== 1 ? 's' : '') + ' loaded';
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  computeAndRender();
+}
+
+document.getElementById('folderInput').addEventListener('change', e => loadRunFiles(Array.from(e.target.files)));
+
+// Auto-restore from IndexedDB on page load
+loadRunsFromDB().then(saved => {
+  if (saved && saved.length > 0) { runs = saved; onRunsLoaded(); }
+});
+
+// ─── Analytics Computation ───────────────────────────────────────────────────
+
+let analytics = {};
+let activeMode = 'all'; // 'all', 'solo', 'coop'
+let activeChar = 'all'; // 'all' or a character ID like 'CHARACTER.IRONCLAD'
+let ownerSteamId = null;
+
+// Detect the owner's Steam ID: the non-1 ID that appears in the most multiplayer runs
+function detectOwner() {
+  const idCounts = {};
+  runs.forEach(run => {
+    if ((run.players || []).length <= 1) return;
+    (run.players || []).forEach(p => {
+      const pid = p.id;
+      if (pid && pid !== 1) {
+        idCounts[pid] = (idCounts[pid] || 0) + 1;
+      }
+    });
+  });
+  const sorted = Object.entries(idCounts).sort((a, b) => b[1] - a[1]);
+  ownerSteamId = sorted.length > 0 ? Number(sorted[0][0]) : null;
+
+  // Update info text
+  const multiCount = runs.filter(r => (r.players || []).length > 1).length;
+  const soloCount = runs.filter(r => (r.players || []).length <= 1).length;
+  const info = document.getElementById('modeInfo');
+  info.textContent = soloCount + ' solo, ' + multiCount + ' co-op' + (ownerSteamId ? ' (your ID: ' + ownerSteamId + ')' : '');
+}
+
+// Get the owner's player object from a run, or the solo player
+function getOwnerPlayer(run) {
+  const players = run.players || [];
+  if (players.length <= 1) return players[0] || null;
+  // Multiplayer: find owner by Steam ID
+  if (ownerSteamId) {
+    const match = players.find(p => p.id === ownerSteamId);
+    if (match) return match;
+  }
+  // Fallback: first player
+  return players[0];
+}
+
+function computeAnalytics() {
+  const filtered = runs.filter(run => {
+    const isCoop = (run.players || []).length > 1;
+    if (activeMode === 'solo' && isCoop) return false;
+    if (activeMode === 'coop' && !isCoop) return false;
+    if (activeChar !== 'all') {
+      const p = getOwnerPlayer(run);
+      if (!p || p.character !== activeChar) return false;
+    }
+    return true;
+  });
+
+  const a = {
+    total: filtered.length, wins: 0, losses: 0, abandoned: 0,
+    totalTime: 0, maxAsc: 0, maxAscWin: 0,
+    charStats: {}, ascStats: {}, deathEncounters: {},
+    deathByAct: {}, // { actName: { boss: N, elite: N, hallway: N, event: N } }
+    deckSizeWins: [], deckSizeLosses: [],
+    relicStats: {}, cardStats: {}, cardPickStats: {},
+    runPlayerData: [],
+    hpProgWins: [], hpProgLosses: [],
+    streakCurrent: 0, streakBest: 0,
+    fastestWin: Infinity, slowestWin: 0,
+    uniqueCards: new Set(), uniqueRelics: new Set(),
+    timeline: []
+  };
+
+  let currentStreak = 0;
+
+  filtered.forEach(run => {
+    const win = !!run.win;
+    const abandoned = !!run.was_abandoned;
+    if (win) { a.wins++; } else if (abandoned) { a.abandoned++; } else { a.losses++; }
+    a.totalTime += run.run_time || 0;
+    a.timeline.push({ date: run.start_time, win, abandoned });
+
+    // Fastest / slowest win
+    if (win && run.run_time) {
+      if (run.run_time < a.fastestWin) a.fastestWin = run.run_time;
+      if (run.run_time > a.slowestWin) a.slowestWin = run.run_time;
+    }
+
+    // Streaks (chronological order) — abandoned counts as a loss
+    if (win) {
+      currentStreak++;
+      if (currentStreak > a.streakBest) a.streakBest = currentStreak;
+    } else {
+      currentStreak = 0;
+    }
+
+    // Ascension
+    const asc = run.ascension || 0;
+    if (asc > a.maxAsc) a.maxAsc = asc;
+    if (win && asc > a.maxAscWin) a.maxAscWin = asc;
+    if (!a.ascStats[asc]) a.ascStats[asc] = { runs: 0, wins: 0 };
+    a.ascStats[asc].runs++;
+    if (win) a.ascStats[asc].wins++;
+
+    // Owner's player only — one player per run
+    const player = getOwnerPlayer(run);
+    if (player) {
+      const charId = player.character || 'Unknown';
+      const charName = prettyId(charId);
+      if (!a.charStats[charName]) a.charStats[charName] = { runs: 0, wins: 0, totalTime: 0, totalAsc: 0, totalDeckSize: 0 };
+      const cs = a.charStats[charName];
+      cs.runs++;
+      if (win) cs.wins++;
+      cs.totalTime += run.run_time || 0;
+      cs.totalAsc += asc;
+
+      const deckSize = (player.deck || []).length;
+      cs.totalDeckSize += deckSize;
+      if (win) a.deckSizeWins.push(deckSize);
+      else if (!abandoned) a.deckSizeLosses.push(deckSize);
+
+      // Determine Act 1 floor count for "early" classification
+      const act1Floors = (run.map_point_history && run.map_point_history[0]) ? run.map_point_history[0].length : 16;
+
+      // Relics
+      const playerRelics = new Set();
+      (player.relics || []).forEach(r => {
+        const rid = r.id;
+        playerRelics.add(rid);
+        a.uniqueRelics.add(rid);
+        if (!a.relicStats[rid]) a.relicStats[rid] = { count: 0, wins: 0, totalFloor: 0, earlyCount: 0, earlyWins: 0 };
+        const rs = a.relicStats[rid];
+        rs.count++;
+        if (win) rs.wins++;
+        const floor = r.floor_added_to_deck || 0;
+        rs.totalFloor += floor;
+        if (floor > 0 && floor <= act1Floors) {
+          rs.earlyCount++;
+          if (win) rs.earlyWins++;
+        }
+      });
+
+      // Cards in final deck — track earliest floor per card ID
+      const playerCards = new Set();
+      const cardFloors = {};
+      (player.deck || []).forEach(c => {
+        playerCards.add(c.id);
+        a.uniqueCards.add(c.id);
+        const f = c.floor_added_to_deck || 0;
+        if (!cardFloors[c.id] || f < cardFloors[c.id]) cardFloors[c.id] = f;
+      });
+      playerCards.forEach(cid => {
+        if (!a.cardStats[cid]) a.cardStats[cid] = { count: 0, wins: 0, totalFloor: 0, floorEntries: 0, earlyCount: 0, earlyWins: 0 };
+        const cs = a.cardStats[cid];
+        cs.count++;
+        if (win) cs.wins++;
+        const floor = cardFloors[cid] || 0;
+        if (floor > 0) {
+          cs.totalFloor += floor;
+          cs.floorEntries++;
+          if (floor <= act1Floors) {
+            cs.earlyCount++;
+            if (win) cs.earlyWins++;
+          }
+        }
+      });
+
+      // Store for synergy cross-filtering
+      a.runPlayerData.push({ win, relics: playerRelics, cards: playerCards });
+    }
+
+    // Card pick rate — scan floor history for owner's card_choices
+    const ownerId = player ? player.id : null;
+    if (ownerId) {
+      (run.map_point_history || []).forEach(actFloors => {
+        (actFloors || []).forEach(mp => {
+          const ps = (mp.player_stats || []).find(p => p.player_id === ownerId);
+          if (!ps) return;
+          (ps.card_choices || []).forEach(cc => {
+            const cid = cc.card?.id;
+            if (!cid) return;
+            if (!a.cardPickStats[cid]) a.cardPickStats[cid] = { offered: 0, picked: 0 };
+            a.cardPickStats[cid].offered++;
+            if (cc.was_picked) a.cardPickStats[cid].picked++;
+          });
+          // Colorless cards bought at shops bypass card_choices
+          (ps.bought_colorless || []).forEach(cid => {
+            if (!a.cardPickStats[cid]) a.cardPickStats[cid] = { offered: 0, picked: 0 };
+            a.cardPickStats[cid].offered++;
+            a.cardPickStats[cid].picked++;
+          });
+        });
+      });
+    }
+
+    // Death info (non-wins, including abandoned)
+    if (!win) {
+      const killer = run.killed_by_encounter && run.killed_by_encounter !== 'NONE.NONE'
+        ? run.killed_by_encounter
+        : (run.killed_by_event && run.killed_by_event !== 'NONE.NONE' ? run.killed_by_event : null);
+      if (killer) {
+        if (!a.deathEncounters[killer]) a.deathEncounters[killer] = 0;
+        a.deathEncounters[killer]++;
+      }
+
+      // Death by act + floor type
+      const hist = run.map_point_history || [];
+      const acts = run.acts || [];
+      const lastActIdx = hist.length - 1;
+      if (lastActIdx >= 0) {
+        const actName = prettyId(acts[lastActIdx] || ('Act ' + (lastActIdx + 1)));
+        if (!a.deathByAct[actName]) a.deathByAct[actName] = { boss: 0, elite: 0, hallway: 0, event: 0 };
+        // Classify death type using killed_by fields as the source of truth
+        // If killed_by_encounter is set, it was a combat death — use the map/room type to determine boss/elite/hallway
+        // If killed_by_event is set (and no encounter), it was a pure event death
+        const killedByEnc = run.killed_by_encounter && run.killed_by_encounter !== 'NONE.NONE';
+        const killedByEvt = run.killed_by_event && run.killed_by_event !== 'NONE.NONE';
+        const lastActFloors = hist[lastActIdx];
+        const lastFloor = (lastActFloors && lastActFloors.length > 0) ? lastActFloors[lastActFloors.length - 1] : null;
+        const mpt = lastFloor ? (lastFloor.map_point_type || '') : '';
+        const roomType = lastFloor && lastFloor.rooms && lastFloor.rooms[0] ? lastFloor.rooms[0].room_type : mpt;
+
+        if (!killedByEnc && killedByEvt) {
+          a.deathByAct[actName].event++;
+        } else if (mpt === 'boss' || roomType === 'boss') {
+          a.deathByAct[actName].boss++;
+        } else if (mpt === 'elite' || roomType === 'elite') {
+          a.deathByAct[actName].elite++;
+        } else {
+          a.deathByAct[actName].hallway++;
+        }
+      }
+    }
+
+    // HP progression per floor — owner's player only
+    const history = run.map_point_history || [];
+    let floorIdx = 0;
+    const target = win ? a.hpProgWins : a.hpProgLosses;
+    if (target) {
+      history.forEach(actFloors => {
+        (actFloors || []).forEach(mp => {
+          const ps = ownerId ? (mp.player_stats || []).find(p => p.player_id === ownerId) : (mp.player_stats || [])[0];
+          if (ps) {
+            const ratio = ps.max_hp > 0 ? ps.current_hp / ps.max_hp : 0;
+            if (!target[floorIdx]) target[floorIdx] = [];
+            target[floorIdx].push(ratio);
+          }
+          floorIdx++;
+        });
+      });
+    }
+  });
+
+  a.streakCurrent = currentStreak;
+  analytics = a;
+}
+
+// ─── Rendering ───────────────────────────────────────────────────────────────
+
+function renderCharFilters() {
+  const chars = new Set();
+  runs.forEach(run => {
+    const p = getOwnerPlayer(run);
+    if (p && p.character) chars.add(p.character);
+  });
+  const container = document.getElementById('charFilters');
+  let html = '<button class="mode-btn' + (activeChar === 'all' ? ' active' : '') + '" data-char="all">All Characters</button>';
+  [...chars].sort().forEach(c => {
+    const color = charColor(c);
+    const active = activeChar === c ? ' active' : '';
+    html += '<button class="mode-btn' + active + '" data-char="' + c + '"' + (color ? ' style="color:' + color + '"' : '') + '>' + prettyId(c) + '</button>';
+  });
+  container.innerHTML = html;
+  container.querySelectorAll('[data-char]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeChar = btn.dataset.char;
+      selectedRelic = null;
+      renderCharFilters();
+      computeAnalytics();
+      renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
+      renderDeaths(); renderHpProgression(); renderDeckSize(); renderRelics(); renderCards();
+    });
+  });
+}
+
+function computeAndRender() {
+  const steps = [
+    ['detectOwner', detectOwner],
+    ['renderCharFilters', renderCharFilters],
+    ['computeAnalytics', computeAnalytics],
+    ['renderOverview', renderOverview],
+    ['renderTimeline', renderTimeline],
+    ['renderCharTable', renderCharTable],
+    ['renderAscension', renderAscension],
+    ['renderDeaths', renderDeaths],
+    ['renderHpProgression', renderHpProgression],
+    ['renderDeckSize', renderDeckSize],
+    ['renderRelics', renderRelics],
+    ['renderCards', renderCards],
+  ];
+  selectedRelic = null;
+  for (const [name, fn] of steps) {
+    try { fn(); } catch (err) { console.error('Analytics error in ' + name + ':', err); }
+  }
+}
+
+// Overview stats
+function renderOverview() {
+  const a = analytics;
+  const charsByRuns = Object.entries(a.charStats).sort((a, b) => b[1].runs - a[1].runs);
+  const mostPlayed = charsByRuns[0];
+  const leastPlayed = charsByRuns.length > 1 ? charsByRuns[charsByRuns.length - 1] : null;
+  const avgTime = a.total > 0 ? Math.round(a.totalTime / a.total) : 0;
+
+  // Most skipped: card offered the most times but never picked
+  const mostSkipped = Object.entries(a.cardPickStats)
+    .filter(([id, s]) => s.picked === 0 && s.offered > 0 && !STARTER_CARDS.has(id))
+    .sort((a, b) => b[1].offered - a[1].offered)[0];
+
+  document.getElementById('statGrid').innerHTML = [
+    { label: 'Total Runs', value: a.total, cls: '' },
+    { label: 'Win Rate', value: pct(a.wins, a.wins + a.losses), sub: a.wins + 'W / ' + a.losses + 'L' + (a.abandoned ? ' / ' + a.abandoned + ' abandoned' : ''), cls: a.wins >= a.losses ? 'green' : 'red' },
+    { label: 'Total Play Time', value: prettyTime(a.totalTime), cls: '' },
+    { label: 'Avg Run Time', value: prettyTime(avgTime), cls: '' },
+    { label: 'Max Ascension (Won)', value: 'A' + a.maxAscWin, sub: 'Highest attempted: A' + a.maxAsc, cls: 'yellow' },
+    { label: 'Most Played', value: mostPlayed ? mostPlayed[0] : '—', sub: mostPlayed ? mostPlayed[1].runs + ' runs' : '', style: mostPlayed ? charColor(mostPlayed[0]) : '' },
+    { label: 'Least Played', value: leastPlayed ? leastPlayed[0] : '—', sub: leastPlayed ? leastPlayed[1].runs + ' runs' : '', style: leastPlayed ? charColor(leastPlayed[0]) : '' },
+    { label: 'Fastest Win', value: a.fastestWin < Infinity ? prettyTime(a.fastestWin) : '—', cls: 'green' },
+    { label: 'Slowest Win', value: a.slowestWin > 0 ? prettyTime(a.slowestWin) : '—', cls: '' },
+    { label: 'Current Streak', value: a.streakCurrent + 'W', cls: a.streakCurrent > 0 ? 'green' : '' },
+    { label: 'Best Streak', value: a.streakBest + 'W', cls: 'blue' },
+    { label: 'Cards Seen', value: a.uniqueCards.size + ' / 576', sub: (a.uniqueCards.size / 576 * 100).toFixed(1) + '% of all cards', cls: '' },
+    { label: 'Relics Seen', value: a.uniqueRelics.size + ' / 288', sub: (a.uniqueRelics.size / 288 * 100).toFixed(1) + '% of all relics', cls: '' },
+    { label: 'Most Skipped', value: mostSkipped ? prettyId(mostSkipped[0]) : '—', sub: mostSkipped ? 'Offered ' + mostSkipped[1].offered + 'x, Picked 0' : '', style: mostSkipped ? charColor(CARD_CHARS[mostSkipped[0]] || '') : '' },
+  ].map(s => {
+    const styleAttr = s.style ? ' style="color:' + s.style + '"' : '';
+    return '<div class="stat-card"><span class="stat-label">' + s.label + '</span><span class="stat-value ' + (s.cls || '') + '"' + styleAttr + '>' + s.value + '</span>' + (s.sub ? '<span class="stat-sub">' + s.sub + '</span>' : '') + '</div>';
+  }).join('');
+}
+
+// Results Over Time chart
+function renderTimeline() {
+  const canvas = document.getElementById('timelineChart');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const data = analytics.timeline;
+  if (data.length === 0) return;
+
+  const pad = { top: 25, right: 20, bottom: 30, left: 45 };
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+
+  // Draw grid
+  ctx.strokeStyle = CHART_COLORS.grid; ctx.lineWidth = 0.5;
+  ctx.fillStyle = CHART_COLORS.text; ctx.font = '10px system-ui';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + plotH * (1 - i / 4);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+    ctx.fillText(Math.round(i * 25) + '%', pad.left - 4, y + 3);
+  }
+
+  // Compute rolling win rate over non-abandoned runs (window of 10)
+  const completed = data.filter(t => !t.abandoned);
+  const windowSize = Math.min(10, Math.max(3, Math.floor(completed.length / 5)));
+  const rollingWr = [];
+  let completedSoFar = [];
+  data.forEach(d => {
+    if (!d.abandoned) completedSoFar.push(d.win);
+    const window = completedSoFar.slice(-windowSize);
+    rollingWr.push(window.length > 0 ? window.filter(Boolean).length / window.length : 0);
+  });
+
+  // Draw dots
+  data.forEach((d, i) => {
+    const x = pad.left + (data.length > 1 ? (i / (data.length - 1)) * plotW : plotW / 2);
+    const dotY = d.abandoned ? pad.top + plotH * 0.5 : (d.win ? pad.top + plotH * 0.2 : pad.top + plotH * 0.8);
+    ctx.beginPath();
+    ctx.arc(x, dotY, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = d.abandoned ? CHART_COLORS.orange + '90' : (d.win ? CHART_COLORS.green + '90' : CHART_COLORS.red + '90');
+    ctx.fill();
+  });
+
+  // Draw rolling win rate line
+  ctx.beginPath();
+  ctx.strokeStyle = CHART_COLORS.blue;
+  ctx.lineWidth = 2;
+  data.forEach((d, i) => {
+    const x = pad.left + (data.length > 1 ? (i / (data.length - 1)) * plotW : plotW / 2);
+    const y = pad.top + plotH * (1 - rollingWr[i]);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Legend
+  ctx.font = '10px system-ui'; ctx.textAlign = 'left';
+  ctx.fillStyle = CHART_COLORS.green; ctx.fillText('\u25CF Win', pad.left, 14);
+  ctx.fillStyle = CHART_COLORS.red; ctx.fillText('\u25CF Loss', pad.left + 50, 14);
+  ctx.fillStyle = CHART_COLORS.orange; ctx.fillText('\u25CF Abandoned', pad.left + 100, 14);
+  ctx.fillStyle = CHART_COLORS.blue; ctx.fillText('\u2500 Rolling ' + windowSize + '-run WR', pad.left + 185, 14);
+
+  // X axis labels — use round intervals
+  ctx.fillStyle = CHART_COLORS.text; ctx.textAlign = 'center';
+  const niceSteps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500];
+  const rawStep = data.length / 8;
+  const step = niceSteps.find(s => s >= rawStep) || Math.ceil(rawStep / 100) * 100;
+  for (let n = 0; n < data.length; n++) {
+    if ((n + 1) % step !== 0 && n !== 0 && n !== data.length - 1) continue;
+    const x = pad.left + (n / (data.length - 1)) * plotW;
+    ctx.fillText('#' + (n + 1), x, h - 8);
+  }
+}
+
+// Character table
+function renderCharTable() {
+  const entries = Object.entries(analytics.charStats).sort((a, b) => b[1].runs - a[1].runs);
+  let html = '<table class="data-table"><thead><tr><th>Character</th><th class="num">Runs</th><th class="num">Wins</th><th class="num">Losses</th><th class="num">Win Rate</th><th class="bar-cell"></th><th class="num">Avg Time</th><th class="num">Avg Asc</th><th class="num">Avg Deck</th></tr></thead><tbody>';
+  entries.forEach(([name, s]) => {
+    const wr = s.runs > 0 ? s.wins / s.runs : 0;
+    const cc = charColor(name);
+    html += '<tr><td><strong' + (cc ? ' style="color:' + cc + '"' : '') + '>' + name + '</strong></td><td class="num">' + s.runs + '</td><td class="num">' + s.wins + '</td><td class="num">' + (s.runs - s.wins) + '</td><td class="num ' + wrClass(wr) + '">' + pct(s.wins, s.runs) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (wr * 100) + '%;background:' + wrBarColor(wr) + '"></div></div></td><td class="num">' + prettyTime(Math.round(s.totalTime / s.runs)) + '</td><td class="num">' + (s.totalAsc / s.runs).toFixed(1) + '</td><td class="num">' + (s.totalDeckSize / s.runs).toFixed(1) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('charTableBox').innerHTML = html;
+}
+
+// Ascension
+function renderAscension() {
+  // Table
+  const ascEntries = Object.entries(analytics.ascStats).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+  let thtml = '<table class="data-table"><thead><tr><th>Ascension</th><th class="num">Runs</th><th class="num">Wins</th><th class="num">Win Rate</th><th class="bar-cell"></th></tr></thead><tbody>';
+  ascEntries.forEach(([asc, s]) => {
+    const wr = s.runs > 0 ? s.wins / s.runs : 0;
+    thtml += '<tr><td>A' + asc + '</td><td class="num">' + s.runs + '</td><td class="num">' + s.wins + '</td><td class="num ' + wrClass(wr) + '">' + pct(s.wins, s.runs) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (wr * 100) + '%;background:' + wrBarColor(wr) + '"></div></div></td></tr>';
+  });
+  thtml += '</tbody></table>';
+  document.getElementById('ascTableBox').innerHTML = thtml;
+
+  // Chart
+  const canvas = document.getElementById('ascChart');
+  const { ctx, w, h } = setupCanvas(canvas);
+  if (ascEntries.length === 0) return;
+
+  const pad = { top: 20, right: 20, bottom: 30, left: 45 };
+  drawGridAndLabels(ctx, w, h, pad, 100, 4, v => Math.round(v) + '%');
+
+  const barW = Math.min(40, (w - pad.left - pad.right) / ascEntries.length * 0.7);
+  const gap = (w - pad.left - pad.right) / ascEntries.length;
+  ascEntries.forEach(([asc, s], i) => {
+    const wr = s.runs > 0 ? s.wins / s.runs : 0;
+    const x = pad.left + gap * i + gap / 2 - barW / 2;
+    const barH = wr * (h - pad.top - pad.bottom);
+    const y = h - pad.bottom - barH;
+    ctx.fillStyle = wrBarColor(wr) + 'cc';
+    ctx.fillRect(x, y, barW, barH);
+    // Label
+    ctx.fillStyle = CHART_COLORS.text; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('A' + asc, pad.left + gap * i + gap / 2, h - 8);
+    // Value on top
+    if (wr > 0) {
+      ctx.fillStyle = '#e6edf3'; ctx.font = '9px system-ui';
+      ctx.fillText(Math.round(wr * 100) + '%', pad.left + gap * i + gap / 2, y - 4);
+    }
+  });
+}
+
+// Deaths
+function renderDeaths() {
+  // Top killers table
+  const killers = Object.entries(analytics.deathEncounters).sort((a, b) => b[1] - a[1]);
+  const maxKills = killers.length > 0 ? killers[0][1] : 1;
+  function encounterType(id) {
+    const raw = id.toUpperCase();
+    if (raw.includes('_BOSS') || raw.includes('.BOSS')) return { label: 'Boss', color: CHART_COLORS.red };
+    if (raw.includes('_ELITE')) return { label: 'Elite', color: CHART_COLORS.orange };
+    if (raw.includes('_WEAK')) return { label: 'Weak', color: CHART_COLORS.muted };
+    if (raw.startsWith('EVENT.')) return { label: 'Event', color: CHART_COLORS.purple };
+    return { label: 'Normal', color: CHART_COLORS.blue };
+  }
+  let khtml = '<table class="data-table"><thead><tr><th>Encounter</th><th class="num">Type</th><th class="num">Deaths</th><th class="bar-cell"></th></tr></thead><tbody>';
+  killers.forEach(([id, count]) => {
+    const et = encounterType(id);
+    const typeBadge = '<span style="color:' + et.color + '">' + et.label + '</span>';
+    khtml += '<tr><td>' + prettyId(id) + '</td><td class="num">' + typeBadge + '</td><td class="num">' + count + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (count / maxKills * 100) + '%;background:' + et.color + '"></div></div></td></tr>';
+  });
+  khtml += '</tbody></table>';
+  document.getElementById('killersBox').innerHTML = khtml;
+
+  // Deaths by act — stacked bar chart (Boss / Elite / Hallway / Event)
+  const canvas1 = document.getElementById('deathActChart');
+  const { ctx: ctx1, w: w1, h: h1 } = setupCanvas(canvas1);
+  const deathActs = analytics.deathByAct;
+  // Sort acts in a logical order: Act 1 variants, Act 2, Act 3
+  const actOrder = ['overgrowth', 'underdocks', 'hive', 'glory', 'radiance'];
+  const actEntries = Object.entries(deathActs).sort((a, b) => {
+    const ai = actOrder.indexOf(a[0].toLowerCase()), bi = actOrder.indexOf(b[0].toLowerCase());
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a[0].localeCompare(b[0]);
+  });
+  if (actEntries.length > 0) {
+    const categories = ['boss', 'elite', 'hallway', 'event'];
+    const catColors = { boss: CHART_COLORS.red, elite: CHART_COLORS.orange, hallway: CHART_COLORS.blue, event: CHART_COLORS.purple };
+    const catLabels = { boss: 'Boss', elite: 'Elite', hallway: 'Hallway', event: 'Event' };
+    const maxVal = Math.max(...actEntries.map(([_, d]) => d.boss + d.elite + d.hallway + d.event));
+    const pad = { top: 30, right: 20, bottom: 35, left: 45 };
+    drawGridAndLabels(ctx1, w1, h1, pad, maxVal, 4, v => Math.round(v));
+    const barW = Math.min(50, (w1 - pad.left - pad.right) / actEntries.length * 0.6);
+    const gap = (w1 - pad.left - pad.right) / actEntries.length;
+    const plotH = h1 - pad.top - pad.bottom;
+
+    actEntries.forEach(([actName, data], i) => {
+      const cx = pad.left + gap * i + gap / 2;
+      const x = cx - barW / 2;
+      let yBottom = h1 - pad.bottom;
+      const total = data.boss + data.elite + data.hallway + data.event;
+
+      categories.forEach(cat => {
+        if (data[cat] <= 0) return;
+        const segH = maxVal > 0 ? (data[cat] / maxVal) * plotH : 0;
+        yBottom -= segH;
+        ctx1.fillStyle = catColors[cat] + 'cc';
+        ctx1.fillRect(x, yBottom, barW, segH);
+      });
+
+      // Total on top
+      ctx1.fillStyle = '#e6edf3'; ctx1.font = '10px system-ui'; ctx1.textAlign = 'center';
+      const topY = h1 - pad.bottom - (maxVal > 0 ? (total / maxVal) * plotH : 0);
+      ctx1.fillText(total, cx, topY - 4);
+
+      // Act name label
+      ctx1.fillStyle = CHART_COLORS.text; ctx1.font = '10px system-ui';
+      ctx1.fillText(actName, cx, h1 - 8);
+    });
+
+    // Legend
+    ctx1.font = '10px system-ui'; ctx1.textAlign = 'left';
+    let lx = pad.left;
+    categories.forEach(cat => {
+      ctx1.fillStyle = catColors[cat]; ctx1.fillRect(lx, 8, 10, 10);
+      ctx1.fillStyle = CHART_COLORS.text; ctx1.fillText(catLabels[cat], lx + 13, 17);
+      lx += ctx1.measureText(catLabels[cat]).width + 24;
+    });
+  }
+
+}
+
+// HP progression
+function renderHpProgression() {
+  const canvas = document.getElementById('hpProgChart');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const winData = analytics.hpProgWins;
+  const lossData = analytics.hpProgLosses;
+  const maxFloors = Math.max(winData.length, lossData.length);
+  if (maxFloors === 0) return;
+
+  const pad = { top: 25, right: 20, bottom: 30, left: 52 };
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+
+  // Y axis grid + labels
+  ctx.strokeStyle = CHART_COLORS.grid; ctx.lineWidth = 0.5;
+  ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+  for (let i = 0; i <= 5; i++) {
+    const pctVal = i * 20;
+    const y = pad.top + plotH * (1 - i / 5);
+    ctx.fillStyle = CHART_COLORS.grid;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+    ctx.fillStyle = CHART_COLORS.text;
+    ctx.fillText(pctVal + '%', pad.left - 6, y + 4);
+  }
+
+  // Draw lines
+  function drawLine(data, color) {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    data.forEach((bucket, i) => {
+      if (!bucket || bucket.length === 0) return;
+      const avg = bucket.reduce((s, v) => s + v, 0) / bucket.length;
+      const x = pad.left + (i / (maxFloors - 1)) * plotW;
+      const y = pad.top + plotH * (1 - avg);
+      if (i === 0 || !data[i - 1] || data[i - 1].length === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  drawLine(winData, CHART_COLORS.green);
+  drawLine(lossData, CHART_COLORS.red);
+
+  // Legend
+  ctx.font = '11px system-ui'; ctx.textAlign = 'left';
+  ctx.fillStyle = CHART_COLORS.green; ctx.fillText('\u2500 Wins', pad.left, 14);
+  ctx.fillStyle = CHART_COLORS.red; ctx.fillText('\u2500 Losses', pad.left + 60, 14);
+
+  // X axis
+  ctx.fillStyle = CHART_COLORS.text; ctx.textAlign = 'center'; ctx.font = '10px system-ui';
+  const niceSteps = [1, 2, 5, 10, 15, 20, 25];
+  const rawStep = maxFloors / 8;
+  const step = niceSteps.find(s => s >= rawStep) || Math.ceil(rawStep / 10) * 10;
+  for (let i = 0; i < maxFloors; i++) {
+    if ((i + 1) % step !== 0 && i !== 0 && i !== maxFloors - 1) continue;
+    ctx.fillText('F' + (i + 1), pad.left + (i / (maxFloors - 1)) * plotW, h - 8);
+  }
+}
+
+// Deck size
+function renderDeckSize() {
+  const canvas = document.getElementById('deckSizeChart');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const winSizes = analytics.deckSizeWins;
+  const lossSizes = analytics.deckSizeLosses;
+  if (winSizes.length === 0 && lossSizes.length === 0) return;
+
+  // Create histogram buckets
+  const allSizes = [...winSizes, ...lossSizes];
+  const minSize = Math.min(...allSizes);
+  const maxSize = Math.max(...allSizes);
+  const bucketSize = Math.max(1, Math.ceil((maxSize - minSize + 1) / 12));
+  const numBuckets = Math.ceil((maxSize - minSize + 1) / bucketSize);
+  const winBuckets = new Array(numBuckets).fill(0);
+  const lossBuckets = new Array(numBuckets).fill(0);
+
+  winSizes.forEach(s => { const b = Math.min(numBuckets - 1, Math.floor((s - minSize) / bucketSize)); winBuckets[b]++; });
+  lossSizes.forEach(s => { const b = Math.min(numBuckets - 1, Math.floor((s - minSize) / bucketSize)); lossBuckets[b]++; });
+
+  const maxVal = Math.max(...winBuckets, ...lossBuckets);
+  const pad = { top: 25, right: 20, bottom: 30, left: 45 };
+  drawGridAndLabels(ctx, w, h, pad, maxVal, 4, v => Math.round(v));
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+  const groupW = plotW / numBuckets;
+  const barW = groupW * 0.35;
+
+  for (let i = 0; i < numBuckets; i++) {
+    const x = pad.left + groupW * i + groupW * 0.1;
+    // Win bar
+    const wH = maxVal > 0 ? (winBuckets[i] / maxVal) * plotH : 0;
+    ctx.fillStyle = CHART_COLORS.green + '99';
+    ctx.fillRect(x, h - pad.bottom - wH, barW, wH);
+    // Loss bar
+    const lH = maxVal > 0 ? (lossBuckets[i] / maxVal) * plotH : 0;
+    ctx.fillStyle = CHART_COLORS.red + '99';
+    ctx.fillRect(x + barW + 2, h - pad.bottom - lH, barW, lH);
+    // Label
+    const labelVal = minSize + i * bucketSize;
+    const labelEnd = Math.min(maxSize, labelVal + bucketSize - 1);
+    ctx.fillStyle = CHART_COLORS.text; ctx.font = '9px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(labelVal + (bucketSize > 1 ? '-' + labelEnd : ''), pad.left + groupW * i + groupW / 2, h - 8);
+  }
+
+  // Legend
+  ctx.font = '10px system-ui'; ctx.textAlign = 'left';
+  ctx.fillStyle = CHART_COLORS.green; ctx.fillText('\u25A0 Wins', pad.left, 14);
+  ctx.fillStyle = CHART_COLORS.red; ctx.fillText('\u25A0 Losses', pad.left + 60, 14);
+}
+
+// ─── Synergy state ───────────────────────────────────────────────────────────
+
+let selectedRelic = null;
+let relicSort = { col: 'count', dir: 'desc' };
+let cardSort = { col: 'count', dir: 'desc' };
+
+function selectRelic(relicId) {
+  selectedRelic = selectedRelic === relicId ? null : relicId;
+  renderRelics();
+  renderCards();
+}
+
+function sortArrow(currentCol, currentDir, col) {
+  if (currentCol !== col) return '<span class="sort-arrow">\u2195</span>';
+  return '<span class="sort-arrow">' + (currentDir === 'desc' ? '\u2193' : '\u2191') + '</span>';
+}
+
+function toggleSort(state, col) {
+  if (state.col === col) { state.dir = state.dir === 'desc' ? 'asc' : 'desc'; }
+  else { state.col = col; state.dir = 'desc'; }
+}
+
+// Relics — single sortable table
+function renderRelics() {
+  const hideStarters = document.getElementById('hideStarters').checked;
+  const minRuns = parseInt(document.getElementById('relicMinRuns').value) || 1;
+  const search = (document.getElementById('relicSearch').value || '').toLowerCase();
+
+  let data = Object.entries(analytics.relicStats)
+    .map(([id, s]) => ({
+      id, count: s.count, wins: s.wins,
+      wr: s.count > 0 ? s.wins / s.count : 0,
+      avgFloor: s.count > 0 ? s.totalFloor / s.count : 0,
+      earlyWr: s.earlyCount > 0 ? s.earlyWins / s.earlyCount : -1,
+      earlyCount: s.earlyCount, earlyWins: s.earlyWins
+    }));
+  if (hideStarters) data = data.filter(r => !STARTER_RELICS.has(r.id));
+  data = data.filter(r => r.count >= minRuns);
+  if (search) data = data.filter(r => prettyId(r.id).toLowerCase().includes(search));
+
+  const dir = relicSort.dir === 'desc' ? -1 : 1;
+  data.sort((a, b) => {
+    let diff;
+    switch (relicSort.col) {
+      case 'name': diff = a.id.localeCompare(b.id); break;
+      case 'count': diff = a.count - b.count; break;
+      case 'wr': diff = a.wr - b.wr || a.count - b.count; break;
+      case 'avgFloor': diff = a.avgFloor - b.avgFloor; break;
+      case 'earlyWr': diff = (a.earlyWr < 0 ? -999 : a.earlyWr) - (b.earlyWr < 0 ? -999 : b.earlyWr) || a.earlyCount - b.earlyCount; break;
+      default: diff = a.count - b.count;
+    }
+    return diff * dir;
+  });
+
+  function th(label, col, isNum) {
+    const sorted = relicSort.col === col ? ' sorted' : '';
+    return '<th class="' + (isNum ? 'num ' : '') + 'sortable' + sorted + '" data-sort="' + col + '">' + label + sortArrow(relicSort.col, relicSort.dir, col) + '</th>';
+  }
+
+  let html = '<table class="data-table" id="relicTable"><thead><tr>' +
+    th('Relic', 'name', false) + th('Runs', 'count', true) + th('Win Rate', 'wr', true) +
+    th('Avg Floor', 'avgFloor', true) + th('Early WR', 'earlyWr', true) +
+    '</tr></thead><tbody>';
+
+  data.forEach(r => {
+    const sel = selectedRelic === r.id ? ' selected' : '';
+    const earlyDisplay = r.earlyWr >= 0 ? '<span class="' + wrClass(r.earlyWr) + '">' + pct(r.earlyWins, r.earlyCount) + '</span> <span style="color:var(--text-muted);font-size:0.65rem;">(' + r.earlyCount + ')</span>' : '<span style="color:var(--text-muted)">—</span>';
+    html += '<tr class="clickable' + sel + '" data-relic="' + r.id + '"><td><div class="item-row">' + relicImgTag(r.id) + '<span>' + prettyId(r.id) + '</span></div></td><td class="num">' + r.count + '</td><td class="num ' + wrClass(r.wr) + '">' + pct(r.wins, r.count) + '</td><td class="num">' + (r.avgFloor > 0 ? r.avgFloor.toFixed(1) : '—') + '</td><td class="num">' + earlyDisplay + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('relicTableBox').innerHTML = html;
+
+  document.querySelectorAll('#relicTable th.sortable').forEach(th => {
+    th.addEventListener('click', () => { toggleSort(relicSort, th.dataset.sort); renderRelics(); });
+  });
+  document.querySelectorAll('[data-relic]').forEach(row => {
+    row.addEventListener('click', () => selectRelic(row.dataset.relic));
+  });
+}
+
+// Cards — single sortable table with pick rate and win rate
+function renderCards() {
+  const hideStarters = document.getElementById('hideStarterCards').checked;
+  const minRuns = parseInt(document.getElementById('cardMinRuns').value) || 1;
+  const search = (document.getElementById('cardSearch').value || '').toLowerCase();
+
+  // Synergy filter
+  let cardData;
+  const banner = document.getElementById('cardFilterBanner');
+  if (selectedRelic) {
+    cardData = {};
+    analytics.runPlayerData.forEach(rp => {
+      if (!rp.relics.has(selectedRelic)) return;
+      rp.cards.forEach(cid => {
+        if (!cardData[cid]) cardData[cid] = { count: 0, wins: 0, totalFloor: 0, floorEntries: 0, earlyCount: 0, earlyWins: 0 };
+        cardData[cid].count++;
+        if (rp.win) cardData[cid].wins++;
+      });
+    });
+    const totalWithRelic = analytics.runPlayerData.filter(rp => rp.relics.has(selectedRelic)).length;
+    banner.innerHTML = '<div class="filter-banner">' + relicImgTag(selectedRelic) + '<span>Showing card stats for runs with <strong>' + prettyId(selectedRelic) + '</strong> (' + totalWithRelic + ' runs)</span><button class="clear-btn" id="clearRelicFilter">Clear</button></div>';
+    document.getElementById('clearRelicFilter').addEventListener('click', (e) => { e.stopPropagation(); selectRelic(selectedRelic); });
+  } else {
+    cardData = analytics.cardStats;
+    banner.innerHTML = '';
+  }
+
+  // Pick rate data (synergy-filtered if needed)
+  let pickData;
+  if (selectedRelic) {
+    pickData = {};
+    const filteredRuns = runs.filter(run => {
+      if (activeMode === 'solo' && isCoopRun(run)) return false;
+      if (activeMode === 'coop' && !isCoopRun(run)) return false;
+      const p = getOwnerPlayer(run);
+      if (!p) return false;
+      return (p.relics || []).some(r => r.id === selectedRelic);
+    });
+    filteredRuns.forEach(run => {
+      const p = getOwnerPlayer(run);
+      const pid = p ? p.id : null;
+      if (!pid) return;
+      (run.map_point_history || []).forEach(actFloors => {
+        (actFloors || []).forEach(mp => {
+          const ps = (mp.player_stats || []).find(s => s.player_id === pid);
+          if (!ps) return;
+          (ps.card_choices || []).forEach(cc => {
+            const cid = cc.card?.id;
+            if (!cid) return;
+            if (!pickData[cid]) pickData[cid] = { offered: 0, picked: 0 };
+            pickData[cid].offered++;
+            if (cc.was_picked) pickData[cid].picked++;
+          });
+          (ps.bought_colorless || []).forEach(cid => {
+            if (!pickData[cid]) pickData[cid] = { offered: 0, picked: 0 };
+            pickData[cid].offered++;
+            pickData[cid].picked++;
+          });
+        });
+      });
+    });
+  } else {
+    pickData = analytics.cardPickStats;
+  }
+
+  // Merge card stats + pick stats into one dataset
+  const allIds = new Set([...Object.keys(cardData), ...Object.keys(pickData)]);
+  let data = [...allIds].map(id => {
+    const cs = cardData[id] || { count: 0, wins: 0, totalFloor: 0, floorEntries: 0, earlyCount: 0, earlyWins: 0 };
+    const ps = pickData[id] || { offered: 0, picked: 0 };
+    return {
+      id, count: cs.count, wins: cs.wins,
+      wr: cs.count > 0 ? cs.wins / cs.count : 0,
+      avgFloor: cs.floorEntries > 0 ? cs.totalFloor / cs.floorEntries : 0,
+      earlyWr: cs.earlyCount > 0 ? cs.earlyWins / cs.earlyCount : -1,
+      earlyCount: cs.earlyCount,
+      earlyWins: cs.earlyWins || 0,
+      offered: ps.offered, picked: ps.picked,
+      pickRate: ps.offered > 0 ? ps.picked / ps.offered : 0,
+      type: CARD_TYPES[id] || '?'
+    };
+  });
+  if (hideStarters) data = data.filter(r => !STARTER_CARDS.has(r.id));
+  data = data.filter(r => r.count >= minRuns || r.offered >= minRuns);
+  if (search) data = data.filter(r => prettyId(r.id).toLowerCase().includes(search) || r.type.includes(search));
+
+  const dir = cardSort.dir === 'desc' ? -1 : 1;
+  data.sort((a, b) => {
+    let diff;
+    switch (cardSort.col) {
+      case 'name': diff = a.id.localeCompare(b.id); break;
+      case 'type': diff = a.type.localeCompare(b.type) || a.id.localeCompare(b.id); break;
+      case 'count': diff = a.count - b.count; break;
+      case 'wr': diff = a.wr - b.wr || a.count - b.count; break;
+      case 'avgFloor': diff = (a.avgFloor || 999) - (b.avgFloor || 999); break;
+      case 'earlyWr': diff = (a.earlyWr < 0 ? -999 : a.earlyWr) - (b.earlyWr < 0 ? -999 : b.earlyWr) || a.earlyCount - b.earlyCount; break;
+      case 'offered': diff = a.offered - b.offered; break;
+      case 'picked': diff = a.picked - b.picked; break;
+      case 'pickRate': diff = a.pickRate - b.pickRate || a.offered - b.offered; break;
+      default: diff = a.count - b.count;
+    }
+    return diff * dir;
+  });
+
+  function th(label, col, isNum) {
+    const sorted = cardSort.col === col ? ' sorted' : '';
+    return '<th class="' + (isNum ? 'num ' : '') + 'sortable' + sorted + '" data-sort="' + col + '">' + label + sortArrow(cardSort.col, cardSort.dir, col) + '</th>';
+  }
+
+  let html = '<table class="data-table" id="cardTable"><thead><tr>' +
+    th('Card', 'name', false) + th('Type', 'type', true) + th('Runs', 'count', true) +
+    th('Win Rate', 'wr', true) + th('Avg Floor', 'avgFloor', true) + th('Early WR', 'earlyWr', true) +
+    th('Offered', 'offered', true) + th('Picked', 'picked', true) +
+    th('Pick Rate', 'pickRate', true) +
+    '</tr></thead><tbody>';
+
+  data.forEach(r => {
+    const typeColor = TYPE_COLORS[r.type] || CHART_COLORS.text;
+    const typeBadge = '<span style="color:' + typeColor + ';text-transform:capitalize;">' + r.type + '</span>';
+    const wrDisplay = r.count > 0 ? '<span class="' + wrClass(r.wr) + '">' + pct(r.wins, r.count) + '</span>' : '<span style="color:var(--text-muted)">—</span>';
+    const earlyDisplay = r.earlyWr >= 0 ? '<span class="' + wrClass(r.earlyWr) + '">' + pct(r.earlyWins, r.earlyCount) + '</span> <span style="color:var(--text-muted);font-size:0.65rem;">(' + r.earlyCount + ')</span>' : '<span style="color:var(--text-muted)">—</span>';
+    const prDisplay = r.offered > 0 ? (r.pickRate * 100).toFixed(1) + '%' : '<span style="color:var(--text-muted)">—</span>';
+    html += '<tr><td><div class="item-row">' + cardImgTag(r.id) + '<span>' + prettyId(r.id) + '</span></div></td><td class="num">' + typeBadge + '</td><td class="num">' + r.count + '</td><td class="num">' + wrDisplay + '</td><td class="num">' + (r.avgFloor > 0 ? r.avgFloor.toFixed(1) : '—') + '</td><td class="num">' + earlyDisplay + '</td><td class="num">' + r.offered + '</td><td class="num">' + r.picked + '</td><td class="num">' + prDisplay + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('cardTableBox').innerHTML = html;
+
+  document.querySelectorAll('#cardTable th.sortable').forEach(th => {
+    th.addEventListener('click', () => { toggleSort(cardSort, th.dataset.sort); renderCards(); });
+  });
+}
+
+// ─── Filter Interactions ─────────────────────────────────────────────────────
+
+document.getElementById('hideStarters').addEventListener('change', renderRelics);
+document.getElementById('relicMinRuns').addEventListener('change', renderRelics);
+document.getElementById('relicSearch').addEventListener('input', renderRelics);
+document.getElementById('hideStarterCards').addEventListener('change', renderCards);
+document.getElementById('cardMinRuns').addEventListener('change', renderCards);
+document.getElementById('cardSearch').addEventListener('input', renderCards);
+
+// Mode filter — only handle buttons with data-mode (not character buttons)
+document.getElementById('modeFilters').addEventListener('click', e => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  document.querySelectorAll('#modeFilters > [data-mode]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeMode = btn.dataset.mode;
+  selectedRelic = null;
+  renderCharFilters();
+  computeAnalytics();
+  renderOverview();
+  renderTimeline();
+  renderCharTable();
+  renderAscension();
+  renderDeaths();
+  renderHpProgression();
+  renderDeckSize();
+  renderRelics();
+  renderCards();
+});
+
+// ─── Resize ──────────────────────────────────────────────────────────────────
+
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    if (runs.length > 0) {
+      renderTimeline();
+      renderAscension();
+      renderDeaths();
+      renderHpProgression();
+      renderDeckSize();
+    }
+  }, 150);
+});
+
+// ─── Tooltips ────────────────────────────────────────────────────────────────
+
+const tipEl = document.createElement('div');
+tipEl.className = 'item-tooltip';
+document.body.appendChild(tipEl);
+
+document.addEventListener('mouseover', e => {
+  const trigger = e.target.closest('.tip-trigger');
+  if (!trigger || !trigger.dataset.tip) return;
+  const name = trigger.alt || trigger.closest('.item-row')?.querySelector('span')?.textContent || '';
+  tipEl.innerHTML = (name ? '<div class="tip-name">' + name + '</div>' : '') + trigger.dataset.tip;
+  tipEl.style.display = 'block';
+  const rect = trigger.getBoundingClientRect();
+  tipEl.style.left = Math.min(rect.left, window.innerWidth - 340) + 'px';
+  tipEl.style.top = (rect.bottom + 8) + 'px';
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('.tip-trigger')) tipEl.style.display = 'none';
+});
+</script>
+
+<footer class="site-footer">
+  <p>This is an unofficial, fan-made companion app and is not affiliated with, endorsed by, or associated with Mega Crit Games. All game imagery, card art, relic icons, and other visual assets displayed in this application are the property of Mega Crit Games and are used here solely for informational and non-commercial purposes in connection with Slay the Spire 2.</p>
+  <p style="margin-top:8px;">Slay the Spire and Slay the Spire 2 are trademarks of Mega Crit Games. All rights reserved.</p>
+  <p style="margin-top:8px;">Card, relic, and potion images provided by <a href="https://spire-codex.com" style="color:var(--accent-blue);text-decoration:none;">Spire Codex</a> — thanks to them for making this data freely available. Run data is read directly from local .run files generated by the game on your machine. No data is collected or sent to any external server.</p>
+</footer>
+</body>
+</html>

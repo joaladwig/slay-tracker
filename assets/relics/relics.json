@@ -1,0 +1,1730 @@
+[
+  {
+    "name": "Akabeko",
+    "slug": "akabeko",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of each combat, gain 8 Vigor."
+  },
+  {
+    "name": "Alchemical Coffer",
+    "slug": "alchemical_coffer",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, gain 4 potion slots filled with random potions."
+  },
+  {
+    "name": "Amethyst Aubergine",
+    "slug": "amethyst_aubergine",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Enemies drop 10 additional Gold."
+  },
+  {
+    "name": "Anchor",
+    "slug": "anchor",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Start each combat with 10 Block."
+  },
+  {
+    "name": "Anchor???",
+    "slug": "fake_anchor",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Start each combat with 4 Block."
+  },
+  {
+    "name": "Arcane Scroll",
+    "slug": "arcane_scroll",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain a random Rare Card to add to your Deck."
+  },
+  {
+    "name": "Archaic Tooth",
+    "slug": "archaic_tooth",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Transform a starter card with an ancient version."
+  },
+  {
+    "name": "Art of War",
+    "slug": "art_of_war",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "If you do not play any Attacks during your turn, gain an additional energy next turn."
+  },
+  {
+    "name": "Astrolabe",
+    "slug": "astrolabe",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Transform 3 cards, then Upgrade them."
+  },
+  {
+    "name": "Bag of Marbles",
+    "slug": "bag_of_marbles",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of each combat, apply 1 Vulnerable to ALL enemies."
+  },
+  {
+    "name": "Bag of Preparation",
+    "slug": "bag_of_preparation",
+    "rarity_pool": "Common Relic·shared",
+    "description": "At the start of each combat, draw 2 additional cards."
+  },
+  {
+    "name": "Beating Remnant",
+    "slug": "beating_remnant",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "You cannot lose more than 20 HP in a single turn."
+  },
+  {
+    "name": "Beautiful Bracelet",
+    "slug": "beautiful_bracelet",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, choose 3 cards in your Deck. Enchant them with Swift 3."
+  },
+  {
+    "name": "Bellows",
+    "slug": "bellows",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "The first Hand you draw each combat is Upgraded."
+  },
+  {
+    "name": "Belt Buckle",
+    "slug": "belt_buckle",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "While you have no potions, you have 2 additional Dexterity."
+  },
+  {
+    "name": "Big Hat",
+    "slug": "big_hat",
+    "rarity_pool": "Rare Relic·necrobinder",
+    "description": "At the start of each combat, add 2 random Ethereal cards into your Hand."
+  },
+  {
+    "name": "Big Mushroom",
+    "slug": "big_mushroom",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 20. At the start of each combat, draw 2 fewer cards."
+  },
+  {
+    "name": "Biiig Hug",
+    "slug": "biiig_hug",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, remove 4 cards from your Deck. Whenever you shuffle your Draw Pile, add a Soot into your Draw Pile."
+  },
+  {
+    "name": "Bing Bong",
+    "slug": "bing_bong",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you add a card to your Deck, add one additional copy."
+  },
+  {
+    "name": "Black Blood",
+    "slug": "black_blood",
+    "rarity_pool": "Starter Relic·ironclad",
+    "description": "At the end of combat, heal 12 HP."
+  },
+  {
+    "name": "Black Star",
+    "slug": "black_star",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Elites drop an additional Relic when defeated."
+  },
+  {
+    "name": "Blessed Antler",
+    "slug": "blessed_antler",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. At the start of each combat, shuffle 3 Dazed into your Draw Pile."
+  },
+  {
+    "name": "Blood Vial",
+    "slug": "blood_vial",
+    "rarity_pool": "Common Relic·shared",
+    "description": "At the start of each combat, heal 2 HP."
+  },
+  {
+    "name": "Blood Vial???",
+    "slug": "fake_blood_vial",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of each combat, heal 1 HP."
+  },
+  {
+    "name": "Blood-Soaked Rose",
+    "slug": "blood_soaked_rose",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 1 Enthralled to your Deck. Gain energy at the start of each turn."
+  },
+  {
+    "name": "Bone Flute",
+    "slug": "bone_flute",
+    "rarity_pool": "Common Relic·necrobinder",
+    "description": "Whenever Osty attacks, gain 2 Block."
+  },
+  {
+    "name": "Bone Tea",
+    "slug": "bone_tea",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of the next 2 combats, Upgrade your starting hand."
+  },
+  {
+    "name": "Book of Five Rings",
+    "slug": "book_of_five_rings",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Every 5 cards you add to your Deck, heal 15 HP."
+  },
+  {
+    "name": "Book Repair Knife",
+    "slug": "book_repair_knife",
+    "rarity_pool": "Uncommon Relic·necrobinder",
+    "description": "Whenever a non-Minion enemy dies to Doom, heal 3 HP."
+  },
+  {
+    "name": "Bookmark",
+    "slug": "bookmark",
+    "rarity_pool": "Rare Relic·necrobinder",
+    "description": "At the end of each turn, lower the cost of a random Retained card by 1 until played."
+  },
+  {
+    "name": "Booming Conch",
+    "slug": "booming_conch",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of Elite combats, draw 2 additional cards."
+  },
+  {
+    "name": "Bound Phylactery",
+    "slug": "bound_phylactery",
+    "rarity_pool": "Starter Relic·necrobinder",
+    "description": "At the start of your turn, Summon 1."
+  },
+  {
+    "name": "Bowler Hat",
+    "slug": "bowler_hat",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Gain 20% additional Gold."
+  },
+  {
+    "name": "Bread",
+    "slug": "bread",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "At the start of your first turn, lose energy. At the start of all other turns, gain energy."
+  },
+  {
+    "name": "Brilliant Scarf",
+    "slug": "brilliant_scarf",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "The 5th card you play each turn is free."
+  },
+  {
+    "name": "Brimstone",
+    "slug": "brimstone",
+    "rarity_pool": "Shop Relic·ironclad",
+    "description": "At the start of your turn, gain 2 Strength and ALL enemies gain 1 Strength."
+  },
+  {
+    "name": "Bronze Scales",
+    "slug": "bronze_scales",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Start each combat with 3 Thorns."
+  },
+  {
+    "name": "Burning Blood",
+    "slug": "burning_blood",
+    "rarity_pool": "Starter Relic·ironclad",
+    "description": "At the end of combat, heal 6 HP."
+  },
+  {
+    "name": "Burning Sticks",
+    "slug": "burning_sticks",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "The first time each combat you Exhaust a Skill, add a copy of it into your Hand."
+  },
+  {
+    "name": "Byrdpip",
+    "slug": "byrdpip",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Upon pickup, gain the card Byrd Swoop. A Byrdpip will accompany you in battles."
+  },
+  {
+    "name": "Calling Bell",
+    "slug": "calling_bell",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain a unique Curse and 3 Relics."
+  },
+  {
+    "name": "Candelabra",
+    "slug": "candelabra",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of your 2nd turn, gain energy."
+  },
+  {
+    "name": "Captain's Wheel",
+    "slug": "captains_wheel",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "At the start of your 3rd turn, gain 18 Block."
+  },
+  {
+    "name": "Cauldron",
+    "slug": "cauldron",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, brews 5 random potions."
+  },
+  {
+    "name": "Centennial Puzzle",
+    "slug": "centennial_puzzle",
+    "rarity_pool": "Common Relic·shared",
+    "description": "The first time you lose HP each combat, draw 3 cards."
+  },
+  {
+    "name": "Chandelier",
+    "slug": "chandelier",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "At the start of your 3rd turn, gain energy."
+  },
+  {
+    "name": "Charon's Ashes",
+    "slug": "charons_ashes",
+    "rarity_pool": "Rare Relic·ironclad",
+    "description": "Whenever you Exhaust a card, deal 3 damage to ALL enemies."
+  },
+  {
+    "name": "Chemical X",
+    "slug": "chemical_x",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "The effects of your cost X cards are increased by 2."
+  },
+  {
+    "name": "Choices Paradox",
+    "slug": "choices_paradox",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of each combat, add 1 of 5 random cards into your Hand. Add Retain to the chosen card."
+  },
+  {
+    "name": "Circlet",
+    "slug": "circlet",
+    "rarity_pool": "None·shared",
+    "description": "It's a circlet."
+  },
+  {
+    "name": "Claws",
+    "slug": "claws",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Transform up to 6 cards into Maul."
+  },
+  {
+    "name": "Cloak Clasp",
+    "slug": "cloak_clasp",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "At the end of your turn, gain 1 Block for each card in your Hand."
+  },
+  {
+    "name": "Cracked Core",
+    "slug": "cracked_core",
+    "rarity_pool": "Starter Relic·defect",
+    "description": "At the start of each combat, Channel 1 Lightning."
+  },
+  {
+    "name": "Crossbow",
+    "slug": "crossbow",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of your turn, add a random Attack into your Hand. It costs 0 energy this turn."
+  },
+  {
+    "name": "Cursed Pearl",
+    "slug": "cursed_pearl",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, receive Greed. Gain 333 Gold."
+  },
+  {
+    "name": "Darkstone Periapt",
+    "slug": "darkstone_periapt",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you obtain a Curse, raise your Max HP by 6."
+  },
+  {
+    "name": "Data Disk",
+    "slug": "data_disk",
+    "rarity_pool": "Common Relic·defect",
+    "description": "Start each combat with 1 Focus."
+  },
+  {
+    "name": "Daughter of the Wind",
+    "slug": "daughter_of_the_wind",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you play an Attack, gain 1 Block."
+  },
+  {
+    "name": "Delicate Frond",
+    "slug": "delicate_frond",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of each combat, fill all empty potion slots with random potions."
+  },
+  {
+    "name": "Demon Tongue",
+    "slug": "demon_tongue",
+    "rarity_pool": "Rare Relic·ironclad",
+    "description": "The first time you lose HP on your turn, heal HP equal to the amount lost."
+  },
+  {
+    "name": "Diamond Diadem",
+    "slug": "diamond_diadem",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Whenever you play 2 or fewer cards in a turn, take half damage from enemies."
+  },
+  {
+    "name": "Dingy Rug",
+    "slug": "dingy_rug",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Card rewards can now contain Colorless cards."
+  },
+  {
+    "name": "Distinguished Cape",
+    "slug": "distinguished_cape",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, lose 9 Max HP. Add 3 Apparitions to your Deck."
+  },
+  {
+    "name": "Divine Destiny",
+    "slug": "divine_destiny",
+    "rarity_pool": "Starter Relic·regent",
+    "description": "At the start of each combat, gain 6 stars."
+  },
+  {
+    "name": "Divine Right",
+    "slug": "divine_right",
+    "rarity_pool": "Starter Relic·regent",
+    "description": "At the start of each combat, gain 3 stars."
+  },
+  {
+    "name": "Dolly's Mirror",
+    "slug": "dollys_mirror",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, obtain an additional copy of a card in your Deck."
+  },
+  {
+    "name": "Dragon Fruit",
+    "slug": "dragon_fruit",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Whenever you gain Gold, raise your Max HP by 1."
+  },
+  {
+    "name": "Dream Catcher",
+    "slug": "dream_catcher",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you Rest, you may add a card to your Deck."
+  },
+  {
+    "name": "Driftwood",
+    "slug": "driftwood",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "You may reroll each card reward once."
+  },
+  {
+    "name": "Dusty Tome",
+    "slug": "dusty_tome",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain an Ancient Card."
+  },
+  {
+    "name": "Ectoplasm",
+    "slug": "ectoplasm",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "You can no longer gain Gold. Gain energy at the start of each turn."
+  },
+  {
+    "name": "Electric Shrymp",
+    "slug": "electric_shrymp",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Enchant a Skill with Imbued."
+  },
+  {
+    "name": "Ember Tea",
+    "slug": "ember_tea",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of the next 2 combats, gain 2 Strength."
+  },
+  {
+    "name": "Emotion Chip",
+    "slug": "emotion_chip",
+    "rarity_pool": "Rare Relic·defect",
+    "description": "If you lost HP during the previous turn, trigger the passive ability of all Orbs at the start of your turn."
+  },
+  {
+    "name": "Empty Cage",
+    "slug": "empty_cage",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, remove 2 cards from your Deck."
+  },
+  {
+    "name": "Eternal Feather",
+    "slug": "eternal_feather",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "For every 5 cards in your Deck, heal 3 HP whenever you enter a Rest Site."
+  },
+  {
+    "name": "Fencing Manual",
+    "slug": "fencing_manual",
+    "rarity_pool": "Common Relic·regent",
+    "description": "At the start of each combat, Forge 10."
+  },
+  {
+    "name": "Festive Popper",
+    "slug": "festive_popper",
+    "rarity_pool": "Common Relic·shared",
+    "description": "At the start of each combat, deal 9 damage to ALL enemies."
+  },
+  {
+    "name": "Fiddle",
+    "slug": "fiddle",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of each turn, draw 2 additional cards. You may not draw cards during your turn."
+  },
+  {
+    "name": "Forgotten Soul",
+    "slug": "forgotten_soul",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you Exhaust a card, deal 1 damage to a random enemy."
+  },
+  {
+    "name": "Fragrant Mushroom",
+    "slug": "fragrant_mushroom",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Upon pickup, lose 15 HP and Upgrade 3 random cards."
+  },
+  {
+    "name": "Fresnel Lens",
+    "slug": "fresnel_lens",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you add a card that gains Block to your Deck, Enchant it with Nimble 2."
+  },
+  {
+    "name": "Frozen Egg",
+    "slug": "frozen_egg",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you add a Power into your Deck, Upgrade it."
+  },
+  {
+    "name": "Funerary Mask",
+    "slug": "funerary_mask",
+    "rarity_pool": "Uncommon Relic·necrobinder",
+    "description": "At the start of each combat, add 3 Souls into your Draw Pile."
+  },
+  {
+    "name": "Fur Coat",
+    "slug": "fur_coat",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, mark 7 random combats. Enemies in those rooms have 1 HP."
+  },
+  {
+    "name": "Galactic Dust",
+    "slug": "galactic_dust",
+    "rarity_pool": "Uncommon Relic·regent",
+    "description": "For every 10 stars spent, gain 10 Block."
+  },
+  {
+    "name": "Gambling Chip",
+    "slug": "gambling_chip",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "At the start of each combat, discard any number of cards then draw that many."
+  },
+  {
+    "name": "Game Piece",
+    "slug": "game_piece",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you play a Power, draw 1 card."
+  },
+  {
+    "name": "Ghost Seed",
+    "slug": "ghost_seed",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Strikes and Defends gain Ethereal."
+  },
+  {
+    "name": "Girya",
+    "slug": "girya",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "You can now gain Strength at Rest Sites. (3 times max)"
+  },
+  {
+    "name": "Glass Eye",
+    "slug": "glass_eye",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain 2 Common cards, 2 Uncommon cards, and 1 Rare card."
+  },
+  {
+    "name": "Glitter",
+    "slug": "glitter",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Enchant all card rewards with Glam."
+  },
+  {
+    "name": "Gnarled Hammer",
+    "slug": "gnarled_hammer",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, Enchant up to 3 Attacks with Sharp 3."
+  },
+  {
+    "name": "Gold-Plated Cables",
+    "slug": "gold_plated_cables",
+    "rarity_pool": "Uncommon Relic·defect",
+    "description": "Your rightmost Orb triggers its passive an additional time."
+  },
+  {
+    "name": "Golden Compass",
+    "slug": "golden_compass",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, replace the Act 2 Map with a single special path."
+  },
+  {
+    "name": "Golden Pearl",
+    "slug": "golden_pearl",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, gain 150 Gold."
+  },
+  {
+    "name": "Gorget",
+    "slug": "gorget",
+    "rarity_pool": "Common Relic·shared",
+    "description": "At the start of each combat, gain 4 Plating."
+  },
+  {
+    "name": "Gremlin Horn",
+    "slug": "gremlin_horn",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Whenever an enemy dies, gain energy and draw 1 card."
+  },
+  {
+    "name": "Hand Drill",
+    "slug": "hand_drill",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you break an enemy's Block, apply 2 Vulnerable."
+  },
+  {
+    "name": "Happy Flower",
+    "slug": "happy_flower",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Every 3 turns, gain energy."
+  },
+  {
+    "name": "Happy Flower???",
+    "slug": "fake_happy_flower",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Every 5 turns, gain energy."
+  },
+  {
+    "name": "Helical Dart",
+    "slug": "helical_dart",
+    "rarity_pool": "Rare Relic·silent",
+    "description": "Whenever you play a Shiv, gain 1 Dexterity this turn."
+  },
+  {
+    "name": "History Course",
+    "slug": "history_course",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of your turn, play a copy of your last played Attack or Skill."
+  },
+  {
+    "name": "Horn Cleat",
+    "slug": "horn_cleat",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of your 2nd turn, gain 14 Block."
+  },
+  {
+    "name": "Ice Cream",
+    "slug": "ice_cream",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Energy is now conserved between turns."
+  },
+  {
+    "name": "Infused Core",
+    "slug": "infused_core",
+    "rarity_pool": "Starter Relic·defect",
+    "description": "At the start of each combat, Channel 3 Lightning."
+  },
+  {
+    "name": "Intimidating Helmet",
+    "slug": "intimidating_helmet",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you play a card that costs 2 or more, gain 4 Block."
+  },
+  {
+    "name": "Iron Club",
+    "slug": "iron_club",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Every 4 cards you play, draw 1 card."
+  },
+  {
+    "name": "Ivory Tile",
+    "slug": "ivory_tile",
+    "rarity_pool": "Rare Relic·necrobinder",
+    "description": "Whenever you play a card that costs 3 or more, gain energy."
+  },
+  {
+    "name": "Jeweled Mask",
+    "slug": "jeweled_mask",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of combat put a random Power from your Draw Pile into your Hand, it's free to play."
+  },
+  {
+    "name": "Jewelry Box",
+    "slug": "jewelry_box",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 1 Apotheosis to your Deck."
+  },
+  {
+    "name": "Joss Paper",
+    "slug": "joss_paper",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every 5 times you Exhaust a card, draw 1 card."
+  },
+  {
+    "name": "Juzu Bracelet",
+    "slug": "juzu_bracelet",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Regular enemy combats are no longer encountered in ? rooms."
+  },
+  {
+    "name": "Kifuda",
+    "slug": "kifuda",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, Enchant up to 3 cards with Adroit."
+  },
+  {
+    "name": "Kunai",
+    "slug": "kunai",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Every time you play 3 Attacks in a single turn, gain 1 Dexterity."
+  },
+  {
+    "name": "Kusarigama",
+    "slug": "kusarigama",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every time you play 3 Attacks in a single turn, deal 6 damage to a random enemy."
+  },
+  {
+    "name": "Lantern",
+    "slug": "lantern",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Start each combat with an additional energy."
+  },
+  {
+    "name": "Large Capsule",
+    "slug": "large_capsule",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain 2 random Relics. Add an additional Strike and Defend to your Deck."
+  },
+  {
+    "name": "Lasting Candy",
+    "slug": "lasting_candy",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Every other combat, your card rewards gain an additional Power."
+  },
+  {
+    "name": "Lava Lamp",
+    "slug": "lava_lamp",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "At the end of combat, Upgrade all card rewards if you took no damage."
+  },
+  {
+    "name": "Lava Rock",
+    "slug": "lava_rock",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "The Act 1 Boss drops 2 Relics."
+  },
+  {
+    "name": "Lead Paperweight",
+    "slug": "lead_paperweight",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, choose 1 of 2 Colorless cards to add to your Deck."
+  },
+  {
+    "name": "Leafy Poultice",
+    "slug": "leafy_poultice",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Transform 1 of your Strikes and 1 of your Defends and lose 10 Max HP."
+  },
+  {
+    "name": "Lee's Waffle",
+    "slug": "lees_waffle",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 7 and heal all of your HP."
+  },
+  {
+    "name": "Lee's Waffle???",
+    "slug": "fake_lees_waffle",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Upon pickup, heal 10% of your HP."
+  },
+  {
+    "name": "Letter Opener",
+    "slug": "letter_opener",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every time you play 3 Skills in a single turn, deal 5 damage to ALL enemies."
+  },
+  {
+    "name": "Lizard Tail",
+    "slug": "lizard_tail",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "When you would die, heal to 50% of your Max HP instead (works once)."
+  },
+  {
+    "name": "Looming Fruit",
+    "slug": "looming_fruit",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 31."
+  },
+  {
+    "name": "Lord's Parasol",
+    "slug": "lords_parasol",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "When you encounter the Merchant, immediately obtain EVERYTHING he sells."
+  },
+  {
+    "name": "Lost Coffer",
+    "slug": "lost_coffer",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, gain 1 card reward and procure 1 random potion."
+  },
+  {
+    "name": "Lost Wisp",
+    "slug": "lost_wisp",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you play a Power, deal 8 damage to ALL enemies."
+  },
+  {
+    "name": "Lucky Fysh",
+    "slug": "lucky_fysh",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Whenever you add a card to your Deck, gain 15 Gold."
+  },
+  {
+    "name": "Lunar Pastry",
+    "slug": "lunar_pastry",
+    "rarity_pool": "Rare Relic·regent",
+    "description": "At the end of your turn, gain 1 star."
+  },
+  {
+    "name": "Mango",
+    "slug": "mango",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 14."
+  },
+  {
+    "name": "Mango???",
+    "slug": "fake_mango",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 3."
+  },
+  {
+    "name": "Massive Scroll",
+    "slug": "massive_scroll",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, choose 1 of 3 Multiplayer Colorless Cards to add to your Deck."
+  },
+  {
+    "name": "Maw Bank",
+    "slug": "maw_bank",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you climb a floor, gain 12 Gold. No longer works when you spend any Gold at the shop."
+  },
+  {
+    "name": "Meal Ticket",
+    "slug": "meal_ticket",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Whenever you enter a shop room, heal 15 HP."
+  },
+  {
+    "name": "Meat Cleaver",
+    "slug": "meat_cleaver",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "You may Cook at Rest Sites."
+  },
+  {
+    "name": "Meat on the Bone",
+    "slug": "meat_on_the_bone",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "If your HP is at or below 50% at the end of combat, heal 12 HP."
+  },
+  {
+    "name": "Membership Card",
+    "slug": "membership_card",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "50% discount on all products!"
+  },
+  {
+    "name": "Mercury Hourglass",
+    "slug": "mercury_hourglass",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of your turn, deal 3 damage to ALL enemies."
+  },
+  {
+    "name": "Metronome",
+    "slug": "metronome",
+    "rarity_pool": "Rare Relic·defect",
+    "description": "The first time you Channel 7 Orbs each combat, deal 30 damage to ALL enemies."
+  },
+  {
+    "name": "Mini Regent",
+    "slug": "mini_regent",
+    "rarity_pool": "Rare Relic·regent",
+    "description": "The first time you spend stars each turn, gain 1 Strength."
+  },
+  {
+    "name": "Miniature Cannon",
+    "slug": "miniature_cannon",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Upgraded Attacks deal 3 additional damage."
+  },
+  {
+    "name": "Miniature Tent",
+    "slug": "miniature_tent",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "You may choose any number of options at Rest Sites."
+  },
+  {
+    "name": "Molten Egg",
+    "slug": "molten_egg",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you add an Attack card to your Deck, Upgrade it."
+  },
+  {
+    "name": "Mr. Struggles",
+    "slug": "mr_struggles",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of your turn, deal damage equal to the turn number to ALL enemies."
+  },
+  {
+    "name": "Mummified Hand",
+    "slug": "mummified_hand",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you play a Power, a random card in your Hand is free to play that turn."
+  },
+  {
+    "name": "Music Box",
+    "slug": "music_box",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Create an Ethereal copy of the first Attack you play each turn."
+  },
+  {
+    "name": "Mystic Lighter",
+    "slug": "mystic_lighter",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Enchanted Attacks deal 9 additional damage."
+  },
+  {
+    "name": "Neow's Torment",
+    "slug": "neows_torment",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 1 Neow's Fury to your Deck."
+  },
+  {
+    "name": "New Leaf",
+    "slug": "new_leaf",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Transform 1 card."
+  },
+  {
+    "name": "Ninja Scroll",
+    "slug": "ninja_scroll",
+    "rarity_pool": "Shop Relic·silent",
+    "description": "At the start of each combat, add 3 Shivs into your Hand."
+  },
+  {
+    "name": "Nunchaku",
+    "slug": "nunchaku",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every time you play 10 Attacks, gain energy."
+  },
+  {
+    "name": "Nutritious Oyster",
+    "slug": "nutritious_oyster",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 11."
+  },
+  {
+    "name": "Nutritious Soup",
+    "slug": "nutritious_soup",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Enchant all Strikes in your Deck with Tezcatara's Ember."
+  },
+  {
+    "name": "Oddly Smooth Stone",
+    "slug": "oddly_smooth_stone",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Start each combat with 1 Dexterity."
+  },
+  {
+    "name": "Old Coin",
+    "slug": "old_coin",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Upon pickup, gain 300 Gold."
+  },
+  {
+    "name": "Orange Dough",
+    "slug": "orange_dough",
+    "rarity_pool": "Rare Relic·regent",
+    "description": "At the start of each combat, add 2 random Colorless cards into your Hand."
+  },
+  {
+    "name": "Orichalcum",
+    "slug": "orichalcum",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "If you end your turn without Block, gain 6 Block."
+  },
+  {
+    "name": "Orichalcum???",
+    "slug": "fake_orichalcum",
+    "rarity_pool": "Event Relic·shared",
+    "description": "If you end your turn without Block, gain 3 Block."
+  },
+  {
+    "name": "Ornamental Fan",
+    "slug": "ornamental_fan",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every time you play 3 Attacks in a single turn, gain 4 Block."
+  },
+  {
+    "name": "Orrery",
+    "slug": "orrery",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, gain 5 card rewards."
+  },
+  {
+    "name": "Pael's Blood",
+    "slug": "paels_blood",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of your turn, draw 1 additional card."
+  },
+  {
+    "name": "Pael's Claw",
+    "slug": "paels_claw",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Enchant all Defends with ."
+  },
+  {
+    "name": "Pael's Eye",
+    "slug": "paels_eye",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "The first time each combat you end your turn without playing cards, Exhaust your Hand, and take an extra turn."
+  },
+  {
+    "name": "Pael's Flesh",
+    "slug": "paels_flesh",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain an additional energy at the start of your 3rd turn, and every turn after that."
+  },
+  {
+    "name": "Pael's Growth",
+    "slug": "paels_growth",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Enchant a card with ."
+  },
+  {
+    "name": "Pael's Horn",
+    "slug": "paels_horn",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 2 Relax to your Deck."
+  },
+  {
+    "name": "Pael's Legion",
+    "slug": "paels_legion",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Doubles Block gained from a card, then goes to sleep for 2 turns."
+  },
+  {
+    "name": "Pael's Tears",
+    "slug": "paels_tears",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "If you end your turn with unspent energy, gain an additional energy next turn."
+  },
+  {
+    "name": "Pael's Tooth",
+    "slug": "paels_tooth",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, remove 5 cards from your Deck. After each combat, randomly add 1 back Upgraded."
+  },
+  {
+    "name": "Pael's Wing",
+    "slug": "paels_wing",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "You may sacrifice card rewards to Pael. Every 2 sacrifices, obtain a Relic."
+  },
+  {
+    "name": "Pandora's Box",
+    "slug": "pandoras_box",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Transform ALL Strikes and Defends."
+  },
+  {
+    "name": "Pantograph",
+    "slug": "pantograph",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of each Boss combat, heal 25 HP."
+  },
+  {
+    "name": "Paper Krane",
+    "slug": "paper_krane",
+    "rarity_pool": "Rare Relic·silent",
+    "description": "Enemies with Weak deal 40% less damage to you rather than 25%."
+  },
+  {
+    "name": "Paper Phrog",
+    "slug": "paper_phrog",
+    "rarity_pool": "Uncommon Relic·ironclad",
+    "description": "Enemies with Vulnerable take 75% more damage rather than 50%."
+  },
+  {
+    "name": "Parrying Shield",
+    "slug": "parrying_shield",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "If you end a turn with at least 10 Block, deal 6 damage to a random enemy."
+  },
+  {
+    "name": "Pear",
+    "slug": "pear",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 10."
+  },
+  {
+    "name": "Pen Nib",
+    "slug": "pen_nib",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every 10th Attack you play deals double damage."
+  },
+  {
+    "name": "Pendulum",
+    "slug": "pendulum",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Whenever you shuffle your Draw Pile, draw a card."
+  },
+  {
+    "name": "Permafrost",
+    "slug": "permafrost",
+    "rarity_pool": "Common Relic·shared",
+    "description": "The first time you play a Power each combat, gain 6 Block."
+  },
+  {
+    "name": "Petrified Toad",
+    "slug": "petrified_toad",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of each combat, procure a Potion-Shaped Rock."
+  },
+  {
+    "name": "Philosopher's Stone",
+    "slug": "philosophers_stone",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. ALL enemies start combat with 1 Strength."
+  },
+  {
+    "name": "Phylactery Unbound",
+    "slug": "phylactery_unbound",
+    "rarity_pool": "Starter Relic·necrobinder",
+    "description": "At the start of each combat, Summon 5. At the start of your turn, Summon 2."
+  },
+  {
+    "name": "Planisphere",
+    "slug": "planisphere",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Whenever you enter a ? room, heal 4 HP."
+  },
+  {
+    "name": "Pocketwatch",
+    "slug": "pocketwatch",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you play 3 or fewer cards during your turn, draw 3 additional cards at the start of your next turn."
+  },
+  {
+    "name": "Pollinous Core",
+    "slug": "pollinous_core",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Every 4 turns, draw 2 additional cards."
+  },
+  {
+    "name": "Pomander",
+    "slug": "pomander",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Upgrade a card."
+  },
+  {
+    "name": "Potion Belt",
+    "slug": "potion_belt",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Upon pickup, gain 2 potion slots."
+  },
+  {
+    "name": "Power Cell",
+    "slug": "power_cell",
+    "rarity_pool": "Rare Relic·defect",
+    "description": "At the start of each combat, add 2 zero-cost cards from your Draw Pile into your Hand."
+  },
+  {
+    "name": "Prayer Wheel",
+    "slug": "prayer_wheel",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Normal enemies drop an additional card reward."
+  },
+  {
+    "name": "Precarious Shears",
+    "slug": "precarious_shears",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, remove 2 cards from your Deck and take 13 damage."
+  },
+  {
+    "name": "Precise Scissors",
+    "slug": "precise_scissors",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, remove 1 card from your Deck."
+  },
+  {
+    "name": "Preserved Fog",
+    "slug": "preserved_fog",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, remove 5 cards from your Deck. Add Folly to your Deck."
+  },
+  {
+    "name": "Prismatic Gem",
+    "slug": "prismatic_gem",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. Card rewards now contain cards from other colors."
+  },
+  {
+    "name": "Pumpkin Candle",
+    "slug": "pumpkin_candle",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. Extinguishes at the start of Act 3."
+  },
+  {
+    "name": "Punch Dagger",
+    "slug": "punch_dagger",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, Enchant an Attack with Momentum 5."
+  },
+  {
+    "name": "Radiant Pearl",
+    "slug": "radiant_pearl",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of each combat, add 1 Luminesce into your Hand."
+  },
+  {
+    "name": "Rainbow Ring",
+    "slug": "rainbow_ring",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "The first time you play an Attack, Skill, and Power each turn, gain 1 Strength and 1 Dexterity."
+  },
+  {
+    "name": "Razor Tooth",
+    "slug": "razor_tooth",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Every time you play an Attack or Skill, Upgrade it for the remainder of combat."
+  },
+  {
+    "name": "Red Mask",
+    "slug": "red_mask",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of each combat, apply 1 Weak to ALL enemies."
+  },
+  {
+    "name": "Red Skull",
+    "slug": "red_skull",
+    "rarity_pool": "Common Relic·ironclad",
+    "description": "While your HP is at or below 50%, you have 3 additional Strength."
+  },
+  {
+    "name": "Regal Pillow",
+    "slug": "regal_pillow",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Whenever you Rest, heal an additional 15 HP."
+  },
+  {
+    "name": "Regalite",
+    "slug": "regalite",
+    "rarity_pool": "Uncommon Relic·regent",
+    "description": "Whenever you create a Colorless card, gain 2 Block."
+  },
+  {
+    "name": "Reptile Trinket",
+    "slug": "reptile_trinket",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Whenever you use a potion, gain 3 Strength this turn."
+  },
+  {
+    "name": "Ring of the Drake",
+    "slug": "ring_of_the_drake",
+    "rarity_pool": "Starter Relic·silent",
+    "description": "At the start of your first 3 turns, draw 2 additional cards."
+  },
+  {
+    "name": "Ring of the Snake",
+    "slug": "ring_of_the_snake",
+    "rarity_pool": "Starter Relic·silent",
+    "description": "At the start of each combat, draw 2 additional cards."
+  },
+  {
+    "name": "Ringing Triangle",
+    "slug": "ringing_triangle",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Retain your Hand on the first turn of combat."
+  },
+  {
+    "name": "Ripple Basin",
+    "slug": "ripple_basin",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "If you did not play any Attacks during your turn, gain 4 Block."
+  },
+  {
+    "name": "Royal Poison",
+    "slug": "royal_poison",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of each combat, lose 4 HP."
+  },
+  {
+    "name": "Royal Stamp",
+    "slug": "royal_stamp",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Upon pickup, choose an Attack or Skill in your Deck to Enchant with ."
+  },
+  {
+    "name": "Ruined Helmet",
+    "slug": "ruined_helmet",
+    "rarity_pool": "Rare Relic·ironclad",
+    "description": "The first time you gain Strength each combat, double the amount gained."
+  },
+  {
+    "name": "Runic Capacitor",
+    "slug": "runic_capacitor",
+    "rarity_pool": "Shop Relic·defect",
+    "description": "Start each combat with 3 additional Orb Slots."
+  },
+  {
+    "name": "Runic Pyramid",
+    "slug": "runic_pyramid",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the end of your turn, you no longer discard your Hand."
+  },
+  {
+    "name": "Sai",
+    "slug": "sai",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of your turn, gain 7 Block."
+  },
+  {
+    "name": "Sand Castle",
+    "slug": "sand_castle",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Upgrade 6 random cards."
+  },
+  {
+    "name": "Screaming Flagon",
+    "slug": "screaming_flagon",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "If you end your turn with no cards in your Hand, deal 20 damage to ALL enemies."
+  },
+  {
+    "name": "Scroll Boxes",
+    "slug": "scroll_boxes",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, lose all Gold and choose 1 of 2 packs of cards to add to your Deck."
+  },
+  {
+    "name": "Sea Glass",
+    "slug": "sea_glass",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "See 15 cards from another character. Choose any number of them to add to your Deck."
+  },
+  {
+    "name": "Seal of Gold",
+    "slug": "seal_of_gold",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of your turn, spend 5 Gold to gain energy."
+  },
+  {
+    "name": "Self-Forming Clay",
+    "slug": "self_forming_clay",
+    "rarity_pool": "Uncommon Relic·ironclad",
+    "description": "Whenever you lose HP in combat, gain 3 Block next turn."
+  },
+  {
+    "name": "Sere Talon",
+    "slug": "sere_talon",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 2 random Curses and 3 Wishes to your Deck."
+  },
+  {
+    "name": "Shovel",
+    "slug": "shovel",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "You can now dig at Rest Sites to obtain a random Relic."
+  },
+  {
+    "name": "Shuriken",
+    "slug": "shuriken",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Every time you play 3 Attacks in a single turn, gain 1 Strength."
+  },
+  {
+    "name": "Signet Ring",
+    "slug": "signet_ring",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, gain 999 Gold."
+  },
+  {
+    "name": "Silver Crucible",
+    "slug": "silver_crucible",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "The first 3 card rewards you see are Upgraded. The first Treasure Chest you open is empty."
+  },
+  {
+    "name": "Sling of Courage",
+    "slug": "sling_of_courage",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Start each Elite combat with 2 Strength."
+  },
+  {
+    "name": "Small Capsule",
+    "slug": "small_capsule",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain a random Relic."
+  },
+  {
+    "name": "Snecko Eye",
+    "slug": "snecko_eye",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of your turn, draw 2 additional cards. Start each combat Confused."
+  },
+  {
+    "name": "Snecko Eye???",
+    "slug": "fake_snecko_eye",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Start each combat Confused."
+  },
+  {
+    "name": "Snecko Skull",
+    "slug": "snecko_skull",
+    "rarity_pool": "Common Relic·silent",
+    "description": "Whenever you apply Poison, apply an additional 1 Poison."
+  },
+  {
+    "name": "Sozu",
+    "slug": "sozu",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. You can no longer obtain potions."
+  },
+  {
+    "name": "Sparkling Rouge",
+    "slug": "sparkling_rouge",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of your 3rd turn, gain 1 Strength and 1 Dexterity."
+  },
+  {
+    "name": "Spiked Gauntlets",
+    "slug": "spiked_gauntlets",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. Powers cost 1 more energy."
+  },
+  {
+    "name": "Stone Calendar",
+    "slug": "stone_calendar",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "At the end of turn 7, deal 52 damage to ALL enemies."
+  },
+  {
+    "name": "Stone Cracker",
+    "slug": "stone_cracker",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "At the start of Boss combats, Upgrade 3 random cards in your Draw Pile for the rest of combat."
+  },
+  {
+    "name": "Stone Humidifier",
+    "slug": "stone_humidifier",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Whenever you Rest at a Rest Site, raise your Max HP by 5."
+  },
+  {
+    "name": "Storybook",
+    "slug": "storybook",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 1 Brightest Flame to your Deck."
+  },
+  {
+    "name": "Strawberry",
+    "slug": "strawberry",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Upon pickup, raise your Max HP by 7."
+  },
+  {
+    "name": "Strike Dummy",
+    "slug": "strike_dummy",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Cards containing \"Strike\" deal 3 additional damage."
+  },
+  {
+    "name": "Strike Dummy???",
+    "slug": "fake_strike_dummy",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Cards containing \"Strike\" deal 1 additional damage."
+  },
+  {
+    "name": "Sturdy Clamp",
+    "slug": "sturdy_clamp",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Up to 10 Block persists across turns."
+  },
+  {
+    "name": "Sword of Jade",
+    "slug": "sword_of_jade",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Start each combat with 3 Strength."
+  },
+  {
+    "name": "Sword of Stone",
+    "slug": "sword_of_stone",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Transforms into a powerful Relic after defeating 5 Elites."
+  },
+  {
+    "name": "Symbiotic Virus",
+    "slug": "symbiotic_virus",
+    "rarity_pool": "Uncommon Relic·defect",
+    "description": "At the start of each combat, Channel 1 Dark."
+  },
+  {
+    "name": "Tanx's Whistle",
+    "slug": "tanxs_whistle",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, add 1 Whistle to your Deck."
+  },
+  {
+    "name": "Tea of Discourtesy",
+    "slug": "tea_of_discourtesy",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the start of the next combat, shuffle 2 Dazed into your Draw Pile."
+  },
+  {
+    "name": "The Abacus",
+    "slug": "the_abacus",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "Whenever you shuffle your Draw Pile, gain 6 Block."
+  },
+  {
+    "name": "The Boot",
+    "slug": "the_boot",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you would deal 4 or less unblocked attack damage, increase it to 5."
+  },
+  {
+    "name": "The Chosen Cheese",
+    "slug": "chosen_cheese",
+    "rarity_pool": "Event Relic·shared",
+    "description": "At the end of combat, gain 1 Max HP."
+  },
+  {
+    "name": "The Courier",
+    "slug": "the_courier",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "The merchant no longer runs out of cards, relics, or potions and his prices are reduced by 20%."
+  },
+  {
+    "name": "The Merchant's Rug???",
+    "slug": "fake_merchants_rug",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Poor imitation. Does nothing."
+  },
+  {
+    "name": "Throwing Axe",
+    "slug": "throwing_axe",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "The first card you play each combat is played an extra time."
+  },
+  {
+    "name": "Tingsha",
+    "slug": "tingsha",
+    "rarity_pool": "Uncommon Relic·silent",
+    "description": "Whenever you discard a card during your turn, deal 3 damage to a random enemy for each card discarded."
+  },
+  {
+    "name": "Tiny Mailbox",
+    "slug": "tiny_mailbox",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Whenever you Rest, procure a random potion."
+  },
+  {
+    "name": "Toasty Mittens",
+    "slug": "toasty_mittens",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "At the start of your turn, Exhaust the top card of your Draw Pile and gain 1 Strength."
+  },
+  {
+    "name": "Toolbox",
+    "slug": "toolbox",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "At the start of each combat, choose 1 of 3 random Colorless cards and add the chosen card into your Hand."
+  },
+  {
+    "name": "Touch of Orobas",
+    "slug": "touch_of_orobas",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, replace your starter Relic with an Ancient version."
+  },
+  {
+    "name": "Tough Bandages",
+    "slug": "tough_bandages",
+    "rarity_pool": "Rare Relic·silent",
+    "description": "Whenever you discard a card during your turn, gain 3 Block."
+  },
+  {
+    "name": "Toxic Egg",
+    "slug": "toxic_egg",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you add a Skill into your Deck, Upgrade it."
+  },
+  {
+    "name": "Toy Box",
+    "slug": "toy_box",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, obtain 4 Wax Relics. Every 3 combats, your left-most Wax Relic will melt away."
+  },
+  {
+    "name": "Tri-Boomerang",
+    "slug": "tri_boomerang",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Choose 3 Attacks in your Deck. Enchant them with Instinct."
+  },
+  {
+    "name": "Tungsten Rod",
+    "slug": "tungsten_rod",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you would lose HP, lose 1 less."
+  },
+  {
+    "name": "Tuning Fork",
+    "slug": "tuning_fork",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "Every time you play 10 Skills, gain 7 Block."
+  },
+  {
+    "name": "Twisted Funnel",
+    "slug": "twisted_funnel",
+    "rarity_pool": "Uncommon Relic·silent",
+    "description": "At the start of each combat, apply 4 Poison to ALL enemies."
+  },
+  {
+    "name": "Unceasing Top",
+    "slug": "unceasing_top",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Whenever you have no cards in Hand during your turn, draw a card."
+  },
+  {
+    "name": "Undying Sigil",
+    "slug": "undying_sigil",
+    "rarity_pool": "Shop Relic·necrobinder",
+    "description": "Enemies with at least as much Doom as HP deal 50% less damage."
+  },
+  {
+    "name": "Unsettling Lamp",
+    "slug": "unsettling_lamp",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Each combat, the first time you play a card that Debuffs an enemy, double its effect."
+  },
+  {
+    "name": "Vajra",
+    "slug": "vajra",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Start each combat with 1 Strength."
+  },
+  {
+    "name": "Vambrace",
+    "slug": "vambrace",
+    "rarity_pool": "Uncommon Relic·shared",
+    "description": "The first time you gain Block from a card each combat, double the amount gained."
+  },
+  {
+    "name": "Velvet Choker",
+    "slug": "velvet_choker",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. You cannot play more than 6 cards per turn."
+  },
+  {
+    "name": "Venerable Tea Set",
+    "slug": "venerable_tea_set",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Whenever you enter a Rest Site, start the next combat with an additional energy."
+  },
+  {
+    "name": "Venerable Tea Set???",
+    "slug": "fake_venerable_tea_set",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Whenever you enter a Rest Site, start the next combat with an additional energy."
+  },
+  {
+    "name": "Very Hot Cocoa",
+    "slug": "very_hot_cocoa",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Start each combat with an additional energy."
+  },
+  {
+    "name": "Vexing Puzzlebox",
+    "slug": "vexing_puzzlebox",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "At the start of each combat, add a random card into your Hand. It costs 0 energy."
+  },
+  {
+    "name": "Vitruvian Minion",
+    "slug": "vitruvian_minion",
+    "rarity_pool": "Shop Relic·regent",
+    "description": "Cards containing \"Minion\" deal double damage and gain double Block."
+  },
+  {
+    "name": "War Hammer",
+    "slug": "war_hammer",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Whenever you kill an Elite, Upgrade 4 random cards."
+  },
+  {
+    "name": "War Paint",
+    "slug": "war_paint",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Upon pickup, Upgrade 2 random Skills."
+  },
+  {
+    "name": "Whetstone",
+    "slug": "whetstone",
+    "rarity_pool": "Common Relic·shared",
+    "description": "Upon pickup, Upgrade 2 random Attacks."
+  },
+  {
+    "name": "Whispering Earring",
+    "slug": "whispering_earring",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Gain energy at the start of each turn. Vakuu plays your first turn for you."
+  },
+  {
+    "name": "White Beast Statue",
+    "slug": "white_beast_statue",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Potions always appear in combat rewards."
+  },
+  {
+    "name": "White Star",
+    "slug": "white_star",
+    "rarity_pool": "Rare Relic·shared",
+    "description": "Elites drop an additional Rare card reward."
+  },
+  {
+    "name": "Wing Charm",
+    "slug": "wing_charm",
+    "rarity_pool": "Shop Relic·shared",
+    "description": "A random card in each card reward is Enchanted with Swift 1."
+  },
+  {
+    "name": "Wongo Customer Appreciation Badge",
+    "slug": "wongo_customer_appreciation_badge",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Does nothing."
+  },
+  {
+    "name": "Wongo's Mystery Ticket",
+    "slug": "wongos_mystery_ticket",
+    "rarity_pool": "Event Relic·shared",
+    "description": "Receive 3 random Relics after 5 combats."
+  },
+  {
+    "name": "Yummy Cookie",
+    "slug": "yummy_cookie",
+    "rarity_pool": "Ancient Relic·shared",
+    "description": "Upon pickup, Upgrade 4 cards."
+  }
+]

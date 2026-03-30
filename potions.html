@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potions — Slay the Spire 2 Run Tracker</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117; --bg-secondary: #161b22; --bg-tertiary: #1c2333;
+      --bg-card: #21262d; --border: #30363d; --text-primary: #e6edf3;
+      --text-secondary: #8b949e; --text-muted: #6e7681;
+      --accent-green: #3fb950; --accent-red: #f85149; --accent-blue: #58a6ff;
+      --accent-yellow: #d29922; --accent-purple: #bc8cff; --accent-orange: #f0883e;
+      --accent-cyan: #39d2c0; --accent-pink: #f778ba;
+      --radius: 8px; --radius-lg: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; min-height: 100vh; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    .app-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 16px 24px; height: 70px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+    .app-header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+    .app-header h1 span { color: var(--accent-yellow); }
+    .nav { display: flex; align-items: center; gap: 4px; margin-left: 24px; }
+    .nav a { padding: 6px 14px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; border-radius: var(--radius); transition: color 0.15s, background 0.15s; }
+    .nav a:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav a.active { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav-sep { width: 1px; height: 20px; background: var(--border); margin: 0 8px; }
+    .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .search-box { flex: 1; min-width: 200px; max-width: 400px; padding: 8px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-primary); font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+    .search-box::placeholder { color: var(--text-muted); }
+    .search-box:focus { border-color: var(--accent-blue); }
+    .filter-group { display: flex; gap: 4px; }
+    .filter-btn { padding: 6px 12px; font-size: 0.75rem; font-weight: 500; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .filter-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+    .filter-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: #fff; }
+    .result-count { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .potion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .potion-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.15s, transform 0.15s; display: flex; flex-direction: column; }
+    .potion-card:hover { border-color: var(--text-muted); transform: translateY(-2px); }
+    .potion-card-image { display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border); }
+    .potion-card-image img { width: 72px; height: 72px; image-rendering: auto; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+    .potion-card-body { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .potion-card-name { font-size: 0.9rem; font-weight: 600; }
+    .potion-card-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge { font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge.common { background: rgba(139,148,158,0.15); color: var(--text-secondary); }
+    .badge.uncommon { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+    .badge.rare { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+    .badge.event { background: rgba(188,140,255,0.15); color: var(--accent-purple); }
+    .badge.token { background: rgba(139,148,158,0.1); color: var(--text-muted); }
+    .badge.shared { background: rgba(139,148,158,0.1); color: var(--text-muted); }
+    .badge.ironclad { background: rgba(248,81,73,0.1); color: var(--accent-red); }
+    .badge.silent { background: rgba(63,185,80,0.1); color: var(--accent-green); }
+    .badge.defect { background: rgba(88,166,255,0.1); color: var(--accent-blue); }
+    .badge.necrobinder { background: rgba(188,140,255,0.1); color: var(--accent-purple); }
+    .badge.regent { background: rgba(210,153,34,0.1); color: var(--accent-yellow); }
+    .potion-card-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45; }
+    .site-footer { margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.7rem; line-height: 1.7; text-align: center; max-width: 720px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body>
+<header class="app-header">
+  <h1>Slay the Spire 2 <span>Run Tracker</span></h1>
+  <nav class="nav">
+    <a href="index.html">Runs</a>
+    <a href="analytics.html">Stats</a>
+    <span class="nav-sep"></span>
+    <a href="cards.html">Cards</a>
+    <a href="relics.html">Relics</a>
+    <a href="potions.html" class="active">Potions</a>
+  </nav>
+</header>
+<div class="container">
+  <div class="toolbar">
+    <input type="text" class="search-box" id="search" placeholder="Search potions..." />
+    <div class="filter-group" id="rarityFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="common">Common</button>
+      <button class="filter-btn" data-filter="uncommon">Uncommon</button>
+      <button class="filter-btn" data-filter="rare">Rare</button>
+      <button class="filter-btn" data-filter="event">Event</button>
+    </div>
+    <div class="filter-group" id="poolFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="shared">Shared</button>
+      <button class="filter-btn" data-filter="ironclad">Ironclad</button>
+      <button class="filter-btn" data-filter="silent">Silent</button>
+      <button class="filter-btn" data-filter="defect">Defect</button>
+      <button class="filter-btn" data-filter="necrobinder">Necrobinder</button>
+      <button class="filter-btn" data-filter="regent">Regent</button>
+    </div>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+  <div class="potion-grid" id="potionGrid"></div>
+</div>
+<script>
+const allPotions = [{"name":"Ashwater","slug":"ashwater","rarity":"uncommon","pool":"ironclad","description":"Exhaust any number of cards in your Hand."},{"name":"Attack Potion","slug":"attack_potion","rarity":"common","pool":"shared","description":"Choose 1 of 3 random Attack cards to add into your Hand. It's free to play this turn."},{"name":"Beetle Juice","slug":"beetle_juice","rarity":"rare","pool":"shared","description":"Enemy's attacks deal 30% less damage for the next 4 turns."},{"name":"Blessing of the Forge","slug":"blessing_of_the_forge","rarity":"uncommon","pool":"shared","description":"Upgrade all cards in your Hand for the rest of combat."},{"name":"Block Potion","slug":"block_potion","rarity":"common","pool":"shared","description":"Gain 12 Block."},{"name":"Blood Potion","slug":"blood_potion","rarity":"common","pool":"ironclad","description":"Heal for 20% of your Max HP."},{"name":"Bone Brew","slug":"bone_brew","rarity":"uncommon","pool":"necrobinder","description":"Summon 15."},{"name":"Bottled Potential","slug":"bottled_potential","rarity":"rare","pool":"shared","description":"Shuffle ALL your cards into your Draw Pile. Draw 5 cards."},{"name":"Clarity Extract","slug":"clarity","rarity":"uncommon","pool":"shared","description":"Draw 1 card. At the start of your next 3 turns, draw 1 additional card."},{"name":"Colorless Potion","slug":"colorless_potion","rarity":"common","pool":"shared","description":"Choose 1 of 3 random Colorless cards to add into your Hand. It's free to play this turn."},{"name":"Cosmic Concoction","slug":"cosmic_concoction","rarity":"rare","pool":"regent","description":"Add 3 Upgraded Colorless cards into your Hand."},{"name":"Cunning Potion","slug":"cunning_potion","rarity":"uncommon","pool":"silent","description":"Add 3 Upgraded Shivs into your Hand."},{"name":"Cure All","slug":"cure_all","rarity":"uncommon","pool":"shared","description":"Gain 1 Energy. Draw 2 cards."},{"name":"Dexterity Potion","slug":"dexterity_potion","rarity":"common","pool":"shared","description":"Gain 2 Dexterity."},{"name":"Distilled Chaos","slug":"distilled_chaos","rarity":"rare","pool":"shared","description":"Play the top 3 cards of your Draw Pile."},{"name":"Droplet of Precognition","slug":"droplet_of_precognition","rarity":"rare","pool":"shared","description":"Choose a card in your Draw Pile and add it into your Hand."},{"name":"Duplicator","slug":"duplicator","rarity":"uncommon","pool":"shared","description":"This turn, your next card is played an extra time."},{"name":"Energy Potion","slug":"energy_potion","rarity":"common","pool":"shared","description":"Gain 2 Energy."},{"name":"Entropic Brew","slug":"entropic_brew","rarity":"rare","pool":"shared","description":"Fill all your empty potion slots with random potions."},{"name":"Essence of Darkness","slug":"essence_of_darkness","rarity":"rare","pool":"defect","description":"Channel a Dark for each of your Orb Slots."},{"name":"Explosive Ampoule","slug":"explosive_ampoule","rarity":"common","pool":"shared","description":"Deal 10 damage to ALL enemies."},{"name":"Fairy in a Bottle","slug":"fairy_in_a_bottle","rarity":"rare","pool":"shared","description":"When you would die, this potion is discarded and you heal to 30% of Max HP."},{"name":"Fire Potion","slug":"fire_potion","rarity":"common","pool":"shared","description":"Deal 20 damage."},{"name":"Flex Potion","slug":"flex_potion","rarity":"common","pool":"shared","description":"Gain 5 Strength. At the end of your turn, lose 5 Strength."},{"name":"Focus Potion","slug":"focus_potion","rarity":"common","pool":"defect","description":"Gain 2 Focus."},{"name":"Fortifier","slug":"fortifier","rarity":"uncommon","pool":"shared","description":"Triple your Block."},{"name":"Foul Potion","slug":"foul_potion","rarity":"event","pool":"shared","description":"Deal 12 damage to EVERYONE. Can be thrown at the Merchant for 100 Gold instead."},{"name":"Fruit Juice","slug":"fruit_juice","rarity":"rare","pool":"shared","description":"Gain 5 Max HP."},{"name":"Fysh Oil","slug":"fysh_oil","rarity":"uncommon","pool":"shared","description":"Gain 1 Strength and 1 Dexterity."},{"name":"Gambler's Brew","slug":"gamblers_brew","rarity":"uncommon","pool":"shared","description":"Discard any number of cards, then draw that many."},{"name":"Ghost in a Jar","slug":"ghost_in_a_jar","rarity":"rare","pool":"silent","description":"Gain 1 Intangible."},{"name":"Gigantification Potion","slug":"gigantification_potion","rarity":"rare","pool":"shared","description":"The next Attack you play deals triple damage."},{"name":"Glowwater Potion","slug":"glowwater_potion","rarity":"event","pool":"shared","description":"Exhaust your Hand. Draw 10 cards."},{"name":"Heart of Iron","slug":"heart_of_iron","rarity":"uncommon","pool":"shared","description":"Gain 7 Plating."},{"name":"King's Courage","slug":"kings_courage","rarity":"uncommon","pool":"regent","description":"Forge 15."},{"name":"Liquid Bronze","slug":"liquid_bronze","rarity":"uncommon","pool":"shared","description":"Gain 3 Thorns."},{"name":"Liquid Memories","slug":"liquid_memories","rarity":"rare","pool":"shared","description":"Put a card from your Discard Pile into your Hand. It costs 0 Energy this turn."},{"name":"Lucky Tonic","slug":"lucky_tonic","rarity":"rare","pool":"shared","description":"Gain 1 Buffer."},{"name":"Mazaleth's Gift","slug":"mazaleths_gift","rarity":"rare","pool":"shared","description":"Gain 1 Ritual."},{"name":"Orobic Acid","slug":"orobic_acid","rarity":"rare","pool":"shared","description":"Add a random Attack, Skill, and Power into your Hand. Free to play this turn."},{"name":"Poison Potion","slug":"poison_potion","rarity":"common","pool":"silent","description":"Apply 6 Poison."},{"name":"Pot of Ghouls","slug":"pot_of_ghouls","rarity":"rare","pool":"necrobinder","description":"Add 2 Souls into your Hand."},{"name":"Potion of Binding","slug":"potion_of_binding","rarity":"uncommon","pool":"shared","description":"Apply 1 Weak and 1 Vulnerable to ALL enemies."},{"name":"Potion of Capacity","slug":"potion_of_capacity","rarity":"uncommon","pool":"defect","description":"Gain 2 Orb Slots."},{"name":"Potion of Doom","slug":"potion_of_doom","rarity":"common","pool":"necrobinder","description":"Apply 33 Doom."},{"name":"Potion-Shaped Rock","slug":"potion_shaped_rock","rarity":"token","pool":"shared","description":"Deal 15 damage."},{"name":"Powdered Demise","slug":"powdered_demise","rarity":"uncommon","pool":"shared","description":"Enemy loses 9 HP at the end of each of its turns."},{"name":"Power Potion","slug":"power_potion","rarity":"common","pool":"shared","description":"Choose 1 of 3 random Power cards to add into your Hand. Free to play this turn."},{"name":"Radiant Tincture","slug":"radiant_tincture","rarity":"uncommon","pool":"shared","description":"Gain 1 Energy. Gain additional Energy at the start of your next 3 turns."},{"name":"Regen Potion","slug":"regen_potion","rarity":"uncommon","pool":"shared","description":"Gain 5 Regen."},{"name":"Shackling Potion","slug":"shackling_potion","rarity":"rare","pool":"shared","description":"ALL enemies lose 7 Strength this turn."},{"name":"Ship in a Bottle","slug":"ship_in_a_bottle","rarity":"rare","pool":"shared","description":"Gain 10 Block. Next turn, gain 10 Block."},{"name":"Skill Potion","slug":"skill_potion","rarity":"common","pool":"shared","description":"Choose 1 of 3 random Skill cards to add into your Hand. Free to play this turn."},{"name":"Snecko Oil","slug":"snecko_oil","rarity":"rare","pool":"shared","description":"Draw 7 cards. Randomize the cost of cards in your Hand this turn."},{"name":"Soldier's Stew","slug":"soldiers_stew","rarity":"rare","pool":"ironclad","description":"All cards containing Strike gain 1 Replay this combat."},{"name":"Speed Potion","slug":"speed_potion","rarity":"common","pool":"shared","description":"Gain 5 Dexterity. At the end of your turn, lose 5 Dexterity."},{"name":"Stable Serum","slug":"stable_serum","rarity":"uncommon","pool":"shared","description":"Retain your Hand for 2 turns."},{"name":"Star Potion","slug":"star_potion","rarity":"common","pool":"regent","description":"Gain 3 Stars."},{"name":"Strength Potion","slug":"strength_potion","rarity":"common","pool":"shared","description":"Gain 2 Strength."},{"name":"Swift Potion","slug":"swift_potion","rarity":"common","pool":"shared","description":"Draw 3 cards."},{"name":"Touch of Insanity","slug":"touch_of_insanity","rarity":"uncommon","pool":"shared","description":"Choose a card in your Hand. It is free to play this combat."},{"name":"Vulnerable Potion","slug":"vulnerable_potion","rarity":"common","pool":"shared","description":"Apply 3 Vulnerable."},{"name":"Weak Potion","slug":"weak_potion","rarity":"common","pool":"shared","description":"Apply 3 Weak."}];
+let activeRarity = 'all';
+let activePool = 'all';
+let searchQuery = '';
+
+function renderPotions() {
+  const grid = document.getElementById('potionGrid');
+  const q = searchQuery.toLowerCase();
+  const filtered = allPotions.filter(p => {
+    if (activeRarity !== 'all' && p.rarity !== activeRarity) return false;
+    if (activePool !== 'all' && p.pool !== activePool) return false;
+    if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('resultCount').textContent = filtered.length + ' potion' + (filtered.length !== 1 ? 's' : '');
+  grid.innerHTML = filtered.map(p => `
+    <div class="potion-card">
+      <div class="potion-card-image">
+        <img src="assets/potions/${p.slug}.png" alt="${p.name}" loading="lazy" />
+      </div>
+      <div class="potion-card-body">
+        <div class="potion-card-name">${p.name}</div>
+        <div class="potion-card-meta">
+          <span class="badge ${p.rarity}">${p.rarity}</span>
+          <span class="badge ${p.pool}">${p.pool}</span>
+        </div>
+        <div class="potion-card-desc">${p.description}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setupFilterGroup(containerId, setter) {
+  const container = document.getElementById(containerId);
+  container.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    setter(btn.dataset.filter);
+    renderPotions();
+  });
+}
+setupFilterGroup('rarityFilters', v => activeRarity = v);
+setupFilterGroup('poolFilters', v => activePool = v);
+document.getElementById('search').addEventListener('input', (e) => { searchQuery = e.target.value; renderPotions(); });
+renderPotions();
+</script>
+
+<footer class="site-footer">
+  <p>This is an unofficial, fan-made companion app and is not affiliated with, endorsed by, or associated with Mega Crit Games. All game imagery, card art, relic icons, and other visual assets displayed in this application are the property of Mega Crit Games and are used here solely for informational and non-commercial purposes in connection with Slay the Spire 2.</p>
+  <p style="margin-top:8px;">Slay the Spire and Slay the Spire 2 are trademarks of Mega Crit Games. All rights reserved.</p>
+  <p style="margin-top:8px;">Card, relic, and potion images provided by <a href="https://spire-codex.com" style="color:var(--accent-blue);text-decoration:none;">Spire Codex</a> — thanks to them for making this data freely available. Run data is read directly from local .run files generated by the game on your machine. No data is collected or sent to any external server.</p>
+</footer>
+</body>
+</html>
