@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Slay the Spire 2 Run Tracker</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117; --bg-secondary: #161b22; --bg-tertiary: #1c2333;
+      --bg-card: #21262d; --border: #30363d; --text-primary: #e6edf3;
+      --text-secondary: #8b949e; --text-muted: #6e7681;
+      --accent-green: #3fb950; --accent-red: #f85149; --accent-blue: #58a6ff;
+      --accent-yellow: #d29922; --accent-purple: #bc8cff; --accent-orange: #f0883e;
+      --accent-cyan: #39d2c0; --accent-pink: #f778ba;
+      --radius: 8px; --radius-lg: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; min-height: 100vh; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    .app-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 16px 24px; height: 70px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+    .app-header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+    .app-header h1 span { color: var(--accent-yellow); }
+    .nav { display: flex; align-items: center; gap: 4px; margin-left: 24px; }
+    .nav a { padding: 6px 14px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; border-radius: var(--radius); transition: color 0.15s, background 0.15s; }
+    .nav a:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav a.active { color: var(--text-primary); background: var(--bg-tertiary); }
+    .nav-sep { width: 1px; height: 20px; background: var(--border); margin: 0 8px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    .about-hero { text-align: center; margin-bottom: 40px; }
+    .about-hero h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+    .about-hero h2 span { color: var(--accent-yellow); }
+    .about-hero p { color: var(--text-secondary); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+
+    .about-section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 20px; }
+    .about-section h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .about-section h3 .icon { font-size: 1.2rem; width: 28px; text-align: center; }
+    .about-section p, .about-section li { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.65; }
+    .about-section p + p { margin-top: 10px; }
+    .about-section ul, .about-section ol { padding-left: 20px; margin-top: 8px; }
+    .about-section li { margin-bottom: 6px; }
+    .about-section li strong { color: var(--text-primary); font-weight: 600; }
+    .about-section code { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 0.8rem; color: var(--accent-cyan); font-family: 'Cascadia Code', 'Fira Code', monospace; }
+    .about-section a { color: var(--accent-blue); text-decoration: none; }
+    .about-section a:hover { text-decoration: underline; }
+
+    .path-block { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; margin: 10px 0; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.8rem; color: var(--accent-cyan); word-break: break-all; }
+
+    .page-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .page-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .page-card h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+    .page-card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin: 0; }
+
+    .browser-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+    .browser-table td { padding: 8px 12px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .browser-table td:first-child { font-weight: 600; color: var(--text-primary); white-space: nowrap; width: 180px; }
+    .browser-table tr:last-child td { border-bottom: none; }
+    .badge-ok { display: inline-block; background: rgba(63,185,80,0.15); color: var(--accent-green); font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
+    .badge-no { display: inline-block; background: rgba(248,81,73,0.15); color: var(--accent-red); font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
+
+    .known-issue { background: var(--bg-tertiary); border-left: 3px solid var(--accent-orange); border-radius: 0 var(--radius) var(--radius) 0; padding: 10px 14px; margin-bottom: 10px; }
+    .known-issue:last-child { margin-bottom: 0; }
+    .known-issue p { font-size: 0.825rem; }
+    .known-issue strong { color: var(--accent-orange); }
+
+    .site-footer { margin-top: 48px; padding: 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.7rem; line-height: 1.7; text-align: center; max-width: 720px; margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body>
+<header class="app-header">
+  <h1>Slay the Spire 2 <span>Run Tracker</span></h1>
+  <nav class="nav">
+    <a href="index.html">Runs</a>
+    <a href="analytics.html">Stats</a>
+    <span class="nav-sep"></span>
+    <a href="cards.html">Cards</a>
+    <a href="relics.html">Relics</a>
+    <a href="potions.html">Potions</a>
+    <span class="nav-sep"></span>
+    <a href="about.html" class="active">About</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="about-hero">
+    <h2>About <span>Run Tracker</span></h2>
+    <p>A client-side dashboard for analyzing your Slay the Spire 2 runs. Everything runs in your browser — no server, no uploads, no accounts.</p>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#128640;</span> Getting Started</h3>
+    <ol>
+      <li>Open <code>Runs</code> or <code>Stats</code> in <strong>Chrome</strong> or <strong>Edge</strong>.</li>
+      <li>Click <strong>Load Folder</strong> and select your run history folder, which is typically here:
+        <div class="path-block">%appdata%\SlayTheSpire2\steam\&lt;YourSteamID&gt;\profile1\saves\history\</div>
+      </li>
+      <li>Your data persists for the session until you close the tab.</li>
+      <li>The active run file is automatically skipped when a game is in progress.</li>
+    </ol>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#128196;</span> Pages</h3>
+    <div class="page-grid">
+      <div class="page-card">
+        <h4>Runs</h4>
+        <p>Browse individual runs with HP/gold charts, final deck, relics, potions, and a floor-by-floor timeline with full reward tracking. Hover any item for detailed tooltips.</p>
+      </div>
+      <div class="page-card">
+        <h4>Stats</h4>
+        <p>Aggregate analytics across all runs: win rates, streaks, character performance, causes of death, HP analysis, plus sortable relic and card tables with synergy filtering.</p>
+      </div>
+      <div class="page-card">
+        <h4>Cards</h4>
+        <p>Browse all 576 cards with images, costs, types, rarities, descriptions, and keyword badges. Filter by type, rarity, or character.</p>
+      </div>
+      <div class="page-card">
+        <h4>Relics</h4>
+        <p>Browse all 288 relics with images, rarity/pool badges, and descriptions. Filter by rarity or character pool.</p>
+      </div>
+      <div class="page-card">
+        <h4>Potions</h4>
+        <p>Browse all 63 potions with images, rarity/pool badges, and descriptions. Filter by rarity or character pool.</p>
+      </div>
+      <div class="page-card">
+        <h4>About</h4>
+        <p>You are here! How to use the app, browser support, privacy info, and known issues.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#127918;</span> Multiplayer Support</h3>
+    <ul>
+      <li>Automatically detects your Steam ID (the ID appearing most frequently across co-op runs).</li>
+      <li>All stats are scoped to <strong>your character only</strong>, even in multiplayer.</li>
+      <li>Filter by Solo / Co-op / All on both the Runs and Stats pages.</li>
+      <li>A <strong>"YOU"</strong> tag marks your character in co-op run displays and player tabs.</li>
+    </ul>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#127760;</span> Browser Support</h3>
+    <table class="browser-table">
+      <tr>
+        <td>Chrome / Edge / Opera</td>
+        <td><span class="badge-ok">Full support</span> Folder loading and all features work.</td>
+      </tr>
+      <tr>
+        <td>Firefox / Safari</td>
+        <td><span class="badge-no">Not supported</span> The Load Folder button does not work due to lack of <code>webkitdirectory</code> support. Workaround TBD.</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#128274;</span> Privacy</h3>
+    <p>All data stays in your browser. Run files are read locally via the File API and never uploaded anywhere. Session data is stored in IndexedDB and automatically cleared when you close your browser tabs.</p>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#9888;</span> Known Issues</h3>
+    <div class="known-issue">
+      <p><strong>Deaths by Act &mdash; Event classification</strong> is not fully accurate. Some deaths during event-triggered combat may be miscategorized.</p>
+    </div>
+    <div class="known-issue">
+      <p><strong>Regent card star costs</strong> are not included in the card encyclopedia data. The energy cost displays correctly but the secondary star cost is missing.</p>
+    </div>
+    <div class="known-issue">
+      <p><strong>Abandoned runs</strong> do not count toward your win rate (they are excluded from the W/L calculation), but they do interrupt win streaks.</p>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <h3><span class="icon">&#128218;</span> Data Sources</h3>
+    <ul>
+      <li><strong>Run files</strong> &mdash; <code>.run</code> JSON files generated by Slay the Spire 2 (schema version 8, game builds v0.98&ndash;v0.99+).</li>
+      <li><strong>Card, relic, and potion data &amp; images</strong> &mdash; Scraped from <a href="https://spire-codex.com">spire-codex.com</a>.</li>
+    </ul>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>This is an unofficial, fan-made companion app and is not affiliated with, endorsed by, or associated with Mega Crit Games. All game imagery, card art, relic icons, and other visual assets displayed in this application are the property of Mega Crit Games and are used here solely for informational and non-commercial purposes in connection with Slay the Spire 2.</p>
+  <p style="margin-top:8px;">Slay the Spire and Slay the Spire 2 are trademarks of Mega Crit Games. All rights reserved.</p>
+  <p style="margin-top:8px;">Card, relic, and potion images provided by <a href="https://spire-codex.com" style="color:var(--accent-blue);text-decoration:none;">Spire Codex</a> — thanks to them for making this data freely available. Run data is read directly from local .run files generated by the game on your machine. No data is collected or sent to any external server.</p>
+</footer>
+</body>
+</html>
