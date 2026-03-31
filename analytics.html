@@ -237,17 +237,14 @@
     </div>
 
     <!-- Section 5: Causes of Death -->
-    <div class="section">
-      <div class="section-title">Causes of Death</div>
-      <div class="two-col">
-        <div class="card">
-          <div class="card-header">Top Killers</div>
-          <div class="card-body scroll-body" id="killersBox"></div>
-        </div>
-        <div class="card">
-          <div class="card-header">Deaths by Act</div>
-          <div class="card-body"><div class="chart-container" id="deathActChartBox"><canvas id="deathActChart"></canvas></div></div>
-        </div>
+    <div class="section two-col">
+      <div class="card">
+        <div class="card-header">Top Killers</div>
+        <div class="card-body scroll-body" id="killersBox"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Deaths by Act</div>
+        <div class="card-body" id="deathActBox"></div>
       </div>
     </div>
 
@@ -263,7 +260,22 @@
       </div>
     </div>
 
-    <!-- Section 7: Relics -->
+    <!-- Section 7: Card Drafting -->
+    <div class="section">
+      <div class="section-title">Card Drafting</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">Skip Rate: Wins vs Losses</div>
+          <div class="card-body" id="skipCompareBox"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Skip Rate by Act</div>
+          <div class="card-body"><div class="chart-container" id="skipActChartBox"><canvas id="skipActChart"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 8: Relics -->
     <div class="section">
       <div class="card">
         <div class="card-header">
@@ -278,7 +290,7 @@
       </div>
     </div>
 
-    <!-- Section 8: Cards -->
+    <!-- Section 9: Cards -->
     <div class="section">
       <div class="card">
         <div class="card-header">
@@ -536,7 +548,9 @@ function computeAnalytics() {
     streakCurrent: 0, streakBest: 0,
     fastestWin: Infinity, slowestWin: 0,
     uniqueCards: new Set(), uniqueRelics: new Set(),
-    timeline: []
+    timeline: [],
+    skipWins: { total: 0, skipped: 0 }, skipLosses: { total: 0, skipped: 0 },
+    skipByAct: {} // { actName: { total: 0, skipped: 0 } }
   };
 
   let currentStreak = 0;
@@ -575,7 +589,7 @@ function computeAnalytics() {
     if (player) {
       const charId = player.character || 'Unknown';
       const charName = prettyId(charId);
-      if (!a.charStats[charName]) a.charStats[charName] = { runs: 0, wins: 0, totalTime: 0, totalAsc: 0, totalDeckSize: 0 };
+      if (!a.charStats[charName]) a.charStats[charName] = { runs: 0, wins: 0, totalTime: 0, totalAsc: 0, totalDeckSize: 0, skipTotal: 0, skipSkipped: 0 };
       const cs = a.charStats[charName];
       cs.runs++;
       if (win) cs.wins++;
@@ -657,6 +671,39 @@ function computeAnalytics() {
             a.cardPickStats[cid].offered++;
             a.cardPickStats[cid].picked++;
           });
+        });
+      });
+    }
+
+    // Card reward skip tracking — count reward groups skipped vs total
+    if (ownerId) {
+      const skipCharName = player ? prettyId(player.character || 'Unknown') : null;
+      const skipCharStat = skipCharName ? a.charStats[skipCharName] : null;
+      const acts = run.acts || [];
+      (run.map_point_history || []).forEach((actFloors, actIdx) => {
+        const actName = prettyId(acts[actIdx] || ('Act ' + (actIdx + 1)));
+        if (!a.skipByAct[actName]) a.skipByAct[actName] = { total: 0, skipped: 0 };
+        (actFloors || []).forEach(mp => {
+          const ps = (mp.player_stats || []).find(p => p.player_id === ownerId);
+          if (!ps) return;
+          const cardChoices = ps.card_choices || [];
+          if (cardChoices.length === 0) return;
+          const total = cardChoices.length;
+          const numGroups = Math.max(1, Math.round(total / 3));
+          const baseSize = Math.floor(total / numGroups);
+          const remainder = total % numGroups;
+          let offset = 0;
+          for (let g = 0; g < numGroups; g++) {
+            const size = baseSize + (g < remainder ? 1 : 0);
+            const group = cardChoices.slice(offset, offset + size);
+            const wasSkipped = !group.some(c => c.was_picked);
+            const bucket = win ? a.skipWins : (abandoned ? null : a.skipLosses);
+            if (bucket) { bucket.total++; if (wasSkipped) bucket.skipped++; }
+            a.skipByAct[actName].total++;
+            if (wasSkipped) a.skipByAct[actName].skipped++;
+            if (skipCharStat) { skipCharStat.skipTotal++; if (wasSkipped) skipCharStat.skipSkipped++; }
+            offset += size;
+          }
         });
       });
     }
@@ -746,7 +793,7 @@ function renderCharFilters() {
       renderCharFilters();
       computeAnalytics();
       renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
-      renderDeaths(); renderHpProgression(); renderDeckSize(); renderRelics(); renderCards();
+      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderRelics(); renderCards();
     });
   });
 }
@@ -763,6 +810,7 @@ function computeAndRender() {
     ['renderDeaths', renderDeaths],
     ['renderHpProgression', renderHpProgression],
     ['renderDeckSize', renderDeckSize],
+    ['renderDrafting', renderDrafting],
     ['renderRelics', renderRelics],
     ['renderCards', renderCards],
   ];
@@ -881,11 +929,12 @@ function renderTimeline() {
 // Character table
 function renderCharTable() {
   const entries = Object.entries(analytics.charStats).sort((a, b) => b[1].runs - a[1].runs);
-  let html = '<table class="data-table"><thead><tr><th>Character</th><th class="num">Runs</th><th class="num">Wins</th><th class="num">Losses</th><th class="num">Win Rate</th><th class="bar-cell"></th><th class="num">Avg Time</th><th class="num">Avg Asc</th><th class="num">Avg Deck</th></tr></thead><tbody>';
+  let html = '<table class="data-table"><thead><tr><th>Character</th><th class="num">Runs</th><th class="num">Wins</th><th class="num">Losses</th><th class="num">Win Rate</th><th class="bar-cell"></th><th class="num">Avg Time</th><th class="num">Avg Asc</th><th class="num">Avg Deck</th><th class="num">Skip Rate</th></tr></thead><tbody>';
   entries.forEach(([name, s]) => {
     const wr = s.runs > 0 ? s.wins / s.runs : 0;
+    const skipRate = s.skipTotal > 0 ? (s.skipSkipped / s.skipTotal * 100).toFixed(0) + '%' : '—';
     const cc = charColor(name);
-    html += '<tr><td><strong' + (cc ? ' style="color:' + cc + '"' : '') + '>' + name + '</strong></td><td class="num">' + s.runs + '</td><td class="num">' + s.wins + '</td><td class="num">' + (s.runs - s.wins) + '</td><td class="num ' + wrClass(wr) + '">' + pct(s.wins, s.runs) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (wr * 100) + '%;background:' + wrBarColor(wr) + '"></div></div></td><td class="num">' + prettyTime(Math.round(s.totalTime / s.runs)) + '</td><td class="num">' + (s.totalAsc / s.runs).toFixed(1) + '</td><td class="num">' + (s.totalDeckSize / s.runs).toFixed(1) + '</td></tr>';
+    html += '<tr><td><strong' + (cc ? ' style="color:' + cc + '"' : '') + '>' + name + '</strong></td><td class="num">' + s.runs + '</td><td class="num">' + s.wins + '</td><td class="num">' + (s.runs - s.wins) + '</td><td class="num ' + wrClass(wr) + '">' + pct(s.wins, s.runs) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (wr * 100) + '%;background:' + wrBarColor(wr) + '"></div></div></td><td class="num">' + prettyTime(Math.round(s.totalTime / s.runs)) + '</td><td class="num">' + (s.totalAsc / s.runs).toFixed(1) + '</td><td class="num">' + (s.totalDeckSize / s.runs).toFixed(1) + '</td><td class="num">' + skipRate + '</td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('charTableBox').innerHTML = html;
@@ -953,11 +1002,8 @@ function renderDeaths() {
   khtml += '</tbody></table>';
   document.getElementById('killersBox').innerHTML = khtml;
 
-  // Deaths by act — stacked bar chart (Boss / Elite / Hallway / Event)
-  const canvas1 = document.getElementById('deathActChart');
-  const { ctx: ctx1, w: w1, h: h1 } = setupCanvas(canvas1);
+  // Deaths by act — horizontal stacked bars
   const deathActs = analytics.deathByAct;
-  // Sort acts in a logical order: Act 1 variants, Act 2, Act 3
   const actOrder = ['overgrowth', 'underdocks', 'hive', 'glory', 'radiance'];
   const actEntries = Object.entries(deathActs).sort((a, b) => {
     const ai = actOrder.indexOf(a[0].toLowerCase()), bi = actOrder.indexOf(b[0].toLowerCase());
@@ -966,51 +1012,42 @@ function renderDeaths() {
     if (bi !== -1) return 1;
     return a[0].localeCompare(b[0]);
   });
+
+  let dhtml = '';
   if (actEntries.length > 0) {
     const categories = ['boss', 'elite', 'hallway', 'event'];
-    const catColors = { boss: CHART_COLORS.red, elite: CHART_COLORS.orange, hallway: CHART_COLORS.blue, event: CHART_COLORS.purple };
+    const catColors = { boss: 'var(--accent-red)', elite: 'var(--accent-orange)', hallway: 'var(--accent-blue)', event: 'var(--accent-purple)' };
     const catLabels = { boss: 'Boss', elite: 'Elite', hallway: 'Hallway', event: 'Event' };
-    const maxVal = Math.max(...actEntries.map(([_, d]) => d.boss + d.elite + d.hallway + d.event));
-    const pad = { top: 30, right: 20, bottom: 35, left: 45 };
-    drawGridAndLabels(ctx1, w1, h1, pad, maxVal, 4, v => Math.round(v));
-    const barW = Math.min(50, (w1 - pad.left - pad.right) / actEntries.length * 0.6);
-    const gap = (w1 - pad.left - pad.right) / actEntries.length;
-    const plotH = h1 - pad.top - pad.bottom;
-
-    actEntries.forEach(([actName, data], i) => {
-      const cx = pad.left + gap * i + gap / 2;
-      const x = cx - barW / 2;
-      let yBottom = h1 - pad.bottom;
-      const total = data.boss + data.elite + data.hallway + data.event;
-
-      categories.forEach(cat => {
-        if (data[cat] <= 0) return;
-        const segH = maxVal > 0 ? (data[cat] / maxVal) * plotH : 0;
-        yBottom -= segH;
-        ctx1.fillStyle = catColors[cat] + 'cc';
-        ctx1.fillRect(x, yBottom, barW, segH);
-      });
-
-      // Total on top
-      ctx1.fillStyle = '#e6edf3'; ctx1.font = '10px system-ui'; ctx1.textAlign = 'center';
-      const topY = h1 - pad.bottom - (maxVal > 0 ? (total / maxVal) * plotH : 0);
-      ctx1.fillText(total, cx, topY - 4);
-
-      // Act name label
-      ctx1.fillStyle = CHART_COLORS.text; ctx1.font = '10px system-ui';
-      ctx1.fillText(actName, cx, h1 - 8);
-    });
+    const maxVal = Math.max(...actEntries.map(([_, d]) => d.boss + d.elite + d.hallway + d.event), 1);
 
     // Legend
-    ctx1.font = '10px system-ui'; ctx1.textAlign = 'left';
-    let lx = pad.left;
+    dhtml += '<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;">';
     categories.forEach(cat => {
-      ctx1.fillStyle = catColors[cat]; ctx1.fillRect(lx, 8, 10, 10);
-      ctx1.fillStyle = CHART_COLORS.text; ctx1.fillText(catLabels[cat], lx + 13, 17);
-      lx += ctx1.measureText(catLabels[cat]).width + 24;
+      dhtml += '<div style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:' + catColors[cat] + ';opacity:0.8;display:inline-block;"></span>' + catLabels[cat] + '</div>';
     });
-  }
+    dhtml += '</div>';
 
+    // Bars
+    dhtml += '<div style="display:flex;flex-direction:column;gap:10px;">';
+    actEntries.forEach(([actName, data]) => {
+      const total = data.boss + data.elite + data.hallway + data.event;
+      dhtml += '<div style="display:flex;align-items:center;gap:10px;">';
+      dhtml += '<span style="width:90px;font-size:0.8rem;font-weight:600;color:var(--text-primary);text-align:right;flex-shrink:0;">' + actName + '</span>';
+      dhtml += '<div style="flex:1;height:28px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;display:flex;">';
+      categories.forEach(cat => {
+        if (data[cat] <= 0) return;
+        const pct = (data[cat] / maxVal) * 100;
+        dhtml += '<div style="width:' + pct + '%;height:100%;background:' + catColors[cat] + ';opacity:0.75;" title="' + catLabels[cat] + ': ' + data[cat] + '"></div>';
+      });
+      dhtml += '</div>';
+      dhtml += '<span style="width:30px;font-size:0.8rem;font-weight:600;color:var(--text-secondary);text-align:right;flex-shrink:0;">' + total + '</span>';
+      dhtml += '</div>';
+    });
+    dhtml += '</div>';
+  } else {
+    dhtml = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No death data</div>';
+  }
+  document.getElementById('deathActBox').innerHTML = dhtml;
 }
 
 // HP progression
@@ -1122,6 +1159,79 @@ function renderDeckSize() {
   ctx.font = '10px system-ui'; ctx.textAlign = 'left';
   ctx.fillStyle = CHART_COLORS.green; ctx.fillText('\u25A0 Wins', pad.left, 14);
   ctx.fillStyle = CHART_COLORS.red; ctx.fillText('\u25A0 Losses', pad.left + 60, 14);
+}
+
+// Card Drafting
+function renderDrafting() {
+  // Skip Rate: Wins vs Losses (comparison display)
+  const sw = analytics.skipWins;
+  const sl = analytics.skipLosses;
+  const winRate = sw.total > 0 ? (sw.skipped / sw.total * 100) : 0;
+  const lossRate = sl.total > 0 ? (sl.skipped / sl.total * 100) : 0;
+  const totalRewards = sw.total + sl.total;
+  const totalSkipped = sw.skipped + sl.skipped;
+  const overallRate = totalRewards > 0 ? (totalSkipped / totalRewards * 100) : 0;
+
+  let cHtml = '';
+  if (totalRewards === 0) {
+    cHtml = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No card reward data</div>';
+  } else {
+    const maxRate = Math.max(winRate, lossRate, 1);
+    cHtml = '<div style="display:flex;flex-direction:column;gap:16px;padding:8px 0;">';
+    cHtml += '<div style="text-align:center;"><span style="font-size:2rem;font-weight:700;">' + overallRate.toFixed(1) + '%</span><div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">Overall skip rate (' + totalSkipped + ' / ' + totalRewards + ' rewards)</div></div>';
+    cHtml += '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">';
+    // Win bar
+    cHtml += '<div style="display:flex;align-items:center;gap:10px;"><span style="width:50px;font-size:0.8rem;font-weight:600;color:var(--accent-green);">Wins</span><div style="flex:1;height:24px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;position:relative;"><div style="height:100%;width:' + (winRate / Math.max(maxRate * 1.2, 1)) * 100 + '%;background:var(--accent-green);border-radius:4px;opacity:0.7;"></div></div><span style="width:70px;text-align:right;font-size:0.85rem;font-weight:600;">' + winRate.toFixed(1) + '%</span></div>';
+    // Loss bar
+    cHtml += '<div style="display:flex;align-items:center;gap:10px;"><span style="width:50px;font-size:0.8rem;font-weight:600;color:var(--accent-red);">Losses</span><div style="flex:1;height:24px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;position:relative;"><div style="height:100%;width:' + (lossRate / Math.max(maxRate * 1.2, 1)) * 100 + '%;background:var(--accent-red);border-radius:4px;opacity:0.7;"></div></div><span style="width:70px;text-align:right;font-size:0.85rem;font-weight:600;">' + lossRate.toFixed(1) + '%</span></div>';
+    cHtml += '</div>';
+    // Sub-stats
+    cHtml += '<div style="display:flex;justify-content:center;gap:24px;font-size:0.75rem;color:var(--text-muted);margin-top:4px;">';
+    cHtml += '<span>' + sw.skipped + '/' + sw.total + ' in wins</span>';
+    cHtml += '<span>' + sl.skipped + '/' + sl.total + ' in losses</span>';
+    cHtml += '</div>';
+    cHtml += '</div>';
+  }
+  document.getElementById('skipCompareBox').innerHTML = cHtml;
+
+  // Skip Rate by Act (bar chart)
+  const canvas = document.getElementById('skipActChart');
+  const { ctx, w, h } = setupCanvas(canvas);
+  const actOrder = ['overgrowth', 'underdocks', 'hive', 'glory', 'radiance'];
+  const actEntries = Object.entries(analytics.skipByAct).sort((a, b) => {
+    const ai = actOrder.indexOf(a[0].toLowerCase()), bi = actOrder.indexOf(b[0].toLowerCase());
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a[0].localeCompare(b[0]);
+  });
+  if (actEntries.length === 0) return;
+
+  const rates = actEntries.map(([, s]) => s.total > 0 ? s.skipped / s.total * 100 : 0);
+  const maxVal = Math.max(...rates, 1);
+  const pad = { top: 20, right: 20, bottom: 30, left: 45 };
+  drawGridAndLabels(ctx, w, h, pad, maxVal, 4, v => Math.round(v) + '%');
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+
+  const barW = Math.min(50, plotW / actEntries.length * 0.6);
+  const gap = plotW / actEntries.length;
+  actEntries.forEach(([actName, s], i) => {
+    const rate = s.total > 0 ? s.skipped / s.total * 100 : 0;
+    const x = pad.left + gap * i + gap / 2 - barW / 2;
+    const barH = maxVal > 0 ? (rate / maxVal) * plotH : 0;
+    const y = h - pad.bottom - barH;
+    ctx.fillStyle = CHART_COLORS.blue + 'cc';
+    ctx.fillRect(x, y, barW, barH);
+    // Label
+    ctx.fillStyle = CHART_COLORS.text; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(actName, pad.left + gap * i + gap / 2, h - 8);
+    // Value on top
+    if (rate > 0) {
+      ctx.fillStyle = '#e6edf3'; ctx.font = '9px system-ui';
+      ctx.fillText(rate.toFixed(0) + '%', pad.left + gap * i + gap / 2, y - 4);
+    }
+  });
 }
 
 // ─── Synergy state ───────────────────────────────────────────────────────────
@@ -1362,6 +1472,7 @@ document.getElementById('modeFilters').addEventListener('click', e => {
   renderDeaths();
   renderHpProgression();
   renderDeckSize();
+  renderDrafting();
   renderRelics();
   renderCards();
 });
@@ -1375,9 +1486,9 @@ window.addEventListener('resize', () => {
     if (runs.length > 0) {
       renderTimeline();
       renderAscension();
-      renderDeaths();
       renderHpProgression();
       renderDeckSize();
+      renderDrafting();
     }
   }, 150);
 });

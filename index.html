@@ -1216,7 +1216,7 @@ function renderRunDetail(run) {
     <div class="card">
       <div class="card-header">Final Deck</div>
       <div class="card-body">
-        ${renderDeck(player)}
+        ${renderDeck(player, floors, playerId)}
       </div>
     </div>
 
@@ -1281,9 +1281,31 @@ function renderRunDetail(run) {
 
 // ─── Render Deck ────────────────────────────────────────────────────────────
 
-function renderDeck(player) {
+function renderDeck(player, floors, playerId) {
   const deck = player?.deck || [];
   if (deck.length === 0) return '<span style="color:var(--text-muted)">Empty</span>';
+
+  // Count skipped card rewards across all floors
+  let skippedRewards = 0;
+  if (floors && playerId) {
+    for (const f of floors) {
+      const ps = f.playerStats.find(p => p.player_id === playerId);
+      if (!ps) continue;
+      const cardChoices = ps.card_choices || [];
+      if (cardChoices.length === 0) continue;
+      const total = cardChoices.length;
+      const numGroups = Math.max(1, Math.round(total / 3));
+      const baseSize = Math.floor(total / numGroups);
+      const remainder = total % numGroups;
+      let offset = 0;
+      for (let g = 0; g < numGroups; g++) {
+        const size = baseSize + (g < remainder ? 1 : 0);
+        const group = cardChoices.slice(offset, offset + size);
+        if (!group.some(c => c.was_picked)) skippedRewards++;
+        offset += size;
+      }
+    }
+  }
 
   // Count cards
   const counts = {};
@@ -1308,6 +1330,7 @@ function renderDeck(player) {
       <span class="deck-stat"><strong>${totalCards}</strong> cards</span>
       <span class="deck-stat"><strong>${upgradedCount}</strong> upgraded</span>
       ${enchantedCount ? `<span class="deck-stat"><strong>${enchantedCount}</strong> enchanted</span>` : ''}
+      ${skippedRewards ? `<span class="deck-stat"><strong>${skippedRewards}</strong> skipped</span>` : ''}
     </div>
     <div class="items-grid">
   `;
