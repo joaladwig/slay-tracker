@@ -174,6 +174,7 @@ All data stays in your browser. Run files are read locally via the File API and 
 - **Abandoned runs** do not count toward your win rate (they are excluded from the W/L calculation) but they do interrupt win streaks. Not an issue but worth noting.
 - **Card descriptions** were scraped from [spire-codex.com](https://spire-codex.com) and may contain minor paraphrasing or become outdated as the game updates during early access.
 - **Energy/star icons** in card descriptions display as `[E]` and `[S]` respectively, since the originals were inline images on the source site.
+- **Upgraded card costs** are not reflected when sorting by cost in the Final Deck view. Some cards have reduced energy costs when upgraded (e.g. Body Slam goes from 1 to 0), but the sort uses base cost only. Fix TBD.
 
 ## Data Sources
 
