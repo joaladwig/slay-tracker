@@ -547,7 +547,7 @@ function computeAnalytics() {
     charStats: {}, ascStats: {}, deathEncounters: {},
     deathByAct: {}, // { actName: { boss: N, elite: N, hallway: N, event: N } }
     deckSizeWins: [], deckSizeLosses: [],
-    relicStats: {}, relicSources: {}, cardStats: {}, cardPickStats: {},
+    relicStats: {}, relicSources: {}, relicStatsBySource: {}, cardStats: {}, cardPickStats: {},
     runPlayerData: [],
     hpProgWins: [], hpProgLosses: [],
     streakCurrent: 0, streakBest: 0,
@@ -632,6 +632,10 @@ function computeAnalytics() {
         if (STARTER_RELICS.has(rid)) {
           if (!a.relicSources[rid]) a.relicSources[rid] = new Set();
           a.relicSources[rid].add('starter');
+          if (!a.relicStatsBySource['starter']) a.relicStatsBySource['starter'] = {};
+          if (!a.relicStatsBySource['starter'][rid]) a.relicStatsBySource['starter'][rid] = { count: 0, wins: 0 };
+          a.relicStatsBySource['starter'][rid].count++;
+          if (win) a.relicStatsBySource['starter'][rid].wins++;
         }
       });
 
@@ -680,6 +684,10 @@ function computeAnalytics() {
             if (!rid) return;
             if (!a.relicSources[rid]) a.relicSources[rid] = new Set();
             a.relicSources[rid].add(sourceLabel);
+            if (!a.relicStatsBySource[sourceLabel]) a.relicStatsBySource[sourceLabel] = {};
+            if (!a.relicStatsBySource[sourceLabel][rid]) a.relicStatsBySource[sourceLabel][rid] = { count: 0, wins: 0 };
+            a.relicStatsBySource[sourceLabel][rid].count++;
+            if (win) a.relicStatsBySource[sourceLabel][rid].wins++;
           });
           (ps.card_choices || []).forEach(cc => {
             const cid = cc.card?.id;
@@ -1337,18 +1345,20 @@ function renderRelics() {
     filterEl.style.display = 'none';
   }
 
-  let data = Object.entries(analytics.relicStats)
-    .map(([id, s]) => ({
-      id, count: s.count, wins: s.wins,
-      wr: s.count > 0 ? s.wins / s.count : 0,
-      avgFloor: s.count > 0 ? s.totalFloor / s.count : 0,
-      earlyWr: s.earlyCount > 0 ? s.earlyWins / s.earlyCount : -1,
-      earlyCount: s.earlyCount, earlyWins: s.earlyWins
-    }));
-  if (activeRelicSource !== 'all') {
-    const sources = analytics.relicSources || {};
-    data = data.filter(r => sources[r.id] && sources[r.id].has(activeRelicSource));
-  }
+  const sourceStats = activeRelicSource !== 'all' ? (analytics.relicStatsBySource[activeRelicSource] || {}) : null;
+  const statBase = sourceStats || analytics.relicStats;
+
+  let data = Object.entries(statBase)
+    .map(([id, s]) => {
+      const global = analytics.relicStats[id] || s;
+      return {
+        id, count: s.count, wins: s.wins,
+        wr: s.count > 0 ? s.wins / s.count : 0,
+        avgFloor: global.count > 0 ? global.totalFloor / global.count : 0,
+        earlyWr: global.earlyCount > 0 ? global.earlyWins / global.earlyCount : -1,
+        earlyCount: global.earlyCount, earlyWins: global.earlyWins
+      };
+    });
   if (hideStarters) data = data.filter(r => !STARTER_RELICS.has(r.id));
   data = data.filter(r => r.count >= minRuns);
   if (search) data = data.filter(r => prettyId(r.id).toLowerCase().includes(search));
