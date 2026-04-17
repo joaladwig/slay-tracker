@@ -138,7 +138,7 @@ Tracks what happened to each player at each map node. All fields below may be ab
 | `cards_enchanted` | CardRef[]? | Cards that received an enchantment |
 | `upgraded_cards` | string[]? | Card IDs upgraded at campfire (`SMITH`) |
 | `downgraded_cards` | string[]? | Card IDs downgraded |
-| `relic_choices` | RelicChoice[]? | Relics offered; each has `choice` (ID) and `was_picked` bool |
+| `relic_choices` | RelicChoice[]? | Relics offered; each has `choice` (ID) and `was_picked` bool. Normally appears on `ancient`, `elite`, `treasure`, and `shop` nodes. Rarely appears on `boss` nodes — observed once on a Regent player after the Act 1 boss; likely triggered by `RELIC.DIVINE_RIGHT` rather than a standard boss reward. Can have multiple `was_picked: true` entries in that case. |
 | `relics_removed` | string[]? | Relic IDs removed |
 | `potion_choices` | PotionChoice[]? | Potions offered; each has `choice` (ID) and `was_picked` bool |
 | `potion_used` | string[]? | Potion IDs used during combat |

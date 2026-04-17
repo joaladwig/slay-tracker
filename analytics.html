@@ -288,6 +288,7 @@
             <label>Min runs: <input type="number" class="min-runs-input" id="relicMinRuns" value="3" min="1" max="100" /></label>
           </div>
         </div>
+        <div id="relicSourceFilter" style="padding:6px 16px 8px;border-bottom:1px solid var(--border);display:none;"></div>
         <div class="card-body scroll-body" id="relicTableBox"></div>
       </div>
     </div>
@@ -546,7 +547,7 @@ function computeAnalytics() {
     charStats: {}, ascStats: {}, deathEncounters: {},
     deathByAct: {}, // { actName: { boss: N, elite: N, hallway: N, event: N } }
     deckSizeWins: [], deckSizeLosses: [],
-    relicStats: {}, cardStats: {}, cardPickStats: {},
+    relicStats: {}, relicSources: {}, cardStats: {}, cardPickStats: {},
     runPlayerData: [],
     hpProgWins: [], hpProgLosses: [],
     streakCurrent: 0, streakBest: 0,
@@ -626,6 +627,14 @@ function computeAnalytics() {
         }
       });
 
+      // Tag starter relics
+      playerRelics.forEach(rid => {
+        if (STARTER_RELICS.has(rid)) {
+          if (!a.relicSources[rid]) a.relicSources[rid] = new Set();
+          a.relicSources[rid].add('starter');
+        }
+      });
+
       // Cards in final deck — track earliest floor per card ID
       const playerCards = new Set();
       const cardFloors = {};
@@ -655,13 +664,23 @@ function computeAnalytics() {
       a.runPlayerData.push({ win, relics: playerRelics, cards: playerCards });
     }
 
-    // Card pick rate — scan floor history for owner's card_choices
+    // Card pick rate — scan floor history for owner's card_choices + relic sources
     const ownerId = player ? player.id : null;
     if (ownerId) {
       (run.map_point_history || []).forEach(actFloors => {
         (actFloors || []).forEach(mp => {
           const ps = (mp.player_stats || []).find(p => p.player_id === ownerId);
           if (!ps) return;
+          const mpt = mp.map_point_type || 'unknown';
+          const ancientId = mpt === 'ancient' ? ((mp.rooms || [])[0]?.model_id || '').replace('EVENT.', '').toLowerCase() : null;
+          const sourceLabel = ancientId || ({ boss: 'boss', elite: 'elite', shop: 'shop', treasure: 'chest', unknown: 'event' }[mpt] || 'event');
+          (ps.relic_choices || []).forEach(rc => {
+            if (!rc.was_picked) return;
+            const rid = rc.choice;
+            if (!rid) return;
+            if (!a.relicSources[rid]) a.relicSources[rid] = new Set();
+            a.relicSources[rid].add(sourceLabel);
+          });
           (ps.card_choices || []).forEach(cc => {
             const cid = cc.card?.id;
             if (!cid) return;
@@ -794,6 +813,7 @@ function renderCharFilters() {
     btn.addEventListener('click', () => {
       activeChar = btn.dataset.char;
       selectedRelic = null;
+      activeRelicSource = 'all';
       renderCharFilters();
       renderAscFilters();
       computeAnalytics();
@@ -817,6 +837,7 @@ function renderAscFilters() {
     btn.addEventListener('click', () => {
       activeAscension = btn.dataset.asc === 'all' ? 'all' : Number(btn.dataset.asc);
       selectedRelic = null;
+      activeRelicSource = 'all';
       renderAscFilters();
       computeAnalytics();
       renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
@@ -843,6 +864,7 @@ function computeAndRender() {
     ['renderCards', renderCards],
   ];
   selectedRelic = null;
+  activeRelicSource = 'all';
   for (const [name, fn] of steps) {
     try { fn(); } catch (err) { console.error('Analytics error in ' + name + ':', err); }
   }
@@ -1265,6 +1287,7 @@ function renderDrafting() {
 // ─── Synergy state ───────────────────────────────────────────────────────────
 
 let selectedRelic = null;
+let activeRelicSource = 'all';
 let relicSort = { col: 'count', dir: 'desc' };
 let cardSort = { col: 'count', dir: 'desc' };
 
@@ -1285,10 +1308,34 @@ function toggleSort(state, col) {
 }
 
 // Relics — single sortable table
+const SOURCE_LABELS = { all: 'All Sources', neow: 'Neow', tezcatara: 'Tezcatara', orobas: 'Orobas', pael: 'Pael', vakuu: 'Vakuu', nonupeipe: 'Nonupeipe', tanx: 'Tanx', darv: 'Darv', boss: 'Boss', elite: 'Elite', chest: 'Chest', shop: 'Shop', event: 'Event', starter: 'Starter' };
+const SOURCE_ORDER = ['all', 'neow', 'tezcatara', 'orobas', 'pael', 'vakuu', 'nonupeipe', 'tanx', 'darv', 'boss', 'elite', 'chest', 'shop', 'event', 'starter'];
+
 function renderRelics() {
   const hideStarters = document.getElementById('hideStarters').checked;
   const minRuns = parseInt(document.getElementById('relicMinRuns').value) || 1;
   const search = (document.getElementById('relicSearch').value || '').toLowerCase();
+
+  // Build source filter bar from sources present in current data
+  const presentSources = new Set();
+  Object.values(analytics.relicSources || {}).forEach(s => s.forEach(src => presentSources.add(src)));
+  const filterEl = document.getElementById('relicSourceFilter');
+  if (presentSources.size > 0) {
+    const btns = SOURCE_ORDER.filter(s => s === 'all' || presentSources.has(s)).map(s => {
+      const active = activeRelicSource === s ? ' active' : '';
+      return '<button class="mode-btn' + active + '" style="padding:4px 12px;font-size:0.75rem;" data-src="' + s + '">' + SOURCE_LABELS[s] + '</button>';
+    }).join('');
+    filterEl.innerHTML = '<div class="mode-bar" style="gap:4px;flex-wrap:wrap;">' + btns + '</div>';
+    filterEl.style.display = '';
+    filterEl.querySelectorAll('[data-src]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeRelicSource = btn.dataset.src;
+        renderRelics();
+      });
+    });
+  } else {
+    filterEl.style.display = 'none';
+  }
 
   let data = Object.entries(analytics.relicStats)
     .map(([id, s]) => ({
@@ -1298,6 +1345,10 @@ function renderRelics() {
       earlyWr: s.earlyCount > 0 ? s.earlyWins / s.earlyCount : -1,
       earlyCount: s.earlyCount, earlyWins: s.earlyWins
     }));
+  if (activeRelicSource !== 'all') {
+    const sources = analytics.relicSources || {};
+    data = data.filter(r => sources[r.id] && sources[r.id].has(activeRelicSource));
+  }
   if (hideStarters) data = data.filter(r => !STARTER_RELICS.has(r.id));
   data = data.filter(r => r.count >= minRuns);
   if (search) data = data.filter(r => prettyId(r.id).toLowerCase().includes(search));
@@ -1491,6 +1542,7 @@ document.getElementById('modeFilters').addEventListener('click', e => {
   btn.classList.add('active');
   activeMode = btn.dataset.mode;
   selectedRelic = null;
+  activeRelicSource = 'all';
   renderCharFilters();
   renderAscFilters();
   computeAnalytics();
