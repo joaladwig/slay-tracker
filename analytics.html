@@ -200,6 +200,8 @@
         <span id="modeInfo" class="mode-info"></span>
         <span class="nav-sep" style="height:24px;margin:0 10px;"></span>
         <div id="charFilters" class="mode-bar" style="gap:4px;"></div>
+        <span class="nav-sep" style="height:24px;margin:0 10px;"></span>
+        <div id="ascFilters" class="mode-bar" style="gap:4px;"></div>
       </div>
     </div>
 
@@ -487,6 +489,7 @@ loadRunsFromDB().then(saved => {
 let analytics = {};
 let activeMode = 'all'; // 'all', 'solo', 'coop'
 let activeChar = 'all'; // 'all' or a character ID like 'CHARACTER.IRONCLAD'
+let activeAscension = 'all'; // 'all' or a number (0, 1, 2, ...)
 let ownerSteamId = null;
 
 // Detect the owner's Steam ID: the non-1 ID that appears in the most multiplayer runs
@@ -533,6 +536,7 @@ function computeAnalytics() {
       const p = getOwnerPlayer(run);
       if (!p || p.character !== activeChar) return false;
     }
+    if (activeAscension !== 'all' && (run.ascension || 0) !== activeAscension) return false;
     return true;
   });
 
@@ -791,6 +795,29 @@ function renderCharFilters() {
       activeChar = btn.dataset.char;
       selectedRelic = null;
       renderCharFilters();
+      renderAscFilters();
+      computeAnalytics();
+      renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
+      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderRelics(); renderCards();
+    });
+  });
+}
+
+function renderAscFilters() {
+  const ascensions = new Set();
+  runs.forEach(run => ascensions.add(run.ascension || 0));
+  const container = document.getElementById('ascFilters');
+  let html = '<button class="mode-btn' + (activeAscension === 'all' ? ' active' : '') + '" data-asc="all">All Asc</button>';
+  [...ascensions].sort((a, b) => a - b).forEach(asc => {
+    const active = activeAscension === asc ? ' active' : '';
+    html += '<button class="mode-btn' + active + '" data-asc="' + asc + '">A' + asc + '</button>';
+  });
+  container.innerHTML = html;
+  container.querySelectorAll('[data-asc]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeAscension = btn.dataset.asc === 'all' ? 'all' : Number(btn.dataset.asc);
+      selectedRelic = null;
+      renderAscFilters();
       computeAnalytics();
       renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
       renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderRelics(); renderCards();
@@ -802,6 +829,7 @@ function computeAndRender() {
   const steps = [
     ['detectOwner', detectOwner],
     ['renderCharFilters', renderCharFilters],
+    ['renderAscFilters', renderAscFilters],
     ['computeAnalytics', computeAnalytics],
     ['renderOverview', renderOverview],
     ['renderTimeline', renderTimeline],
@@ -1464,6 +1492,7 @@ document.getElementById('modeFilters').addEventListener('click', e => {
   activeMode = btn.dataset.mode;
   selectedRelic = null;
   renderCharFilters();
+  renderAscFilters();
   computeAnalytics();
   renderOverview();
   renderTimeline();
