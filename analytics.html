@@ -927,7 +927,7 @@ function renderOverview() {
 
   document.getElementById('statGrid').innerHTML = [
     { label: 'Total Runs', value: a.total, cls: '' },
-    { label: 'Win Rate', value: pct(a.wins, a.wins + a.losses), sub: a.wins + 'W / ' + a.losses + 'L' + (a.abandoned ? ' / ' + a.abandoned + ' abandoned' : ''), cls: a.wins >= a.losses ? 'green' : 'red' },
+    { label: 'Win Rate', value: pct(a.wins, a.total), sub: a.wins + 'W / ' + a.losses + 'L' + (a.abandoned ? ' / ' + a.abandoned + ' abandoned' : ''), cls: a.wins >= a.losses ? 'green' : 'red' },
     { label: 'Total Play Time', value: prettyTime(a.totalTime), cls: '' },
     { label: 'Avg Run Time', value: prettyTime(avgTime), cls: '' },
     { label: 'Max Ascension (Won)', value: 'A' + a.maxAscWin, sub: 'Highest attempted: A' + a.maxAsc, cls: 'yellow' },
