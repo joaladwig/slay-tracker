@@ -40,6 +40,13 @@ The main run viewer for browsing individual runs.
 - Card chips with thumbnail images, upgrade indicators (+N), enchantment badges, and duplicate counts
 - Total / upgraded / enchanted card stats
 
+**Damage per Floor**
+- Average damage taken per floor broken down by act (Underdocks, Hive, Glory, etc.), plus a Full Run total
+- Shows damage per floor value and raw total damage for each act
+
+**Room Types**
+- Count of each room type visited per act: Hallway fights, Elites, Events, Shops, Campfires
+
 **Relics & Potions**
 - End-of-run display with icons, names, and floor-acquired info
 - Potion slots shown
@@ -107,6 +114,15 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 **HP & Deck Analysis**
 - Avg HP % by Floor: line chart comparing wins (green) vs losses (red), with 0-100% Y-axis at 20% intervals
 - Final Deck Size: overlaid histogram comparing wins vs losses
+
+**Per-Act Analysis**
+Six cards breaking down key metrics per act (Overgrowth, Underdocks, Hive, Glory), each comparing wins vs losses:
+- HP % at Boss: average HP percentage entering the boss fight
+- Deck Growth: average net cards added during the act
+- Elites Fought: average number of elite nodes visited
+- Campfire Choices: per-choice breakdown (Heal/Smith/Dig/etc.) showing how often each was chosen in wins vs losses as a percentage of total campfire visits that act
+- Avg Damage per Floor: average damage taken per floor, including a Full Run row
+- All cards respect the character, ascension, version, and mode filters
 
 **Relics Table**
 - Single sortable table: Relic (with icon), Runs, Win Rate (A-F graded), Avg Floor, Early WR (win rate when acquired in Act 1, with sample size)

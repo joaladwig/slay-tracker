@@ -1160,6 +1160,30 @@ function renderRunDetail(run) {
   // Acts
   const actNames = (run.acts || []).map(a => prettyId(a)).join(' → ');
 
+  // Damage per floor + room type counts by act
+  const ROOM_TYPES = [
+    { key: 'monster',   label: 'Hallway' },
+    { key: 'elite',     label: 'Elites'  },
+    { key: 'unknown',   label: 'Events'  },
+    { key: 'shop',      label: 'Shops'   },
+    { key: 'rest_site', label: 'Campfires' },
+  ];
+  const actDmgStats = (run.map_point_history || []).map((actFloors, actIdx) => {
+    const actName = prettyId((run.acts || [])[actIdx] || ('Act ' + (actIdx + 1)));
+    let totalDmg = 0, count = 0;
+    const roomCounts = {};
+    (actFloors || []).forEach(mp => {
+      const ps = (mp.player_stats || []).find(p => p.player_id === playerId);
+      if (ps) { totalDmg += ps.damage_taken || 0; count++; }
+      const mpt = mp.map_point_type || '';
+      if (ROOM_TYPES.some(r => r.key === mpt)) roomCounts[mpt] = (roomCounts[mpt] || 0) + 1;
+    });
+    return { actName, dmgPerFloor: count > 0 ? totalDmg / count : null, totalDmg, floorCount: count, roomCounts };
+  });
+  const runTotalDmg = actDmgStats.reduce((s, a) => s + a.totalDmg, 0);
+  const runTotalFloors = actDmgStats.reduce((s, a) => s + a.floorCount, 0);
+  const runDmgPerFloor = runTotalFloors > 0 ? runTotalDmg / runTotalFloors : null;
+
   // Modifiers
   const mods = (run.modifiers || []).map(m => prettyId(m.id));
 
@@ -1235,6 +1259,46 @@ function renderRunDetail(run) {
         <div class="card-header">&#9733; Gold Over Floors</div>
         <div class="card-body">
           <div class="chart-container"><canvas id="goldChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Damage per Floor + Room Types by Act -->
+    <div class="chart-row">
+      <div class="card">
+        <div class="card-header">Damage per Floor</div>
+        <div class="card-body">
+          <div class="run-stats">
+            ${actDmgStats.map(({ actName, dmgPerFloor, totalDmg }) => `
+              <div class="stat-item">
+                <span class="stat-label">${actName}</span>
+                <span class="stat-value" style="font-size:0.85rem;">${dmgPerFloor !== null ? dmgPerFloor.toFixed(1) : '—'}</span>
+                <span style="font-size:0.7rem;color:var(--text-muted);">${totalDmg} total</span>
+              </div>
+            `).join('')}
+            <div class="stat-item">
+              <span class="stat-label">Full Run</span>
+              <span class="stat-value">${runDmgPerFloor !== null ? runDmgPerFloor.toFixed(1) : '—'}</span>
+              <span style="font-size:0.7rem;color:var(--text-muted);">${runTotalDmg} total</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Room Types</div>
+        <div class="card-body">
+          <div style="display:flex;gap:24px;flex-wrap:wrap;">
+            ${actDmgStats.map(({ actName, roomCounts }) => `
+              <div>
+                <div style="font-size:0.7rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">${actName}</div>
+                ${ROOM_TYPES.map(({ key, label }) => roomCounts[key] ? `
+                  <div style="display:flex;justify-content:space-between;gap:16px;font-size:0.8rem;margin-bottom:4px;">
+                    <span style="color:var(--text-muted);">${label}</span>
+                    <span style="font-weight:600;">${roomCounts[key]}</span>
+                  </div>` : '').join('')}
+              </div>
+            `).join('')}
+          </div>
         </div>
       </div>
     </div>

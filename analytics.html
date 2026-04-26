@@ -264,7 +264,38 @@
       </div>
     </div>
 
-    <!-- Section 7: Card Drafting -->
+    <!-- Section 7: Per-Act Analysis -->
+    <div class="section">
+      <div class="section-title">Per-Act Analysis</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">HP % at Boss (Wins vs Losses)</div>
+          <div class="card-body" id="actHpBossBox"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Deck Growth per Act (Wins vs Losses)</div>
+          <div class="card-body" id="actDeckGrowthBox"></div>
+        </div>
+      </div>
+      <div class="two-col" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header">Elites Fought per Act (Wins vs Losses)</div>
+          <div class="card-body" id="actElitesBox"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Campfire Choices per Act</div>
+          <div class="card-body" id="actCampfireBox"></div>
+        </div>
+      </div>
+      <div class="two-col" style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header">Avg Damage per Floor by Act (Wins vs Losses)</div>
+          <div class="card-body" id="actDmgPerFloorBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 8: Card Drafting -->
     <div class="section">
       <div class="section-title">Card Drafting</div>
       <div class="two-col">
@@ -559,7 +590,9 @@ function computeAnalytics() {
     uniqueCards: new Set(), uniqueRelics: new Set(),
     timeline: [],
     skipWins: { total: 0, skipped: 0 }, skipLosses: { total: 0, skipped: 0 },
-    skipByAct: {} // { actName: { total: 0, skipped: 0 } }
+    skipByAct: {}, // { actName: { total: 0, skipped: 0 } }
+    actStats: {}, // { actName: { hpAtBossWins, hpAtBossLosses, elitesWins, elitesLosses, deckGrowthWins, deckGrowthLosses, campfire } }
+    dmgPerFloorWins: [], dmgPerFloorLosses: []
   };
 
   let currentStreak = 0;
@@ -782,6 +815,59 @@ function computeAnalytics() {
       }
     }
 
+    // Per-act analysis
+    if (ownerId) {
+      let runTotalDmg = 0, runTotalFloors = 0;
+      (run.map_point_history || []).forEach((actFloors, actIdx) => {
+        const actName = prettyId((run.acts || [])[actIdx] || ('Act ' + (actIdx + 1)));
+        if (!a.actStats[actName]) a.actStats[actName] = {
+          hpAtBossWins: [], hpAtBossLosses: [],
+          elitesWins: [], elitesLosses: [],
+          deckGrowthWins: [], deckGrowthLosses: [],
+          campfireWins: {}, campfireLosses: {},
+          dmgPerFloorWins: [], dmgPerFloorLosses: []
+        };
+        const as = a.actStats[actName];
+        let elites = 0, deckGrowth = 0, bossHpRatio = null, totalDmg = 0;
+        const campfireChoicesThisAct = [];
+        (actFloors || []).forEach(mp => {
+          const mpt = mp.map_point_type || '';
+          const ps = (mp.player_stats || []).find(p => p.player_id === ownerId);
+          if (mpt === 'elite') elites++;
+          if (ps) {
+            deckGrowth += (ps.cards_gained || []).length - (ps.cards_removed || []).length;
+            totalDmg += ps.damage_taken || 0;
+            if (mpt === 'boss') bossHpRatio = ps.max_hp > 0 ? ps.current_hp / ps.max_hp : null;
+            if (mpt === 'rest_site') {
+              (ps.rest_site_choices || []).forEach(c => { campfireChoicesThisAct.push(c); });
+            }
+          }
+        });
+        const floorCount = (actFloors || []).length;
+        const dmgPerFloor = floorCount > 0 ? totalDmg / floorCount : null;
+        if (win) campfireChoicesThisAct.forEach(c => { as.campfireWins[c] = (as.campfireWins[c] || 0) + 1; });
+        else if (!abandoned) campfireChoicesThisAct.forEach(c => { as.campfireLosses[c] = (as.campfireLosses[c] || 0) + 1; });
+        if (win) {
+          as.elitesWins.push(elites);
+          as.deckGrowthWins.push(deckGrowth);
+          if (bossHpRatio !== null) as.hpAtBossWins.push(bossHpRatio);
+          if (dmgPerFloor !== null) as.dmgPerFloorWins.push(dmgPerFloor);
+        } else if (!abandoned) {
+          as.elitesLosses.push(elites);
+          as.deckGrowthLosses.push(deckGrowth);
+          if (bossHpRatio !== null) as.hpAtBossLosses.push(bossHpRatio);
+          if (dmgPerFloor !== null) as.dmgPerFloorLosses.push(dmgPerFloor);
+        }
+        runTotalDmg += totalDmg;
+        runTotalFloors += floorCount;
+      });
+      const runDmgPerFloor = runTotalFloors > 0 ? runTotalDmg / runTotalFloors : null;
+      if (runDmgPerFloor !== null) {
+        if (win) a.dmgPerFloorWins.push(runDmgPerFloor);
+        else if (!abandoned) a.dmgPerFloorLosses.push(runDmgPerFloor);
+      }
+    }
+
     // HP progression per floor — owner's player only
     const history = run.map_point_history || [];
     let floorIdx = 0;
@@ -832,7 +918,7 @@ function renderCharFilters() {
       renderVersionFilters();
       computeAnalytics();
       renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
-      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderRelics(); renderCards();
+      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderActAnalysis(); renderRelics(); renderCards();
     });
   });
 }
@@ -857,7 +943,7 @@ function renderAscFilters() {
       renderVersionFilters();
       computeAnalytics();
       renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
-      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderRelics(); renderCards();
+      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderActAnalysis(); renderRelics(); renderCards();
     });
   });
 }
@@ -881,7 +967,7 @@ function renderVersionFilters() {
       renderVersionFilters();
       computeAnalytics();
       renderOverview(); renderTimeline(); renderCharTable(); renderAscension();
-      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderRelics(); renderCards();
+      renderDeaths(); renderHpProgression(); renderDeckSize(); renderDrafting(); renderActAnalysis(); renderRelics(); renderCards();
     });
   });
 }
@@ -901,6 +987,7 @@ function computeAndRender() {
     ['renderHpProgression', renderHpProgression],
     ['renderDeckSize', renderDeckSize],
     ['renderDrafting', renderDrafting],
+    ['renderActAnalysis', renderActAnalysis],
     ['renderRelics', renderRelics],
     ['renderCards', renderCards],
   ];
@@ -1326,6 +1413,113 @@ function renderDrafting() {
   });
 }
 
+function renderActAnalysis() {
+  const a = analytics;
+  const actOrder = ['overgrowth', 'underdocks', 'hive', 'glory', 'radiance'];
+  function sortActs(entries) {
+    return entries.sort((x, y) => {
+      const ai = actOrder.indexOf(x[0].toLowerCase()), bi = actOrder.indexOf(y[0].toLowerCase());
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1; if (bi !== -1) return 1;
+      return x[0].localeCompare(y[0]);
+    });
+  }
+  function avg(arr) { return arr.length > 0 ? arr.reduce((s, v) => s + v, 0) / arr.length : null; }
+
+  const entries = sortActs(Object.entries(a.actStats));
+  const empty = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No data</div>';
+  if (entries.length === 0) {
+    ['actHpBossBox','actDeckGrowthBox','actElitesBox','actCampfireBox','actDmgPerFloorBox'].forEach(id => { document.getElementById(id).innerHTML = empty; });
+    return;
+  }
+
+  function renderCompareBars(entries, getWins, getLosses, formatVal, maxVal) {
+    let html = '<div style="display:flex;flex-direction:column;gap:14px;padding:4px 0;">';
+    entries.forEach(([actName, s]) => {
+      const wArr = getWins(s), lArr = getLosses(s);
+      const wAvg = avg(wArr), lAvg = avg(lArr);
+      if (wAvg === null && lAvg === null) return;
+      html += '<div><div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;">' + actName + '</div>';
+      if (wAvg !== null) {
+        const pct = Math.min(Math.max(wAvg, 0) / maxVal * 100, 100);
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="width:42px;font-size:0.7rem;color:var(--accent-green);">Wins</span><div style="flex:1;height:16px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--accent-green);opacity:0.7;border-radius:3px;"></div></div><span style="min-width:90px;font-size:0.75rem;font-weight:600;text-align:right;">' + formatVal(wAvg) + ' <span style="color:var(--text-muted);font-weight:400;">(' + wArr.length + ')</span></span></div>';
+      }
+      if (lAvg !== null) {
+        const pct = Math.min(Math.max(lAvg, 0) / maxVal * 100, 100);
+        html += '<div style="display:flex;align-items:center;gap:8px;"><span style="width:42px;font-size:0.7rem;color:var(--accent-red);">Losses</span><div style="flex:1;height:16px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--accent-red);opacity:0.7;border-radius:3px;"></div></div><span style="min-width:90px;font-size:0.75rem;font-weight:600;text-align:right;">' + formatVal(lAvg) + ' <span style="color:var(--text-muted);font-weight:400;">(' + lArr.length + ')</span></span></div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  // HP % at Boss
+  document.getElementById('actHpBossBox').innerHTML = renderCompareBars(entries, s => s.hpAtBossWins, s => s.hpAtBossLosses, v => (v * 100).toFixed(1) + '%', 1.0);
+
+  // Deck Growth
+  const maxGrowth = Math.max(...entries.flatMap(([, s]) => [...s.deckGrowthWins, ...s.deckGrowthLosses]), 1);
+  document.getElementById('actDeckGrowthBox').innerHTML = renderCompareBars(entries, s => s.deckGrowthWins, s => s.deckGrowthLosses, v => (v >= 0 ? '+' : '') + v.toFixed(1) + ' cards', maxGrowth);
+
+  // Damage per Floor (per-act + full run)
+  const dmgEntries = [...entries, ['Full Run', { dmgPerFloorWins: a.dmgPerFloorWins, dmgPerFloorLosses: a.dmgPerFloorLosses }]];
+  const maxDmg = Math.max(...dmgEntries.flatMap(([, s]) => [...s.dmgPerFloorWins, ...s.dmgPerFloorLosses]), 1);
+  document.getElementById('actDmgPerFloorBox').innerHTML = renderCompareBars(dmgEntries, s => s.dmgPerFloorWins, s => s.dmgPerFloorLosses, v => v.toFixed(1) + ' dmg/floor', maxDmg);
+
+  // Elites Fought
+  const maxElites = Math.max(...entries.flatMap(([, s]) => [...s.elitesWins, ...s.elitesLosses]), 1);
+  document.getElementById('actElitesBox').innerHTML = renderCompareBars(entries, s => s.elitesWins, s => s.elitesLosses, v => v.toFixed(1) + ' avg', maxElites);
+
+  // Campfire Choices — stacked bar per act
+  const campfireColors = { HEAL: 'var(--accent-green)', SMITH: 'var(--accent-blue)', DIG: 'var(--accent-yellow)', COOK: 'var(--accent-orange)', HATCH: 'var(--accent-purple)', LIFT: 'var(--accent-cyan)' };
+  const choiceOrder = ['HEAL', 'SMITH', 'DIG', 'COOK', 'HATCH', 'LIFT'];
+  const allChoices = new Set();
+  entries.forEach(([, s]) => { Object.keys(s.campfireWins).forEach(k => allChoices.add(k)); Object.keys(s.campfireLosses).forEach(k => allChoices.add(k)); });
+  const choices = [...allChoices].sort((a, b) => {
+    const ai = choiceOrder.indexOf(a), bi = choiceOrder.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1; if (bi !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+  let cfHtml = '';
+  if (choices.length === 0) {
+    cfHtml = empty;
+  } else {
+    cfHtml += '<div style="display:flex;flex-direction:column;gap:20px;">';
+    entries.forEach(([actName, s]) => {
+      const totalWins = Object.values(s.campfireWins).reduce((a, b) => a + b, 0);
+      const totalLosses = Object.values(s.campfireLosses).reduce((a, b) => a + b, 0);
+      if (totalWins + totalLosses === 0) return;
+
+      cfHtml += '<div>';
+      cfHtml += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:5px;">' + actName + '</div>';
+
+      cfHtml += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      choices.forEach(c => {
+        const wCount = s.campfireWins[c] || 0;
+        const lCount = s.campfireLosses[c] || 0;
+        if (wCount + lCount === 0) return;
+        const color = campfireColors[c] || 'var(--text-muted)';
+        cfHtml += '<div>';
+        cfHtml += '<div style="font-size:0.7rem;font-weight:600;margin-bottom:3px;" ><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + color + ';opacity:0.8;margin-right:4px;"></span>' + prettyId(c) + '</div>';
+        if (totalWins > 0) {
+          const barPct = wCount / totalWins * 100;
+          cfHtml += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="width:38px;font-size:0.68rem;color:var(--accent-green);">Wins</span><div style="flex:1;height:14px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';opacity:0.7;border-radius:3px;"></div></div><span style="width:80px;font-size:0.7rem;text-align:right;">' + wCount + ' <span style="color:var(--text-muted);">(' + barPct.toFixed(1) + '%)</span></span></div>';
+        }
+        if (totalLosses > 0) {
+          const barPct = lCount / totalLosses * 100;
+          cfHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="width:38px;font-size:0.68rem;color:var(--accent-red);">Losses</span><div style="flex:1;height:14px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + barPct + '%;background:' + color + ';opacity:0.45;border-radius:3px;"></div></div><span style="width:80px;font-size:0.7rem;text-align:right;">' + lCount + ' <span style="color:var(--text-muted);">(' + barPct.toFixed(1) + '%)</span></span></div>';
+        }
+        cfHtml += '</div>';
+      });
+      cfHtml += '</div></div>';
+    });
+    cfHtml += '</div>';
+  }
+  document.getElementById('actCampfireBox').innerHTML = cfHtml;
+}
+
 // ─── Synergy state ───────────────────────────────────────────────────────────
 
 let selectedRelic = null;
@@ -1598,6 +1792,7 @@ document.getElementById('modeFilters').addEventListener('click', e => {
   renderHpProgression();
   renderDeckSize();
   renderDrafting();
+  renderActAnalysis();
   renderRelics();
   renderCards();
 });
