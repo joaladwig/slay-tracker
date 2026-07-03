@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
-"""Regenerate card data from the spire-codex API.
+"""Regenerate card/relic/potion data from the spire-codex API.
 
 Usage:
-    py -X utf8 scripts/update_cards.py path/to/api_cards.json [--check]
     py -X utf8 scripts/update_cards.py --fetch [--check]
+    py -X utf8 scripts/update_cards.py path/to/dir-with-api-json [--check]
+
+The directory form expects api_cards.json / api_relics.json /
+api_potions.json saved from the corresponding API endpoints.
 
 Updates, in repo root:
     cards_parsed.json                                   (current cards, name-sorted)
-    index.html      CARD_TYPES / CARD_COSTS / CARD_TIPS / CARD_TIPS_UPGRADED
-    analytics.html  CARD_TYPES / CARD_CHARS / CARD_TIPS
+    index.html      CARD_TYPES / CARD_COSTS / CARD_TIPS / CARD_TIPS_UPGRADED /
+                    RELIC_TIPS / POTION_TIPS
+    analytics.html  CARD_TYPES / CARD_CHARS / CARD_TIPS / RELIC_TIPS /
+                    TOTAL_CARD_COUNT / TOTAL_RELIC_COUNT
     cards.html      allCards
-    assets/cards/<slug>.png                             (downloads missing art)
+    relics.html     allRelics
+    potions.html    allPotions
+    assets/{cards,relics,potions}/<slug>.png            (downloads missing art)
 
-Cards removed from the game are dropped from cards_parsed.json / cards.html
-but their entries in the lookup constants (and their art) are preserved so
-historical runs that contain them still render.
+Items removed from the game are dropped from the gallery pages but their
+entries in the lookup constants (and their art) are preserved so historical
+runs that contain them still render.
 
 --check: regenerate and report differences without writing anything.
 """
@@ -240,6 +247,37 @@ def build_constants(cards_api):
             consts["CARD_TIPS_UPGRADED"][key] = tip(entries[key], upgraded=True)
     return entries, consts
 
+
+def relic_entry(r):
+    return {
+        "name": r["name"],
+        "slug": r["id"].lower(),
+        "rarity_pool": r["rarity"] + "·" + r["pool"],
+        "description": finalize(r["description"]),
+    }
+
+
+def potion_entry(p):
+    return {
+        "name": p["name"],
+        "slug": p["id"].lower(),
+        "rarity": p["rarity_key"].lower(),
+        "pool": p["pool"],
+        "description": finalize(p["description"]),
+    }
+
+
+def relic_tips(relics_api):
+    return {("RELIC." + r["id"]): "%s — %s" % (r["rarity"],
+                                               finalize(r["description"]))
+            for r in sorted(relics_api, key=lambda r: r["id"])}
+
+
+def potion_tips(potions_api):
+    return {("POTION." + p["id"]): "%s · %s — %s" % (
+                p["rarity_key"].lower(), p["pool"], finalize(p["description"]))
+            for p in sorted(potions_api, key=lambda p: p["id"])}
+
 # ---------------------------------------------------------------- splicing
 
 def splice_const(src, name, value, keep_legacy=True):
@@ -259,35 +297,45 @@ def splice_const(src, name, value, keep_legacy=True):
 
 # ---------------------------------------------------------------- art
 
-def download_art(entries, check=False):
-    art_dir = ROOT / "assets" / "cards"
-    missing = [e for e in entries.values()
-               if not (art_dir / (e["slug"] + ".png")).exists()]
-    for e in missing:
+def download_art(slugs, kind, check=False):
+    """kind is 'cards', 'relics', or 'potions' (repo dir == site dir)."""
+    art_dir = ROOT / "assets" / kind
+    missing = [s for s in slugs if not (art_dir / (s + ".png")).exists()]
+    for slug in missing:
         if check:
-            print("  art missing: %s.png" % e["slug"])
+            print("  %s art missing: %s.png" % (kind, slug))
             continue
         from PIL import Image
-        url = "%s/static/images/cards/%s.webp" % (SITE, e["slug"])
+        url = "%s/static/images/%s/%s.webp" % (SITE, kind, slug)
         req = urllib.request.Request(url, headers=UA)
         data = urllib.request.urlopen(req, timeout=60).read()
         img = Image.open(io.BytesIO(data))
-        img.save(art_dir / (e["slug"] + ".png"))
-        print("  downloaded %s.png (%dx%d)" % (e["slug"], img.width, img.height))
+        img.save(art_dir / (slug + ".png"))
+        print("  downloaded %s/%s.png (%dx%d)"
+              % (kind, slug, img.width, img.height))
     return missing
 
 # ---------------------------------------------------------------- main
 
+def load_api(args):
+    data = {}
+    for kind in ("cards", "relics", "potions"):
+        if "--fetch" in sys.argv:
+            req = urllib.request.Request("%s/api/%s" % (SITE, kind), headers=UA)
+            data[kind] = json.loads(urllib.request.urlopen(req, timeout=90).read())
+        elif args:
+            data[kind] = json.loads(
+                (Path(args[0]) / ("api_%s.json" % kind)).read_text(encoding="utf-8"))
+        else:
+            raise SystemExit(__doc__)
+    return data
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     check = "--check" in sys.argv
-    if "--fetch" in sys.argv:
-        req = urllib.request.Request(API_URL, headers=UA)
-        cards_api = json.loads(urllib.request.urlopen(req, timeout=90).read())
-    elif args:
-        cards_api = json.loads(Path(args[0]).read_text(encoding="utf-8"))
-    else:
-        raise SystemExit(__doc__)
+    api = load_api(args)
+    cards_api = api["cards"]
 
     # renderer sanity check against the API's own pre-rendered descriptions
     bad = [c["name"] for c in cards_api if c.get("description_raw") and
@@ -305,13 +353,18 @@ def main():
               ", ".join(derived_bad))
 
     entries, consts = build_constants(cards_api)
+    consts["RELIC_TIPS"] = relic_tips(api["relics"])
+    consts["POTION_TIPS"] = potion_tips(api["potions"])
     parsed = sorted(entries.values(), key=lambda e: e["name"])
     parsed_json = json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
+    counts = {"TOTAL_CARD_COUNT": len(entries),
+              "TOTAL_RELIC_COUNT": len(api["relics"])}
 
     plan = [
         ("index.html", ["CARD_TYPES", "CARD_COSTS", "CARD_TIPS",
-                        "CARD_TIPS_UPGRADED"]),
-        ("analytics.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS"]),
+                        "CARD_TIPS_UPGRADED", "RELIC_TIPS", "POTION_TIPS"]),
+        ("analytics.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS",
+                            "RELIC_TIPS"]),
     ]
     for fname, names in plan:
         path = ROOT / fname
@@ -324,32 +377,47 @@ def main():
                 o, n = json.loads(old_raw), json.loads(new_raw)
                 diff = [k for k in set(o) | set(n) if o.get(k) != n.get(k)]
                 print("%s %s: %d entries differ" % (fname, name, len(diff)))
-        src = re.sub(r"const TOTAL_CARD_COUNT = \d+;",
-                     "const TOTAL_CARD_COUNT = %d;" % len(entries), src)
+        for cname, cval in counts.items():
+            src = re.sub(r"const %s = \d+;" % cname,
+                         "const %s = %d;" % (cname, cval), src)
         if not check and src != orig:
             path.write_text(src, encoding="utf-8", newline="")
             print("updated %s" % fname)
 
-    cards_html = ROOT / "cards.html"
-    src, old_raw = splice_const(cards_html.read_text(encoding="utf-8"),
-                                "allCards", parsed, keep_legacy=False)
-    if check:
-        print("cards.html allCards: %d -> %d cards"
-              % (len(json.loads(old_raw)), len(parsed)))
-        old_parsed = json.loads((ROOT / "cards_parsed.json")
-                                .read_text(encoding="utf-8"))
-        ob = {c["name"]: c for c in old_parsed}
-        nb = {c["name"]: c for c in parsed}
-        changed = [n for n in set(ob) & set(nb) if ob[n] != nb[n]]
-        print("cards_parsed.json: %d changed, %d added, %d removed"
-              % (len(changed), len(set(nb) - set(ob)), len(set(ob) - set(nb))))
-    else:
-        cards_html.write_text(src, encoding="utf-8", newline="")
+    galleries = [
+        ("cards.html", "allCards", parsed),
+        ("relics.html", "allRelics",
+         sorted((relic_entry(r) for r in api["relics"]),
+                key=lambda e: e["name"])),
+        ("potions.html", "allPotions",
+         sorted((potion_entry(p) for p in api["potions"]),
+                key=lambda e: e["name"])),
+    ]
+    for fname, name, value in galleries:
+        path = ROOT / fname
+        src, old_raw = splice_const(path.read_text(encoding="utf-8"),
+                                    name, value, keep_legacy=False)
+        if check:
+            old_list = {e["name"]: e for e in json.loads(old_raw)}
+            new_list = {e["name"]: e for e in value}
+            changed = [n for n in set(old_list) & set(new_list)
+                       if old_list[n] != new_list[n]]
+            print("%s %s: %d changed, %d added, %d removed"
+                  % (fname, name, len(changed),
+                     len(set(new_list) - set(old_list)),
+                     len(set(old_list) - set(new_list))))
+        else:
+            path.write_text(src, encoding="utf-8", newline="")
+            print("updated %s (%d %s)" % (fname, len(value), name))
+
+    if not check:
         (ROOT / "cards_parsed.json").write_text(parsed_json, encoding="utf-8",
                                                 newline="")
-        print("updated cards.html, cards_parsed.json (%d cards)" % len(parsed))
+        print("updated cards_parsed.json (%d cards)" % len(parsed))
 
-    download_art(entries, check=check)
+    download_art([e["slug"] for e in entries.values()], "cards", check=check)
+    download_art([r["id"].lower() for r in api["relics"]], "relics", check=check)
+    download_art([p["id"].lower() for p in api["potions"]], "potions", check=check)
 
 
 if __name__ == "__main__":
