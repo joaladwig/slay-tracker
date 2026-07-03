@@ -240,6 +240,18 @@
       </div>
     </div>
 
+    <!-- Section 4b: Run Start -->
+    <div class="section two-col">
+      <div class="card">
+        <div class="card-header">Act 1 Route</div>
+        <div class="card-body" id="act1RouteBox"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Neow Bonus Outcomes</div>
+        <div class="card-body scroll-body" id="neowBox"></div>
+      </div>
+    </div>
+
     <!-- Section 5: Causes of Death -->
     <div class="section two-col">
       <div class="card">
@@ -249,6 +261,18 @@
       <div class="card">
         <div class="card-header">Deaths by Act</div>
         <div class="card-body" id="deathActBox"></div>
+      </div>
+    </div>
+
+    <!-- Section 5b: Combat Toll & Deck Habits -->
+    <div class="section two-col">
+      <div class="card">
+        <div class="card-header">Toughest Fights (Avg Damage Taken)</div>
+        <div class="card-body scroll-body" id="painBox"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">Deck Habits (Wins vs Losses)</div>
+        <div class="card-body" id="deckHabitsBox"></div>
       </div>
     </div>
 
@@ -291,6 +315,21 @@
         <div class="card">
           <div class="card-header">Avg Damage per Floor by Act (Wins vs Losses)</div>
           <div class="card-body" id="actDmgPerFloorBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7b: Resources & Economy -->
+    <div class="section">
+      <div class="section-title">Resources &amp; Economy</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">Gold per Run (Wins vs Losses)</div>
+          <div class="card-body" id="goldBox"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Potions (Wins vs Losses)</div>
+          <div class="card-body" id="potionBox"></div>
         </div>
       </div>
     </div>
@@ -594,7 +633,15 @@ function computeAnalytics() {
     skipWins: { total: 0, skipped: 0 }, skipLosses: { total: 0, skipped: 0 },
     skipByAct: {}, // { actName: { total: 0, skipped: 0 } }
     actStats: {}, // { actName: { hpAtBossWins, hpAtBossLosses, elitesWins, elitesLosses, deckGrowthWins, deckGrowthLosses, campfire } }
-    dmgPerFloorWins: [], dmgPerFloorLosses: []
+    dmgPerFloorWins: [], dmgPerFloorLosses: [],
+    act1Stats: {}, // { actName: { runs, wins } }
+    neowStats: {}, // { textKey: { picked, wins } }
+    encPain: {}, // { encounterId: { fights, dmg, turns } }
+    goldEarnedWins: [], goldEarnedLosses: [], goldSpentWins: [], goldSpentLosses: [],
+    goldEndWins: [], goldEndLosses: [],
+    potionsUsedWins: [], potionsUsedLosses: [], potionsHeldAtDeath: [], potionUseCounts: {},
+    removalsWins: [], removalsLosses: [],
+    upgradePctWins: [], upgradePctLosses: []
   };
 
   let currentStreak = 0;
@@ -627,6 +674,14 @@ function computeAnalytics() {
     if (!a.ascStats[asc]) a.ascStats[asc] = { runs: 0, wins: 0 };
     a.ascStats[asc].runs++;
     if (win) a.ascStats[asc].wins++;
+
+    // Act 1 route variant
+    const act1Name = prettyId((run.acts || [])[0] || '');
+    if (act1Name) {
+      if (!a.act1Stats[act1Name]) a.act1Stats[act1Name] = { runs: 0, wins: 0 };
+      a.act1Stats[act1Name].runs++;
+      if (win) a.act1Stats[act1Name].wins++;
+    }
 
     // Owner's player only — one player per run
     const player = getOwnerPlayer(run);
@@ -705,15 +760,50 @@ function computeAnalytics() {
 
       // Store for synergy cross-filtering
       a.runPlayerData.push({ win, relics: playerRelics, cards: playerCards });
+
+      // Upgrade discipline — share of final deck upgraded
+      if (deckSize > 0) {
+        const upPct = (player.deck || []).filter(c => c.current_upgrade_level).length / deckSize;
+        if (win) a.upgradePctWins.push(upPct);
+        else if (!abandoned) a.upgradePctLosses.push(upPct);
+      }
+      // Potions still held when the run was lost
+      if (!win && !abandoned) a.potionsHeldAtDeath.push((player.potions || []).length);
     }
 
     // Card pick rate — scan floor history for owner's card_choices + relic sources
+    // (also collects gold flow, potion use, removals, Neow picks, per-encounter damage)
     const ownerId = player ? player.id : null;
+    let goldEarned = 0, goldSpent = 0, goldEnd = 0, potionsUsed = 0, removals = 0;
     if (ownerId) {
       (run.map_point_history || []).forEach(actFloors => {
         (actFloors || []).forEach(mp => {
           const ps = (mp.player_stats || []).find(p => p.player_id === ownerId);
           if (!ps) return;
+          goldEarned += ps.gold_gained || 0;
+          goldSpent += ps.gold_spent || 0;
+          if (typeof ps.current_gold === 'number') goldEnd = ps.current_gold;
+          removals += (ps.cards_removed || []).length;
+          (ps.potion_used || []).forEach(pid => {
+            potionsUsed++;
+            a.potionUseCounts[pid] = (a.potionUseCounts[pid] || 0) + 1;
+          });
+          (ps.ancient_choice || []).forEach(ac => {
+            if (!ac.was_chosen) return;
+            const key = ac.TextKey || (ac.title && ac.title.key) || '';
+            if (!key) return;
+            if (!a.neowStats[key]) a.neowStats[key] = { picked: 0, wins: 0 };
+            a.neowStats[key].picked++;
+            if (win) a.neowStats[key].wins++;
+          });
+          const room = (mp.rooms || [])[0];
+          if (room && room.model_id && ['monster', 'elite', 'boss'].includes(room.room_type)) {
+            if (!a.encPain[room.model_id]) a.encPain[room.model_id] = { fights: 0, dmg: 0, turns: 0 };
+            const ep = a.encPain[room.model_id];
+            ep.fights++;
+            ep.dmg += ps.damage_taken || 0;
+            ep.turns += room.turns_taken || 0;
+          }
           const mpt = mp.map_point_type || 'unknown';
           const ancientId = mpt === 'ancient' ? ((mp.rooms || [])[0]?.model_id || '').replace('EVENT.', '').toLowerCase() : null;
           const sourceLabel = ancientId || ({ boss: 'boss', elite: 'elite', shop: 'shop', treasure: 'chest', unknown: 'event' }[mpt] || 'event');
@@ -743,6 +833,13 @@ function computeAnalytics() {
           });
         });
       });
+      if (win) {
+        a.goldEarnedWins.push(goldEarned); a.goldSpentWins.push(goldSpent); a.goldEndWins.push(goldEnd);
+        a.potionsUsedWins.push(potionsUsed); a.removalsWins.push(removals);
+      } else if (!abandoned) {
+        a.goldEarnedLosses.push(goldEarned); a.goldSpentLosses.push(goldSpent); a.goldEndLosses.push(goldEnd);
+        a.potionsUsedLosses.push(potionsUsed); a.removalsLosses.push(removals);
+      }
     }
 
     // Card reward skip tracking — count reward groups skipped vs total
@@ -985,11 +1082,15 @@ function computeAndRender() {
     ['renderTimeline', renderTimeline],
     ['renderCharTable', renderCharTable],
     ['renderAscension', renderAscension],
+    ['renderRunStart', renderRunStart],
     ['renderDeaths', renderDeaths],
+    ['renderToughestFights', renderToughestFights],
+    ['renderDeckHabits', renderDeckHabits],
     ['renderHpProgression', renderHpProgression],
     ['renderDeckSize', renderDeckSize],
     ['renderDrafting', renderDrafting],
     ['renderActAnalysis', renderActAnalysis],
+    ['renderResources', renderResources],
     ['renderRelics', renderRelics],
     ['renderCards', renderCards],
   ];
@@ -1162,18 +1263,19 @@ function renderAscension() {
 }
 
 // Deaths
+function encounterType(id) {
+  const raw = id.toUpperCase();
+  if (raw.includes('_BOSS') || raw.includes('.BOSS')) return { label: 'Boss', color: CHART_COLORS.red };
+  if (raw.includes('_ELITE')) return { label: 'Elite', color: CHART_COLORS.orange };
+  if (raw.includes('_WEAK')) return { label: 'Weak', color: CHART_COLORS.muted };
+  if (raw.startsWith('EVENT.')) return { label: 'Event', color: CHART_COLORS.purple };
+  return { label: 'Normal', color: CHART_COLORS.blue };
+}
+
 function renderDeaths() {
   // Top killers table
   const killers = Object.entries(analytics.deathEncounters).sort((a, b) => b[1] - a[1]);
   const maxKills = killers.length > 0 ? killers[0][1] : 1;
-  function encounterType(id) {
-    const raw = id.toUpperCase();
-    if (raw.includes('_BOSS') || raw.includes('.BOSS')) return { label: 'Boss', color: CHART_COLORS.red };
-    if (raw.includes('_ELITE')) return { label: 'Elite', color: CHART_COLORS.orange };
-    if (raw.includes('_WEAK')) return { label: 'Weak', color: CHART_COLORS.muted };
-    if (raw.startsWith('EVENT.')) return { label: 'Event', color: CHART_COLORS.purple };
-    return { label: 'Normal', color: CHART_COLORS.blue };
-  }
   let khtml = '<table class="data-table"><thead><tr><th>Encounter</th><th class="num">Type</th><th class="num">Deaths</th><th class="bar-cell"></th></tr></thead><tbody>';
   killers.forEach(([id, count]) => {
     const et = encounterType(id);
@@ -1415,6 +1517,139 @@ function renderDrafting() {
   });
 }
 
+function avgOf(arr) { return arr.length > 0 ? arr.reduce((s, v) => s + v, 0) / arr.length : null; }
+
+// Win/loss comparison bars: entries = [[label, statsObj], ...]
+function renderCompareBars(entries, getWins, getLosses, formatVal, maxVal) {
+  let html = '<div style="display:flex;flex-direction:column;gap:14px;padding:4px 0;">';
+  entries.forEach(([label, s]) => {
+    const wArr = getWins(s), lArr = getLosses(s);
+    const wAvg = avgOf(wArr), lAvg = avgOf(lArr);
+    if (wAvg === null && lAvg === null) return;
+    html += '<div><div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;">' + label + '</div>';
+    if (wAvg !== null) {
+      const pct = Math.min(Math.max(wAvg, 0) / maxVal * 100, 100);
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="width:42px;font-size:0.7rem;color:var(--accent-green);">Wins</span><div style="flex:1;height:16px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--accent-green);opacity:0.7;border-radius:3px;"></div></div><span style="min-width:90px;font-size:0.75rem;font-weight:600;text-align:right;">' + formatVal(wAvg) + ' <span style="color:var(--text-muted);font-weight:400;">(' + wArr.length + ')</span></span></div>';
+    }
+    if (lAvg !== null) {
+      const pct = Math.min(Math.max(lAvg, 0) / maxVal * 100, 100);
+      html += '<div style="display:flex;align-items:center;gap:8px;"><span style="width:42px;font-size:0.7rem;color:var(--accent-red);">Losses</span><div style="flex:1;height:16px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--accent-red);opacity:0.7;border-radius:3px;"></div></div><span style="min-width:90px;font-size:0.75rem;font-weight:600;text-align:right;">' + formatVal(lAvg) + ' <span style="color:var(--text-muted);font-weight:400;">(' + lArr.length + ')</span></span></div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+const EMPTY_BOX = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No data</div>';
+
+function potionImgTag(id) {
+  const s = idToSlug(id);
+  return s ? '<img src="assets/potions/' + s + '.png" alt="" loading="lazy" style="width:22px;height:22px;object-fit:contain;" onerror="this.style.display=\'none\'" title="' + esc(prettyId(id)) + '" />' : '';
+}
+
+// Act 1 route + Neow bonus outcomes
+function renderRunStart() {
+  const a = analytics;
+  const routes = Object.entries(a.act1Stats).sort((x, y) => y[1].runs - x[1].runs);
+  let rhtml = EMPTY_BOX;
+  if (routes.length > 0) {
+    rhtml = '<table class="data-table"><thead><tr><th>Route</th><th class="num">Runs</th><th class="num">Wins</th><th class="num">Win Rate</th><th class="bar-cell"></th></tr></thead><tbody>';
+    routes.forEach(([name, s]) => {
+      const rate = s.runs > 0 ? s.wins / s.runs : 0;
+      rhtml += '<tr><td>' + name + '</td><td class="num">' + s.runs + '</td><td class="num">' + s.wins + '</td><td class="num ' + wrClass(rate) + '">' + pct(s.wins, s.runs) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (rate * 100) + '%;background:' + wrBarColor(rate) + '"></div></div></td></tr>';
+    });
+    rhtml += '</tbody></table>';
+  }
+  document.getElementById('act1RouteBox').innerHTML = rhtml;
+
+  const neow = Object.entries(a.neowStats).sort((x, y) => y[1].picked - x[1].picked);
+  let nhtml = EMPTY_BOX;
+  if (neow.length > 0) {
+    nhtml = '<table class="data-table"><thead><tr><th>Bonus</th><th class="num">Picked</th><th class="num">Win Rate</th><th class="bar-cell"></th></tr></thead><tbody>';
+    neow.forEach(([key, s]) => {
+      const rate = s.picked > 0 ? s.wins / s.picked : 0;
+      nhtml += '<tr><td>' + prettyId(key) + '</td><td class="num">' + s.picked + '</td><td class="num ' + wrClass(rate) + '">' + pct(s.wins, s.picked) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (rate * 100) + '%;background:' + wrBarColor(rate) + '"></div></div></td></tr>';
+    });
+    nhtml += '</tbody></table>';
+  }
+  document.getElementById('neowBox').innerHTML = nhtml;
+}
+
+// Encounters ranked by average damage dealt to you (min 3 fights)
+function renderToughestFights() {
+  const list = Object.entries(analytics.encPain)
+    .filter(([, s]) => s.fights >= 3)
+    .map(([id, s]) => ({ id, fights: s.fights, avgDmg: s.dmg / s.fights, avgTurns: s.turns / s.fights }))
+    .sort((x, y) => y.avgDmg - x.avgDmg)
+    .slice(0, 15);
+  let html = EMPTY_BOX;
+  if (list.length > 0) {
+    const maxDmg = list[0].avgDmg || 1;
+    html = '<table class="data-table"><thead><tr><th>Encounter</th><th class="num">Type</th><th class="num">Fights</th><th class="num">Avg Dmg</th><th class="num">Avg Turns</th><th class="bar-cell"></th></tr></thead><tbody>';
+    list.forEach(e => {
+      const et = encounterType(e.id);
+      html += '<tr><td>' + prettyId(e.id) + '</td><td class="num"><span style="color:' + et.color + '">' + et.label + '</span></td><td class="num">' + e.fights + '</td><td class="num">' + e.avgDmg.toFixed(1) + '</td><td class="num">' + e.avgTurns.toFixed(1) + '</td><td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:' + (e.avgDmg / maxDmg * 100) + '%;background:' + et.color + '"></div></div></td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  document.getElementById('painBox').innerHTML = html;
+}
+
+// Removal + upgrade discipline
+function renderDeckHabits() {
+  const a = analytics;
+  if (a.removalsWins.length + a.removalsLosses.length === 0) {
+    document.getElementById('deckHabitsBox').innerHTML = EMPTY_BOX;
+    return;
+  }
+  const maxRem = Math.max(...a.removalsWins, ...a.removalsLosses, 1);
+  let html = renderCompareBars(
+    [['Cards Removed per Run', { w: a.removalsWins, l: a.removalsLosses }]],
+    s => s.w, s => s.l, v => v.toFixed(1) + ' cards', maxRem);
+  html += renderCompareBars(
+    [['Share of Final Deck Upgraded', { w: a.upgradePctWins, l: a.upgradePctLosses }]],
+    s => s.w, s => s.l, v => (v * 100).toFixed(0) + '%', 1.0);
+  document.getElementById('deckHabitsBox').innerHTML = html;
+}
+
+// Gold flow + potion usage
+function renderResources() {
+  const a = analytics;
+  if (a.goldEarnedWins.length + a.goldEarnedLosses.length === 0) {
+    document.getElementById('goldBox').innerHTML = EMPTY_BOX;
+    document.getElementById('potionBox').innerHTML = EMPTY_BOX;
+    return;
+  }
+  const goldEntries = [
+    ['Gold Earned', { w: a.goldEarnedWins, l: a.goldEarnedLosses }],
+    ['Gold Spent', { w: a.goldSpentWins, l: a.goldSpentLosses }],
+    ['Unspent at Run End', { w: a.goldEndWins, l: a.goldEndLosses }],
+  ];
+  const maxGold = Math.max(...goldEntries.flatMap(([, s]) => [...s.w, ...s.l]), 1);
+  document.getElementById('goldBox').innerHTML = renderCompareBars(
+    goldEntries, s => s.w, s => s.l, v => Math.round(v) + 'g', maxGold);
+
+  const maxPot = Math.max(...a.potionsUsedWins, ...a.potionsUsedLosses, 1);
+  let phtml = renderCompareBars(
+    [['Potions Used per Run', { w: a.potionsUsedWins, l: a.potionsUsedLosses }]],
+    s => s.w, s => s.l, v => v.toFixed(1), maxPot);
+  const heldAvg = avgOf(a.potionsHeldAtDeath);
+  if (heldAvg !== null) {
+    phtml += '<div style="font-size:0.8rem;color:var(--text-secondary);margin:2px 0 14px;">Avg potions still in belt when dying: <strong style="color:' + (heldAvg >= 1 ? 'var(--accent-orange)' : 'var(--accent-green)') + '">' + heldAvg.toFixed(1) + '</strong></div>';
+  }
+  const topUsed = Object.entries(a.potionUseCounts).sort((x, y) => y[1] - x[1]).slice(0, 5);
+  if (topUsed.length > 0) {
+    phtml += '<div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Most Used Potions</div>';
+    phtml += '<div style="display:flex;flex-direction:column;gap:4px;">';
+    topUsed.forEach(([pid, n]) => {
+      phtml += '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">' + potionImgTag(pid) + '<span style="flex:1;">' + prettyId(pid) + '</span><span style="color:var(--text-muted);">' + n + '× used</span></div>';
+    });
+    phtml += '</div>';
+  }
+  document.getElementById('potionBox').innerHTML = phtml;
+}
+
 function renderActAnalysis() {
   const a = analytics;
   const actOrder = ['overgrowth', 'underdocks', 'hive', 'glory', 'radiance'];
@@ -1426,34 +1661,11 @@ function renderActAnalysis() {
       return x[0].localeCompare(y[0]);
     });
   }
-  function avg(arr) { return arr.length > 0 ? arr.reduce((s, v) => s + v, 0) / arr.length : null; }
-
   const entries = sortActs(Object.entries(a.actStats));
   const empty = '<div style="color:var(--text-muted);text-align:center;padding:24px;">No data</div>';
   if (entries.length === 0) {
     ['actHpBossBox','actDeckGrowthBox','actElitesBox','actCampfireBox','actDmgPerFloorBox'].forEach(id => { document.getElementById(id).innerHTML = empty; });
     return;
-  }
-
-  function renderCompareBars(entries, getWins, getLosses, formatVal, maxVal) {
-    let html = '<div style="display:flex;flex-direction:column;gap:14px;padding:4px 0;">';
-    entries.forEach(([actName, s]) => {
-      const wArr = getWins(s), lArr = getLosses(s);
-      const wAvg = avg(wArr), lAvg = avg(lArr);
-      if (wAvg === null && lAvg === null) return;
-      html += '<div><div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:5px;">' + actName + '</div>';
-      if (wAvg !== null) {
-        const pct = Math.min(Math.max(wAvg, 0) / maxVal * 100, 100);
-        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="width:42px;font-size:0.7rem;color:var(--accent-green);">Wins</span><div style="flex:1;height:16px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--accent-green);opacity:0.7;border-radius:3px;"></div></div><span style="min-width:90px;font-size:0.75rem;font-weight:600;text-align:right;">' + formatVal(wAvg) + ' <span style="color:var(--text-muted);font-weight:400;">(' + wArr.length + ')</span></span></div>';
-      }
-      if (lAvg !== null) {
-        const pct = Math.min(Math.max(lAvg, 0) / maxVal * 100, 100);
-        html += '<div style="display:flex;align-items:center;gap:8px;"><span style="width:42px;font-size:0.7rem;color:var(--accent-red);">Losses</span><div style="flex:1;height:16px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--accent-red);opacity:0.7;border-radius:3px;"></div></div><span style="min-width:90px;font-size:0.75rem;font-weight:600;text-align:right;">' + formatVal(lAvg) + ' <span style="color:var(--text-muted);font-weight:400;">(' + lArr.length + ')</span></span></div>';
-      }
-      html += '</div>';
-    });
-    html += '</div>';
-    return html;
   }
 
   // HP % at Boss

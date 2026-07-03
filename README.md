@@ -91,8 +91,8 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 - Slowest Win
 - Current Win Streak
 - Best Win Streak
-- Cards Seen (unique count / 576 with percentage)
-- Relics Seen (unique count / 288 with percentage)
+- Cards Seen (unique count / total card pool with percentage)
+- Relics Seen (unique count / total relic pool with percentage)
 - Most Skipped Card (card offered most times but never picked, color-coded by character)
 
 **Results Over Time**
@@ -107,9 +107,17 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 - Bar chart with A-F color grading
 - Companion table with runs/wins/win rate per ascension level
 
+**Run Start**
+- Act 1 Route: win rate per Act 1 variant (Underdocks vs Overgrowth)
+- Neow Bonus Outcomes: every Neow (ancient) bonus you've picked, with pick count and win rate
+
 **Causes of Death**
 - Top Killers: scrollable table with encounter type classification (Boss/Elite/Normal/Weak/Event), color-coded bars
 - Deaths by Act: stacked bar chart (Boss/Elite/Hallway/Event segments), acts in canonical order (Overgrowth, Underdocks, Hive, Glory), with legend
+
+**Combat Toll & Deck Habits**
+- Toughest Fights: encounters ranked by average damage they deal to you (min 3 fights), with fight count and average combat length in turns
+- Deck Habits: cards removed per run and share of final deck upgraded, wins vs losses
 
 **HP & Deck Analysis**
 - Avg HP % by Floor: line chart comparing wins (green) vs losses (red), with 0-100% Y-axis at 20% intervals
@@ -123,6 +131,10 @@ Six cards breaking down key metrics per act (Overgrowth, Underdocks, Hive, Glory
 - Campfire Choices: per-choice breakdown (Heal/Smith/Dig/etc.) showing how often each was chosen in wins vs losses as a percentage of total campfire visits that act
 - Avg Damage per Floor: average damage taken per floor, including a Full Run row
 - All cards respect the character, ascension, version, and mode filters
+
+**Resources & Economy**
+- Gold per Run: gold earned, spent, and left unspent at run end, wins vs losses
+- Potions: potions used per run (wins vs losses), average potions still in the belt when dying, and most-used potions
 
 **Relics Table**
 - Single sortable table: Relic (with icon), Runs, Win Rate (A-F graded), Avg Floor, Early WR (win rate when acquired in Act 1, with sample size)
