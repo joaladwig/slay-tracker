@@ -297,16 +297,21 @@ def splice_const(src, name, value, keep_legacy=True):
 
 # ---------------------------------------------------------------- art
 
-def download_art(slugs, kind, check=False):
-    """kind is 'cards', 'relics', or 'potions' (repo dir == site dir)."""
+def download_art(slug_urls, kind, check=False):
+    """kind is 'cards', 'relics', or 'potions' (repo dir == site dir).
+
+    slug_urls: dict of slug -> image_url (API-provided path, may live under
+    a beta-versioned prefix for items not yet on the stable branch).
+    """
     art_dir = ROOT / "assets" / kind
-    missing = [s for s in slugs if not (art_dir / (s + ".png")).exists()]
+    missing = [s for s in slug_urls if not (art_dir / (s + ".png")).exists()]
     for slug in missing:
         if check:
             print("  %s art missing: %s.png" % (kind, slug))
             continue
         from PIL import Image
-        url = "%s/static/images/%s/%s.webp" % (SITE, kind, slug)
+        image_url = slug_urls[slug] or ("/static/images/%s/%s.webp" % (kind, slug))
+        url = SITE + image_url
         req = urllib.request.Request(url, headers=UA)
         data = urllib.request.urlopen(req, timeout=60).read()
         img = Image.open(io.BytesIO(data))
@@ -321,7 +326,11 @@ def load_api(args):
     data = {}
     for kind in ("cards", "relics", "potions"):
         if "--fetch" in sys.argv:
-            req = urllib.request.Request("%s/api/%s" % (SITE, kind), headers=UA)
+            # channel=beta: STS2 ships all active content through its beta
+            # branch (see spire-codex.com/api/beta/version) - the "stable"
+            # default channel lags behind and is not what most players run.
+            req = urllib.request.Request(
+                "%s/api/%s?channel=beta" % (SITE, kind), headers=UA)
             data[kind] = json.loads(urllib.request.urlopen(req, timeout=90).read())
         elif args:
             data[kind] = json.loads(
@@ -415,9 +424,12 @@ def main():
                                                 newline="")
         print("updated cards_parsed.json (%d cards)" % len(parsed))
 
-    download_art([e["slug"] for e in entries.values()], "cards", check=check)
-    download_art([r["id"].lower() for r in api["relics"]], "relics", check=check)
-    download_art([p["id"].lower() for p in api["potions"]], "potions", check=check)
+    download_art({c["id"].lower(): c.get("image_url") for c in api["cards"]},
+                 "cards", check=check)
+    download_art({r["id"].lower(): r.get("image_url") for r in api["relics"]},
+                 "relics", check=check)
+    download_art({p["id"].lower(): p.get("image_url") for p in api["potions"]},
+                 "potions", check=check)
 
 
 if __name__ == "__main__":
