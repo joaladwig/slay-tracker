@@ -56,6 +56,7 @@ One object per player. In solo runs, `id` is always `1` (int). In co-op runs, `i
 - `CHARACTER.DEFECT`
 - `CHARACTER.NECROBINDER`
 - `CHARACTER.REGENT`
+- `CHARACTER.FOOL` (added in v0.113.0; ID inferred from the `STRIKE_FOOL`/`DEFEND_FOOL` card naming convention, not yet observed in a run file)
 
 ### Card Entry (in `deck[]`)
 | Field | Type | Notes |
