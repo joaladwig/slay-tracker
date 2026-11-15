@@ -78,87 +78,48 @@ The main run viewer for browsing individual runs.
 
 ### Stats (`analytics.html`)
 
-Aggregate analytics across all loaded runs, scoped to your character in multiplayer.
+Aggregate analytics across all loaded runs, scoped to your character in multiplayer. The page is split into four tabs, with a filter bar that stays visible while you scroll.
 
-**Filters**
-- Solo / Co-op / All mode buttons with icons
-- Character filter buttons (auto-detected from loaded runs, color-coded)
-- Game-mode buttons (Standard / Blitz / All Modes), shown once more than one mode is loaded; defaults to Standard so Blitz runs do not skew the numbers. Custom runs count as Standard
-- Both filters combine (e.g., Solo + Ironclad)
+**Filters (apply to every number on the page)**
+- All runs / Solo / Co-op
+- Game mode (Standard / Blitz / All modes), shown once more than one mode is loaded; defaults to Standard. Custom runs count as Standard
+- Character chips (auto-detected, color-coded)
+- Ascension dropdown
+- Patch dropdown: "vX.Y and later", to leave out runs from older versions of the game
+- Count abandoned runs as losses (off by default: abandoned runs are left out of every number, and the count is shown next to the tabs)
 
-**Overview Stat Cards (14 cards, 2 rows of 7)**
-- Total Runs
-- Win Rate (with W/L/abandoned breakdown)
-- Total Play Time
-- Avg Run Time
-- Max Ascension Won (with highest attempted)
-- Most Played Character (color-coded)
-- Least Played Character (color-coded)
-- Fastest Win
-- Slowest Win
-- Current Win Streak
-- Best Win Streak
-- Cards Seen (unique count / total card pool with percentage)
-- Relics Seen (unique count / total relic pool with percentage)
-- Most Skipped Card (card offered most times but never picked, color-coded by character)
+**How win rates are shown**
+- Colour means better or worse than your own average for the runs being counted, not a fixed grading scale
+- Small samples are pulled toward that average before colouring, and anything from fewer than 5 runs is faded
+- Relics and "in deck" card rates are judged against an expected rate: what runs that reached the same act usually win. A late pickup was found by a run already doing well, so it has a higher bar
 
-**Results Over Time**
-- Canvas chart with green dots (wins), red dots (losses), orange dots (abandoned)
-- Blue rolling win rate line (auto-scaled window size based on run count)
+**Performance**
+- Win rate with a community reference mark (Mega Crit's published figures, dated), last-20-runs form, streaks, highest ascension won, time played
+- Results over time: win/loss dots, rolling 10-run win rate, and ascension as a stepped line
+- How far runs get: started → cleared Act 1 → cleared Act 2 → won, with the number of runs that ended at each stage
+- Solo vs co-op, by player count, and by partner character
+- Characters table, Ascension table, starting-act table
+- Records: fastest/longest win, smallest/largest winning deck, most relics, bosses beaten without damage, cards and relics seen
 
-**Character Performance**
-- Table: Character (color-coded), Runs, Wins, Losses, Win Rate (A-F graded), Avg Time, Avg Ascension, Avg Deck Size
-- Mini bar visualization for win rate
+**Threats**
+- Deadliest act, most lethal fight, most frequent killer, deaths by fight type
+- Floor where runs died (histogram) and death rate by act (deaths ÷ runs that entered the act)
+- Encounter record: fights, deaths, death rate, average damage taken and turns for every boss, elite and hallway fight
+- Average HP by floor (wins vs losses), HP going into each act's boss, damage taken per floor, and where healing comes from
 
-**Win Rate by Ascension**
-- Bar chart with A-F color grading
-- Companion table with runs/wins/win rate per ascension level
+**Drafting**
+- Cards table: offers, pick rate, win rate when you took it vs when you skipped it, pick lift, runs in deck, deck win rate split by the act you picked it up in, and how often it ends up upgraded
+- Relics table: source, win rate vs expected, win rate by act acquired; click a relic to limit the Cards table to runs that had it
+- Ancient boons (Neow and the act-start ancients) and event choices with their win rates
+- Card reward skip rate (overall, wins vs losses, by act) and most upgraded cards
+- Blitz merchant options and how often you take each (when Blitz runs are included)
 
-**Run Start**
-- Act 1 Route: win rate per Act 1 variant (Underdocks vs Overgrowth)
-- Neow Bonus Outcomes: every Neow (ancient) bonus you've picked, with pick count and win rate
-
-**Causes of Death**
-- Top Killers: scrollable table with encounter type classification (Boss/Elite/Normal/Weak/Event), color-coded bars
-- Deaths by Act: stacked bar chart (Boss/Elite/Hallway/Event segments), acts in canonical order (Overgrowth, Underdocks, Hive, Glory), with legend
-
-**Combat Toll & Deck Habits**
-- Toughest Fights: encounters ranked by average damage they deal to you (min 3 fights), with fight count and average combat length in turns
-- Deck Habits: cards removed per run and share of final deck upgraded, wins vs losses
-
-**HP & Deck Analysis**
-- Avg HP % by Floor: line chart comparing wins (green) vs losses (red), with 0-100% Y-axis at 20% intervals
-- Final Deck Size: overlaid histogram comparing wins vs losses
-
-**Per-Act Analysis**
-Six cards breaking down key metrics per act (Overgrowth, Underdocks, Hive, Glory), each comparing wins vs losses:
-- HP % at Boss: average HP percentage entering the boss fight
-- Deck Growth: average net cards added during the act
-- Elites Fought: average number of elite nodes visited
-- Campfire Choices: per-choice breakdown (Heal/Smith/Dig/etc.) showing how often each was chosen in wins vs losses as a percentage of total campfire visits that act
-- Avg Damage per Floor: average damage taken per floor, including a Full Run row
-- All cards respect the character, ascension, version, and mode filters
-
-**Resources & Economy**
-- Gold per Run: gold earned, spent, and left unspent at run end, wins vs losses
-- Potions: potions used per run (wins vs losses), average potions still in the belt when dying, and most-used potions
-
-**Relics Table**
-- Single sortable table: Relic (with icon), Runs, Win Rate (A-F graded), Avg Floor, Early WR (win rate when acquired in Act 1, with sample size)
-- Search box for filtering by name
-- Hide Starter Relics checkbox (checked by default, covers all 10 starter/upgraded relics)
-- Min Runs filter
-- *Click any relic row to filter the Cards table to runs containing that relic (synergy analysis)*
-- Hover relic icon for tooltip with rarity and description
-
-**Cards Table**
-- Single sortable table: Card, Type (color-coded: Attack=red, Skill=blue, Power=yellow), Runs, Win Rate (A-F graded), Avg Floor, Early WR, Offered, Picked, Pick Rate
-- Synergy filter banner when a relic is selected (shows relic icon, name, run count, clear button)
-- Search box for filtering by name or type
-- Hide Starter Cards checkbox (checked by default, covers all 22 basic cards)
-- Min Runs filter
-- Colorless shop purchases counted in Offered/Picked stats
-- Hover card icon for tooltip with type, rarity, cost, keywords, and description
+**Playstyle**
+- Pace: seconds per floor, run length and floors climbed, wins vs losses
+- Campfire choices per act, elites fought per act
+- Final deck size distribution (as shares, so wins and losses are comparable), deck growth per act, removals per 10 floors
+- Gold earned and spent per floor, peak gold and unspent gold; potions used per 10 floors and most-used potions
+- Turns per fight by fight type, and badges earned
 
 ---
 

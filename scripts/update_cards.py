@@ -13,7 +13,7 @@ Updates, in repo root:
     index.html      CARD_TYPES / CARD_COSTS / CARD_TIPS / CARD_TIPS_UPGRADED /
                     RELIC_TIPS / POTION_TIPS / NAME_OVERRIDES
     analytics.html  CARD_TYPES / CARD_CHARS / CARD_TIPS / RELIC_TIPS /
-    analytics2.html NAME_OVERRIDES / TOTAL_CARD_COUNT / TOTAL_RELIC_COUNT
+                    NAME_OVERRIDES / TOTAL_CARD_COUNT / TOTAL_RELIC_COUNT
     cards.html      allCards
     relics.html     allRelics
     potions.html    allPotions
@@ -396,9 +396,6 @@ def main():
                         "NAME_OVERRIDES"]),
         ("analytics.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS",
                             "RELIC_TIPS", "NAME_OVERRIDES"]),
-        # the unlinked Stats redesign keeps its own copies of the same data
-        ("analytics2.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS",
-                             "RELIC_TIPS", "NAME_OVERRIDES"]),
     ]
     for fname, names in plan:
         path = ROOT / fname
