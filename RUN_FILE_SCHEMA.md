@@ -12,7 +12,8 @@ Observed across 57 solo + 25 two-player + 3 three-player + 2 four-player runs, a
 |---|---|---|
 | `schema_version` | int | Always `8` in this dataset |
 | `build_id` | string | Game version, e.g. `"v0.98.3"` |
-| `game_mode` | string | Always `"standard"` so far |
+| `game_mode` | string | `"standard"`, `"custom"`, or `"blitz"` (see Game Modes below) |
+| `is_custom_game` | bool? | Present from v0.113.0 onward |
 | `platform_type` | string | `"steam"` |
 | `seed` | string | Run seed, e.g. `"7MCCA23V5Y"` |
 | `start_time` | int | Unix timestamp; also the filename |
@@ -35,6 +36,11 @@ Observed across 57 solo + 25 two-player + 3 three-player + 2 four-player runs, a
 
 Runs always have 3 acts. Two Act 1 variants observed: Underdocks (50 runs) and Overgrowth (37 runs).
 
+### Game Modes
+- `standard` — the normal game.
+- `custom` — custom-game runs. The seven observed all had empty `modifiers` and are otherwise shaped like standard runs; the tracker groups them with standard.
+- `blitz` — added in v0.113.1 (first observed 2026-11-14, one two-player run). Each act is 8 nodes in a fixed order: `ancient`, `monster`, `monster`, `shop`, `elite`, `treasure`, `rest_site`, `boss` (24 floors total, no `unknown` nodes). There is no gold economy: `current_gold` stays at the starting 99 and all `gold_*` deltas are 0. Shops carry `blitz_merchant_choices` instead of purchases (see Conditional Fields), and the opening Neow node logs the event choice key `BLITZ.NEOW.title` (table `ascension`).
+
 ---
 
 ## `players[]` — Player Object
@@ -49,6 +55,10 @@ One object per player. In solo runs, `id` is always `1` (int). In co-op runs, `i
 | `relics` | RelicEntry[] | All relics held at run end, in acquisition order |
 | `potions` | PotionSlot[] | Potions remaining at run end |
 | `max_potion_slot_count` | int | Potion belt capacity |
+| `badges` | Badge[]? | End-of-run awards, each `{ "id": "DAMAGE_LEADER", "rarity": "bronze" }`. Absent in older run files |
+
+### Badges Observed
+Rarity is `bronze`, `silver`, or `gold`. IDs seen: `BIG_DECK`, `CCCCOMBO`, `CURSES`, `DAMAGE_LEADER`, `DEBUFFER`, `ELITE`, `GLUTTON`, `HEALER`, `HIGHLANDER`, `HONED`, `KACHING`, `MONEY_MONEY`, `PERFECT`, `RESTFUL`, `SPEEDY`.
 
 ### Characters Observed
 - `CHARACTER.IRONCLAD`
@@ -56,7 +66,7 @@ One object per player. In solo runs, `id` is always `1` (int). In co-op runs, `i
 - `CHARACTER.DEFECT`
 - `CHARACTER.NECROBINDER`
 - `CHARACTER.REGENT`
-- `CHARACTER.FOOL` (added in v0.113.0; ID inferred from the `STRIKE_FOOL`/`DEFEND_FOOL` card naming convention, not yet observed in a run file)
+- `CHARACTER.FOOL` (added in v0.113.0; confirmed in run files 2026-11-14)
 
 ### Card Entry (in `deck[]`)
 | Field | Type | Notes |
@@ -150,7 +160,11 @@ Tracks what happened to each player at each map node. All fields below may be ab
 | `event_choices` | EventChoice[]? | Choices made at events; each has `title.key`, `title.table`, and optional `variables` |
 | `ancient_choice` | AncientChoice[]? | Neow bonus options; each has `TextKey`, `title`, `was_chosen` bool |
 | `rest_site_choices` | string[]? | Campfire action taken |
+| `blitz_merchant_choices` | MerchantChoice[]? | Blitz mode shops only: the six options offered, each `{ "type": "card_removal", "model_id": null, "was_picked": true }`. Three were picked at every shop observed. `model_id` is set when the option names something specific (`card_enchant` → an `ENCHANTMENT.*` id, `prismatic_card_reward` → a `CHARACTER.*` id). The results of picked options land in the usual fields (`card_choices`, `cards_gained`, `cards_removed`, `cards_enchanted`, `relic_choices`, `hp_healed`…) |
 | `completed_quests` | ?  | Quest completions |
+
+### Blitz Merchant Choice Types Observed
+`card_enchant`, `card_removal`, `card_rewards`, `card_transform`, `card_upgrade`, `colorless_card_reward`, `enchanted_card_reward`, `full_heal_and_max_hp`, `glam`, `potions`, `prismatic_card_reward`, `rare_card_reward`, `relic`, `two_relics`, `upgraded_card_reward`, `upgraded_rare_card`, `upgraded_rare_card_reward`
 
 ### Rest Site Choices Observed
 `HEAL`, `SMITH`, `DIG`, `COOK`, `HATCH`, `LIFT`

@@ -11,12 +11,14 @@ api_potions.json saved from the corresponding API endpoints.
 Updates, in repo root:
     cards_parsed.json                                   (current cards, name-sorted)
     index.html      CARD_TYPES / CARD_COSTS / CARD_TIPS / CARD_TIPS_UPGRADED /
-                    RELIC_TIPS / POTION_TIPS
+                    RELIC_TIPS / POTION_TIPS / NAME_OVERRIDES
     analytics.html  CARD_TYPES / CARD_CHARS / CARD_TIPS / RELIC_TIPS /
-                    TOTAL_CARD_COUNT / TOTAL_RELIC_COUNT
+    analytics2.html NAME_OVERRIDES / TOTAL_CARD_COUNT / TOTAL_RELIC_COUNT
     cards.html      allCards
     relics.html     allRelics
     potions.html    allPotions
+    about.html      "Browse all N cards/relics/potions"
+    README.md       "Grid of all N cards/relics/potions"
     assets/{cards,relics,potions}/<slug>.png            (downloads missing art)
 
 Items removed from the game are dropped from the gallery pages but their
@@ -278,6 +280,24 @@ def potion_tips(potions_api):
                 p["rarity_key"].lower(), p["pool"], finalize(p["description"]))
             for p in sorted(potions_api, key=lambda p: p["id"])}
 
+
+def pretty_id(item_id):
+    """Mirror of the pages' JS fallback: "BAG_OF_MARBLES" -> "Bag Of Marbles"."""
+    return re.sub(r"\b\w", lambda m: m.group(0).upper(),
+                  item_id.lower().replace("_", " "))
+
+
+def name_overrides(api):
+    """Real in-game names, only where they differ from the id-derived name
+    (apostrophes, lowercase "of"/"the", per-character Strike/Defend, ...)."""
+    out = {}
+    for prefix, kind in (("CARD.", "cards"), ("RELIC.", "relics"),
+                         ("POTION.", "potions")):
+        for item in api[kind]:
+            if pretty_id(item["id"]) != item["name"]:
+                out[prefix + item["id"]] = item["name"]
+    return {k: out[k] for k in sorted(out)}
+
 # ---------------------------------------------------------------- splicing
 
 def splice_const(src, name, value, keep_legacy=True):
@@ -364,6 +384,7 @@ def main():
     entries, consts = build_constants(cards_api)
     consts["RELIC_TIPS"] = relic_tips(api["relics"])
     consts["POTION_TIPS"] = potion_tips(api["potions"])
+    consts["NAME_OVERRIDES"] = name_overrides(api)
     parsed = sorted(entries.values(), key=lambda e: e["name"])
     parsed_json = json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
     counts = {"TOTAL_CARD_COUNT": len(entries),
@@ -371,9 +392,13 @@ def main():
 
     plan = [
         ("index.html", ["CARD_TYPES", "CARD_COSTS", "CARD_TIPS",
-                        "CARD_TIPS_UPGRADED", "RELIC_TIPS", "POTION_TIPS"]),
+                        "CARD_TIPS_UPGRADED", "RELIC_TIPS", "POTION_TIPS",
+                        "NAME_OVERRIDES"]),
         ("analytics.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS",
-                            "RELIC_TIPS"]),
+                            "RELIC_TIPS", "NAME_OVERRIDES"]),
+        # the unlinked Stats redesign keeps its own copies of the same data
+        ("analytics2.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS",
+                             "RELIC_TIPS", "NAME_OVERRIDES"]),
     ]
     for fname, names in plan:
         path = ROOT / fname
@@ -418,6 +443,23 @@ def main():
         else:
             path.write_text(src, encoding="utf-8", newline="")
             print("updated %s (%d %s)" % (fname, len(value), name))
+
+    # gallery sizes quoted in prose
+    totals = {"cards": len(parsed), "relics": len(api["relics"]),
+              "potions": len(api["potions"])}
+    for fname, lead in (("about.html", "Browse all"), ("README.md", "Grid of all")):
+        path = ROOT / fname
+        with open(path, encoding="utf-8", newline="") as fh:
+            src = orig = fh.read()
+        for kind, total in totals.items():
+            src = re.sub(r"(%s )\d+( %s\b)" % (lead, kind),
+                         lambda m: "%s%d%s" % (m.group(1), total, m.group(2)), src)
+        if src != orig:
+            if check:
+                print("%s: gallery counts are stale" % fname)
+            else:
+                path.write_text(src, encoding="utf-8", newline="")
+                print("updated %s" % fname)
 
     if not check:
         (ROOT / "cards_parsed.json").write_text(parsed_json, encoding="utf-8",

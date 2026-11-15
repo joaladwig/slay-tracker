@@ -25,19 +25,24 @@ The main run viewer for browsing individual runs.
 - Character names color-coded by class
 - Win/loss badge, ascension level, date, and duration for each run
 - "YOU" tag on your character in co-op runs
-- Filter by Solo / Co-op / All as well as character
+- Mode tag on runs played in a non-standard game mode (e.g. Blitz)
+- Filter by Solo / Co-op / All, by character, by game mode (shown once more than one mode is loaded), and by game version (dropdown)
 
 **Run Summary**
 - Character names
-- Win/loss result, killed-by encounter for losses
+- Win/loss result, killed-by encounter for losses, game-mode badge for non-standard modes
 - Ascension, run time, seed, date, acts path, floor count, player count, version
 - Active modifiers displayed as tags
+- End-of-run badges (bronze / silver / gold) for the selected player
+- Co-op player tabs tagged You / Partner (or P2, P3…) so same-character teams stay distinguishable
 
 **HP & Gold Charts**
 - Canvas-drawn line charts tracking HP (with max HP dashed line) and gold across all floors
+- Blitz runs have no gold economy, so the gold chart is replaced by a summary of the Blitz merchant picks
 
 **Final Deck**
 - Card chips with thumbnail images, upgrade indicators (+N), enchantment badges, and duplicate counts
+- Sort by deck order, card type, or cost; decks of 60+ cards group by card type by default
 - Total / upgraded / enchanted card stats
 
 **Damage per Floor**
@@ -52,7 +57,8 @@ The main run viewer for browsing individual runs.
 - Potion slots shown
 
 **Floor-by-Floor Timeline**
-- Every node visited, organized by act with act headers
+- Every node visited, organized by act with act headers (acts sit side by side on very wide screens)
+- Blitz merchant options with picked vs skipped display
 - Color-coded node type icons (combat, elite, boss, rest, shop, treasure, unknown, ancient)
 - Encounter name, monster list, turn count
 - Tags for: damage, healing, max HP changes, gold changes, cards gained/removed/transformed/upgraded/enchanted, relics bought, potions used/bought/discarded, rest site choices, event choices
@@ -77,6 +83,7 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 **Filters**
 - Solo / Co-op / All mode buttons with icons
 - Character filter buttons (auto-detected from loaded runs, color-coded)
+- Game-mode buttons (Standard / Blitz / All Modes), shown once more than one mode is loaded; defaults to Standard so Blitz runs do not skew the numbers. Custom runs count as Standard
 - Both filters combine (e.g., Solo + Ironclad)
 
 **Overview Stat Cards (14 cards, 2 rows of 7)**
@@ -184,7 +191,7 @@ Six cards breaking down key metrics per act (Overgrowth, Underdocks, Hive, Glory
 - Automatically detects your Steam ID (the ID appearing most frequently across co-op runs)
 - All stats are scoped to your character only, even in multiplayer
 - Filter by Solo / Co-op / All on both Runs and Stats pages
-- "YOU" tag marks your character in co-op run displays and player tabs
+- "YOU" tag marks your character in co-op run displays and player tabs; other players are tagged Partner (or P2, P3…)
 
 ## Browser Support
 
