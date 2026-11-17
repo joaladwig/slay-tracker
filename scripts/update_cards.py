@@ -12,7 +12,7 @@ Updates, in repo root:
     cards_parsed.json                                   (current cards, name-sorted)
     index.html      CARD_TYPES / CARD_COSTS / CARD_TIPS / CARD_TIPS_UPGRADED /
                     RELIC_TIPS / POTION_TIPS / NAME_OVERRIDES
-    analytics.html  CARD_TYPES / CARD_CHARS / CARD_TIPS / RELIC_TIPS /
+    analytics.html  CARD_TYPES / CARD_COSTS / CARD_CHARS / CARD_TIPS / RELIC_TIPS /
                     NAME_OVERRIDES / TOTAL_CARD_COUNT / TOTAL_RELIC_COUNT
     cards.html      allCards
     relics.html     allRelics
@@ -395,8 +395,8 @@ def main():
         ("index.html", ["CARD_TYPES", "CARD_COSTS", "CARD_TIPS",
                         "CARD_TIPS_UPGRADED", "RELIC_TIPS", "POTION_TIPS",
                         "NAME_OVERRIDES"]),
-        ("analytics.html", ["CARD_TYPES", "CARD_CHARS", "CARD_TIPS",
-                            "RELIC_TIPS", "NAME_OVERRIDES"]),
+        ("analytics.html", ["CARD_TYPES", "CARD_COSTS", "CARD_CHARS",
+                            "CARD_TIPS", "RELIC_TIPS", "NAME_OVERRIDES"]),
     ]
     for fname, names in plan:
         path = ROOT / fname
