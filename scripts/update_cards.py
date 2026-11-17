@@ -220,13 +220,14 @@ def card_entry(c):
 
 
 def tip(entry, upgraded=False):
-    kw = " · ".join(entry["keywords"])
+    """Tooltip text: a meta line, a newline, then the description."""
     cost = entry.get("upgradedCost", entry["cost"]) if upgraded else entry["cost"]
     desc = entry.get("upgradedDescription", entry["description"]) if upgraded \
         else entry["description"]
-    plus = "+1 · " if upgraded else ""
-    return "%s · %s · Cost %s · %s%s— %s" % (
-        entry["type"], entry["rarity"], cost, plus, kw + " " if kw else "", desc)
+    meta = [entry["type"], entry["rarity"], "Cost %s" % cost]
+    if upgraded:
+        meta.append("+1")
+    return " · ".join(meta + entry["keywords"]) + "\n" + desc
 
 
 def is_upgradeable(c):
@@ -270,13 +271,13 @@ def potion_entry(p):
 
 
 def relic_tips(relics_api):
-    return {("RELIC." + r["id"]): "%s — %s" % (r["rarity"],
-                                               finalize(r["description"]))
+    return {("RELIC." + r["id"]): "%s\n%s" % (r["rarity"],
+                                              finalize(r["description"]))
             for r in sorted(relics_api, key=lambda r: r["id"])}
 
 
 def potion_tips(potions_api):
-    return {("POTION." + p["id"]): "%s · %s — %s" % (
+    return {("POTION." + p["id"]): "%s · %s\n%s" % (
                 p["rarity_key"].lower(), p["pool"], finalize(p["description"]))
             for p in sorted(potions_api, key=lambda p: p["id"])}
 

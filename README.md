@@ -108,7 +108,7 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 - Average HP by floor (wins vs losses), HP going into each act's boss, damage taken per floor, and where healing comes from
 
 **Drafting**
-- Cards table: offers, pick rate, win rate when you took it vs when you skipped it, pick lift, runs in deck, deck win rate split by the act you picked it up in, and how often it ends up upgraded
+- Cards table: offers, pick rate, win rate when you took it vs when you skipped it, lift (the gap between those two), runs in deck, deck win rate split by the act you picked it up in, and how often it ends up upgraded
 - Relics table: source, win rate vs expected, win rate by act acquired; click a relic to limit the Cards table to runs that had it
 - Ancient boons (Neow and the act-start ancients) and event choices with their win rates
 - Card reward skip rate (overall, wins vs losses, by act) and most upgraded cards
