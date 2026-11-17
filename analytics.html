@@ -103,14 +103,11 @@
     .tile.lead .tile-value { font-size: 2.6rem; }
     .tile-sub { font-size: 0.78rem; color: var(--text-secondary); }
     .tile-sub.dim { color: var(--text-muted); }
-    .bullet { position: relative; height: 8px; border-radius: 4px; background: var(--bg-tertiary); margin: 8px 0 2px; }
-    .bullet-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--accent-blue); }
-    .bullet-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text-primary); }
     .form-dots { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 6px; }
     .form-dots span { width: 10px; height: 10px; border-radius: 2px; }
     .up { color: var(--accent-green); } .down { color: var(--accent-red); }
 
-    /* Win-rate colouring: relative to the baseline of the filtered runs */
+    /* Win-rate coloring: relative to the baseline of the filtered runs */
     .wr-up2 { color: #3fb950; } .wr-up1 { color: #8ddb9f; } .wr-0 { color: var(--text-primary); }
     .wr-dn1 { color: #f5a97f; } .wr-dn2 { color: #f85149; }
     .n { color: var(--text-muted); font-size: 0.72rem; margin-left: 4px; }
@@ -296,7 +293,7 @@
           <div class="card-body"><div class="chart-container"><canvas id="hazardChart"></canvas></div><div class="legend" id="hazardLegend" style="margin-top:8px;"></div></div>
         </div>
         <div class="card">
-          <div class="card-header">Death rate by act <span class="info tip-trigger" data-tip="Deaths in an act divided by the runs that entered it, so acts you play more often are not penalised.">i</span></div>
+          <div class="card-header">Death rate by act <span class="info tip-trigger" data-tip="Deaths in an act divided by the runs that entered it, so acts you play more often are not penalized.">i</span></div>
           <div id="deathActBox"></div>
         </div>
       </div>
@@ -327,7 +324,7 @@
           <div class="card-body" id="actDmgPerFloorBox"></div>
         </div>
         <div class="card">
-          <div class="card-header">Where healing comes from <span class="info tip-trigger" data-tip="HP recovered per 10 floors, split by where it happened. 'Other' covers relics, events, potions and combat healing.">i</span></div>
+          <div class="card-header">Where healing comes from <span class="info tip-trigger" data-tip="HP recovered per 10 floors, split by where it happened. 'Other' covers relics, events, potions, and combat healing.">i</span></div>
           <div class="card-body" id="healBox"></div>
         </div>
       </div>
@@ -363,7 +360,7 @@
       <div class="card">
         <div class="card-header">
           Relics
-          <span class="info tip-trigger" data-tip="Win rate in runs that ended with the relic, against what those runs were expected to win given their character, ascension, co-op status, date and the act you got the relic in. The From chest/elite column counts only runs where the relic was not your choice, which is the cleanest evidence. Click a relic to limit the Cards table to runs that had it.">i</span>
+          <span class="info tip-trigger" data-tip="Win rate in runs that ended with the relic, against what those runs were expected to win given their character, ascension, co-op status, date, and the act you got the relic in. The From chest/elite column counts only runs where the relic was not your choice, which is the cleanest evidence. Click a relic to limit the Cards table to runs that had it.">i</span>
           <div class="controls">
             <input type="text" class="search-box-sm" id="relicSearch" placeholder="Search relics..." />
             <label><input type="checkbox" id="hideStarters" checked /> Hide starter relics</label>
@@ -464,8 +461,6 @@ const CARD_TIPS = {"CARD.ABRASIVE":"power · rare · Cost 3 · Sly\nGain 1 Dexte
 const SHARED_NAMES = new Set(Object.values(NAME_OVERRIDES).filter((n, i, all) => all.indexOf(n) !== i));
 const TYPE_COLORS = { attack: '#f85149', skill: '#58a6ff', power: '#d29922', status: '#848d97', curse: '#bc8cff' };
 
-// Published community figures, shown as a dated reference line only
-const COMMUNITY = { source: 'Mega Crit, May 2026', overall: 0.25, byAsc: { 0: 0.16, 10: 0.17 } };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -590,14 +585,27 @@ function estimate(x, t2) {
   const noise = luckVar(x);
   const B = t2 / (t2 + noise);   // share of the estimate that comes from the data
   const d = B * (x.w - x.e) / x.n, sd = Math.sqrt(B * noise);
-  return { n: x.n, w: x.w, e: x.e, B, d, sd, lo: d - Z90 * sd, hi: d + Z90 * sd };
+  return { n: x.n, w: x.w, e: x.e, B, d, sd, lo: d - Z90 * sd, hi: d + Z90 * sd, need: runsNeeded(x, t2) };
 }
 function difference(a, b) {
   if (!a || !b) return null;
   const d = a.d - b.d, sd = Math.sqrt(a.sd * a.sd + b.sd * b.sd);
-  return { d, sd, lo: d - Z90 * sd, hi: d + Z90 * sd, B: Math.min(a.B, b.B), n: Math.min(a.n, b.n) };
+  return { d, sd, lo: d - Z90 * sd, hi: d + Z90 * sd, B: Math.min(a.B, b.B), n: Math.min(a.n, b.n), arms: [a, b] };
 }
-const isGuess = est => est.B < 0.15;  // mostly the assumption, too little data to say much
+// Below this share of information from the runs themselves (the rest coming
+// from the 5-point assumption), a number is faded and flagged as too thin.
+const GUESS_B = 0.15;
+const isGuess = est => est.B < GUESS_B;
+// Runs a sample needs before it carries GUESS_B of its own weight
+function runsNeeded(x, t2) { return Math.ceil(luckVar(x) * x.n / (t2 * (1 / GUESS_B - 1))); }
+function guessText(est) {
+  if (!isGuess(est)) return '';
+  if (est.arms) {
+    return ' Took it in ' + plural(est.arms[0].n, 'run') + ' and skipped it in ' + est.arms[1].n + '; each side needs about ' +
+      Math.max(est.arms[0].need, est.arms[1].need) + ' or more before this says much, so for now it leans on the ' + (MIN_TAU * 100) + '-point assumption.';
+  }
+  return ' Only ' + plural(est.n, 'run') + '; about ' + est.need + ' or more are needed before this says much, so for now it leans on the ' + (MIN_TAU * 100) + '-point assumption.';
+}
 function liftClass(d) {
   if (d >= 0.06) return 'wr-up2';
   if (d >= 0.025) return 'wr-up1';
@@ -606,36 +614,47 @@ function liftClass(d) {
   return 'wr-0';
 }
 function pts(v) { return (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(1); }
-function rangeText(est) { return 'likely ' + pts(est.lo) + ' to ' + pts(est.hi) + ' pts'; }
-// Win-rate cell: the real percentage, coloured by the shrunken gap to expected
+function rangeText(est) { return 'likely between ' + pts(est.lo) + ' and ' + pts(est.hi) + ' pts (90% range)'; }
+// Win-rate cell: the real percentage, colored by the shrunken gap to expected
 function wrCell(x, t2, showN) {
   const est = estimate(x, t2);
   if (!est) return '<span class="low">–</span>';
   const tip = 'Won ' + x.w + ' of ' + plural(x.n, 'run') + '. Expected about ' + x.e.toFixed(1) + ' (' + pct(x.e, x.n, 0) + '). ' +
-    'Versus expected: ' + pts(est.d) + ' pts, ' + rangeText(est) + '.' + (isGuess(est) ? ' Too few runs to say much.' : '');
+    'Versus expected: ' + pts(est.d) + ' pts, ' + rangeText(est) + '.' + guessText(est);
   return '<span class="tip-trigger ' + liftClass(est.d) + (isGuess(est) ? ' low' : '') + '" data-tip="' + esc(tip) + '">' + pct(x.w, x.n) + '</span>' +
     (showN === false ? '' : '<span class="n">' + x.n + '</span>');
 }
 // Diverging bar: the bar is the best estimate, the thin line its likely range
-function deltaBar(est) {
+// cautious: the bar ends at the pessimistic end of the range, matching the cautious sort
+function deltaBar(est, cautious) {
   if (!est) return '';
-  const x = v => Math.max(0, Math.min(100, 50 + v / 0.2 * 50));
-  const color = est.d >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-  const pos = est.d >= 0 ? 'left:50%;width:' + (x(est.d) - 50) + '%' : 'right:50%;width:' + (50 - x(est.d)) + '%';
-  return '<span class="lift tip-trigger' + (isGuess(est) ? ' low' : '') + '" data-tip="' + esc(pts(est.d) + ' pts, ' + rangeText(est) + '.' + (isGuess(est) ? ' Too few runs to say much.' : '')) + '">' +
+  const v = cautious ? est.lo : est.d;
+  const x = u => Math.max(0, Math.min(100, 50 + u / 0.2 * 50));
+  const color = v >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+  const pos = v >= 0 ? 'left:50%;width:' + (x(v) - 50) + '%' : 'right:50%;width:' + (50 - x(v)) + '%';
+  const tip = cautious
+    ? 'Pessimistic end: ' + pts(est.lo) + ' pts. Best estimate ' + pts(est.d) + ' pts, ' + rangeText(est) + '.'
+    : pts(est.d) + ' pts, ' + rangeText(est) + '.';
+  return '<span class="lift tip-trigger' + (isGuess(est) ? ' low' : '') + '" data-tip="' + esc(tip + guessText(est)) + '">' +
     '<b style="left:' + x(est.lo) + '%;width:' + (x(est.hi) - x(est.lo)) + '%"></b><i style="' + pos + ';background:' + color + '"></i></span>';
 }
-function ptsCell(est) {
+// cautious: show the pessimistic end of the range, so the number matches the
+// cautious sort order instead of disagreeing with it
+function ptsCell(est, cautious) {
   if (!est) return '<span class="low">–</span>';
-  return '<span class="tip-trigger ' + liftClass(est.d) + (isGuess(est) ? ' low' : '') + '" data-tip="' +
-    esc(pts(est.d) + ' pts, ' + rangeText(est) + '.' + (isGuess(est) ? ' Too few runs to say much.' : '')) + '">' + pts(est.d) + '</span>';
+  const v = cautious ? est.lo : est.d;
+  const tip = cautious
+    ? 'Pessimistic end: ' + pts(est.lo) + ' pts. Best estimate ' + pts(est.d) + ' pts, ' + rangeText(est) + '.'
+    : pts(est.d) + ' pts, ' + rangeText(est) + '.';
+  return '<span class="tip-trigger ' + liftClass(v) + (isGuess(est) ? ' low' : '') + '" data-tip="' +
+    esc(tip + guessText(est)) + '">' + pts(v) + '</span>';
 }
 // Group tables (characters, ascension, solo/co-op) compare with the plain average
 function vsAverage(n, w) { return { n, w, e: n * BASE, v: n * BASE * (1 - BASE) }; }
 const rankVal = (est, cautious) => est ? (cautious ? est.lo : est.d) : -9;
 
 // ─── Expected win chance ─────────────────────────────────────────────────────
-// A small ridge-penalised logistic regression, refitted on the runs being
+// A small ridge-penalized logistic regression, refitted on the runs being
 // counted: what a run's start (character, ascension, co-op, when it was played)
 // (and game mode, when more than one is counted) says about its chance of winning. d.P[k] is that chance for a run that has
 // reached act k + 1 (k = 0: the start of the run), fitted only on runs that got
@@ -665,7 +684,7 @@ function solveLinear(A, b) {
   }
   return x;
 }
-// Newton's method; the intercept (column 0) is not penalised
+// Newton's method; the intercept (column 0) is not penalized
 function fitLogit(X, y, lambda) {
   const m = X[0].length;
   let w = new Array(m).fill(0);
@@ -691,9 +710,9 @@ function fitLogit(X, y, lambda) {
   }
   return w;
 }
-// Columns: ascension and run order (standardised), then co-op, one per
+// Columns: ascension and run order (standardized), then co-op, one per
 // character except the most played and one per non-standard game mode (0/1,
-// centred). Binary columns are not rescaled, so the penalty keeps a character
+// centered). Binary columns are not rescaled, so the penalty keeps a character
 // with one or two runs from swinging the model. Run order rather than the date
 // itself, so a long break between sessions does not stretch the trend.
 function featureBuilder(set) {
@@ -1429,14 +1448,21 @@ function table(boxId, cols, rows, opts) {
 function compareBars(groups, format, opts) {
   opts = opts || {};
   const stat = opts.median ? median : avg;
+  let dropped = 0;
+  if (opts.bothSides) {
+    const kept = groups.filter(g => g.w.length && g.l.length);
+    dropped = groups.length - kept.length;
+    groups = kept;
+  }
   const vals = groups.map(g => ({ title: g.title, w: stat(g.w), l: stat(g.l), wn: g.w.length, ln: g.l.length }));
   const max = opts.max || Math.max(0.0001, ...vals.map(v => Math.max(v.w || 0, v.l || 0)));
   const row = (label, cls, v, n) =>
     '<div class="cmp-row"><span class="' + cls + '">' + label + '</span>' +
     '<div class="cmp-track"><div class="cmp-fill" style="width:' + (v == null ? 0 : Math.min(100, v / max * 100)) + '%;background:var(--accent-' + (cls === 'w' ? 'green' : 'red') + ');opacity:0.75;"></div></div>' +
     '<span class="cmp-val' + (n < LOW_SAMPLE ? ' low' : '') + '">' + (v == null ? '–' : format(v)) + '<span class="n">' + n + '</span></span></div>';
-  return vals.map(v => '<div class="cmp-group">' + (v.title ? '<div class="cmp-title">' + v.title + '</div>' : '') +
-    row('Wins', 'w', v.w, v.wn) + row('Losses', 'l', v.l, v.ln) + '</div>').join('') || '<div class="empty-note" style="padding:16px;">No data</div>';
+  return (vals.map(v => '<div class="cmp-group">' + (v.title ? '<div class="cmp-title">' + v.title + '</div>' : '') +
+    row('Wins', 'w', v.w, v.wn) + row('Losses', 'l', v.l, v.ln) + '</div>').join('') || '<div class="empty-note" style="padding:16px;">No data</div>') +
+    (dropped && opts.bothSides !== true ? '<div class="tile-sub dim" style="margin-top:8px;">' + opts.bothSides + '</div>' : '');
 }
 function actsInOrder(obj) { return Object.entries(obj).sort((a, b) => (a[1].order - b[1].order) || a[0].localeCompare(b[0])); }
 function tile(label, value, sub, cls) {
@@ -1461,16 +1487,10 @@ function renderActiveTab() {
 
 function renderPerfHero() {
   const n = S.n, losses = n - S.wins;
-  // Headline with a community reference mark
-  const bench = (F.asc !== 'all' && COMMUNITY.byAsc[F.asc] != null) ? COMMUNITY.byAsc[F.asc] : COMMUNITY.overall;
-  const benchLabel = (F.asc !== 'all' && COMMUNITY.byAsc[F.asc] != null) ? 'A' + F.asc + ' community average' : 'community average';
-  const scale = Math.max(0.5, BASE + 0.1, bench + 0.1);
   const abandonedNote = S.abandonedInPool ? (F.abandonedAsLoss ? 'includes ' + S.abandonedInPool + ' abandoned as losses' : S.abandonedInPool + ' abandoned runs not counted') : '';
   let html = '<div class="tile lead"><span class="tile-label">Win rate</span>' +
     '<span class="tile-value">' + pct(S.wins, n) + '</span>' +
-    '<span class="tile-sub">' + S.wins + ' wins &middot; ' + losses + ' losses' + (abandonedNote ? ' &middot; ' + abandonedNote : '') + '</span>' +
-    '<div class="bullet"><div class="bullet-fill" style="width:' + Math.min(100, BASE / scale * 100) + '%"></div><div class="bullet-mark" style="left:' + Math.min(100, bench / scale * 100) + '%"></div></div>' +
-    '<span class="tile-sub dim">White mark: ' + benchLabel + ' ' + (bench * 100).toFixed(0) + '% (' + COMMUNITY.source + ')</span></div>';
+    '<span class="tile-sub">' + S.wins + ' wins &middot; ' + losses + ' losses' + (abandonedNote ? ' &middot; ' + abandonedNote : '') + '</span></div>';
 
   // Recent form
   const recent = SET.slice(-20);
@@ -1613,8 +1633,7 @@ function renderAscension() {
     { key: 'n', label: 'Runs', num: true, val: r => r.n, html: r => r.n },
     { key: 'w', label: 'Wins', num: true, val: r => r.w, html: r => r.w },
     { key: 'wr', label: 'Win rate', num: true, val: r => r.w / r.n, html: r => wrCell(vsAverage(r.n, r.w), t2, false) },
-    { key: 'lift', label: 'vs average', val: r => rankVal(estimate(vsAverage(r.n, r.w), t2)), html: r => deltaBar(estimate(vsAverage(r.n, r.w), t2)) },
-    { key: 'bench', label: 'Community avg', num: true, title: COMMUNITY.source, html: r => COMMUNITY.byAsc[r.asc] != null ? '<span class="n">' + (COMMUNITY.byAsc[r.asc] * 100).toFixed(0) + '%</span>' : '' }
+    { key: 'lift', label: 'vs average', val: r => rankVal(estimate(vsAverage(r.n, r.w), t2)), html: r => deltaBar(estimate(vsAverage(r.n, r.w), t2)) }
   ], rows, { sort: 'asc', dir: 'asc', rerender: renderAscension });
 }
 
@@ -1851,7 +1870,7 @@ function renderCards() {
 
   const rate = x => x.n ? x.w / x.n : -1;
   const actCol = i => ({ key: 'act' + i, label: 'Act ' + (i + 1), num: true, grp: i === 0,
-    title: 'Win rate when you first added it in act ' + (i + 1) + ', coloured against what those runs were expected to win',
+    title: 'Win rate when you first added it in act ' + (i + 1) + ', colored against what those runs were expected to win',
     val: r => rate(r.act[i]), html: r => wrCell(r.act[i], tDeck) });
   table('cardTableBox', [
     { key: 'name', label: 'Card', str: true, val: r => prettyId(r.id), html: r => '<div class="item-row">' + cardImgTag(r.id) + '<span>' + prettyId(r.id) + '</span></div>' },
@@ -1860,16 +1879,16 @@ function renderCards() {
     { key: 'pick', label: 'Pick %', num: true, val: r => r.offers ? r.picks / r.offers : -1, html: r => r.offers ? pct(r.picks, r.offers, 0) : '<span class="low">–</span>' },
     { key: 'took', label: 'Took it', num: true, grp: true, title: 'Win rate in runs where you took it', val: r => rate(r.took), html: r => wrCell(r.took, tArms) },
     { key: 'skipped', label: 'Skipped it', num: true, title: 'Win rate in runs where it was offered and you never took it', val: r => rate(r.skip), html: r => wrCell(r.skip, tArms) },
-    { key: 'pickLift', label: 'Lift', num: true, title: 'How much better the took-it runs did than the skipped-it runs, in percentage points, each judged against what it was expected to win. Hover for the likely range.', val: r => rankVal(r.lift, cautious), html: r => ptsCell(r.lift) },
+    { key: 'pickLift', label: 'Lift', num: true, title: 'How much better the took-it runs did than the skipped-it runs, in percentage points, each judged against what it was expected to win. Hover for the likely range.', val: r => rankVal(r.lift, cautious), html: r => ptsCell(r.lift, cautious) },
     { key: 'deckN', label: 'In deck', num: true, grp: true, title: 'Runs that ended with it in the deck', val: r => r.deck.n, html: r => r.deck.n },
-    { key: 'deckWr', label: 'Deck WR', num: true, title: 'Win rate with it in the final deck, coloured against what those runs were expected to win', val: r => rate(r.deck), html: r => wrCell(r.deck, tDeck, false) },
+    { key: 'deckWr', label: 'Deck WR', num: true, title: 'Win rate with it in the final deck, colored against what those runs were expected to win', val: r => rate(r.deck), html: r => wrCell(r.deck, tDeck, false) },
     actCol(0), actCol(1), actCol(2),
     { key: 'floor', label: 'Avg floor', num: true, grp: true, title: 'Average floor where you first added it to your deck', val: r => r.floorN ? r.floorSum / r.floorN : 999, html: r => r.floorN ? (r.floorSum / r.floorN).toFixed(0) : '<span class="low">–</span>' },
     { key: 'upg', label: 'Upgraded', num: true, title: 'Share of final decks where a copy was upgraded', val: r => r.deck.n ? r.upgraded / r.deck.n : -1, html: r => r.deck.n ? pct(r.upgraded, r.deck.n, 0) : '<span class="low">–</span>' }
   ], rows, { sort: 'offers', rerender: renderCards, limit: 25, empty: 'No cards match' });
 
-  document.getElementById('cardNote').innerHTML = 'Each run gets an expected chance of winning from its character, ascension, co-op status and date, and from the act it had reached when the card came up. ' +
-    'Colours show better or worse than expected; faded numbers rest on too few runs to say much. Hover any number for its likely range. ' +
+  document.getElementById('cardNote').innerHTML = 'Each run gets an expected chance of winning from its character, ascension, co-op status, and date, plus the act it had reached when the card came up. ' +
+    'Colors show better or worse than expected; faded numbers rest on too few runs to say much. Hover any number for its likely range. ' +
     'Small samples are pulled toward "as expected" by an amount estimated from your runs; where they are too few to measure how much cards really differ, the page assumes about ' + (MIN_TAU * 100) + ' points. ' +
     (MODEL_INFO.fitted[0] ? '' : 'With fewer than ' + MIN_MODEL_RUNS + ' runs counted, expectations fall back to plain win rates. ') +
     'These are patterns in your own runs, not proof that a card is good or bad.';
@@ -1934,12 +1953,12 @@ function renderRethink() {
   const byPref = cands.slice().sort((a, b) => po[b.id].gamma - po[a.id].gamma);
   const half = Math.ceil(byPref.length / 2);
   const top = new Set(byPref.slice(0, half).map(r => r.id));
-  const favoured = cands.filter(r => top.has(r.id) && r.lift.d <= -0.03).sort((a, b) => a.lift.d - b.lift.d).slice(0, 6);
+  const favored = cands.filter(r => top.has(r.id) && r.lift.d <= -0.03).sort((a, b) => a.lift.d - b.lift.d).slice(0, 6);
   const passed = cands.filter(r => !top.has(r.id) && r.lift.d >= 0.03).sort((a, b) => b.lift.d - a.lift.d).slice(0, 6);
   const item = r => '<div class="rethink-item">' + cardImgTag(r.id) + '<div><div><strong>' + prettyId(r.id) + '</strong> &nbsp;' + ptsCell(r.lift) + '</div>' +
-    '<div class="why">You take it over skipping ' + (po[r.id].overSkip * 100).toFixed(0) + '% of the time. Took it in ' + plural(r.took.n, 'run') + ', skipped it in ' + r.skip.n + '; ' + rangeText(r.lift) + '.</div></div></div>';
+    '<div class="why">You take it over skipping ' + (po[r.id].overSkip * 100).toFixed(0) + '% of the time. Took it in ' + plural(r.took.n, 'run') + ' and skipped it in ' + r.skip.n + '; ' + rangeText(r.lift) + '.</div></div></div>';
   const group = (title, list, none) => '<div class="rethink-group"><div class="rethink-title">' + title + '</div>' + (list.length ? list.map(item).join('') : '<div class="tile-sub dim">' + none + '</div>') + '</div>';
-  box.innerHTML = group('You favour these, but they underperform', favoured, 'Nothing stands out.') +
+  box.innerHTML = group('You favor these, but they underperform', favored, 'Nothing stands out.') +
     group('You often pass on these, but they do well', passed, 'Nothing stands out.');
 }
 
@@ -1971,15 +1990,15 @@ function renderRelics() {
   if (search) rows = rows.filter(r => prettyId(r.id).toLowerCase().includes(search));
 
   const actCol = i => ({ key: 'act' + i, label: 'Act ' + (i + 1), num: true, grp: i === 0,
-    title: 'Win rate when you got it in act ' + (i + 1) + ', coloured against what those runs were expected to win',
+    title: 'Win rate when you got it in act ' + (i + 1) + ', colored against what those runs were expected to win',
     val: r => r.act[i].n ? r.act[i].w / r.act[i].n : -1, html: r => wrCell(r.act[i], t2) });
   table('relicTableBox', [
     { key: 'name', label: 'Relic', str: true, val: r => prettyId(r.id), html: r => '<div class="item-row">' + relicImgTag(r.id) + '<span>' + prettyId(r.id) + '</span></div>' },
     { key: 'src', label: 'From', html: r => [...(S.relicSources[r.id] || [])].map(x => '<span class="tag">' + sourceLabel(x) + '</span>').join('') },
     { key: 'n', label: 'Runs', num: true, val: r => r.n, html: r => r.n },
     { key: 'wr', label: 'Win rate', num: true, val: r => r.w / r.n, html: r => wrCell(r, t2, false) },
-    { key: 'exp', label: 'Expected', num: true, title: 'What these runs were expected to win, given their character, ascension, co-op status, date and the act you got the relic in', val: r => r.e / r.n, html: r => '<span class="n">' + pct(r.e, r.n, 0) + '</span>' },
-    { key: 'lift', label: 'vs expected', title: 'Win rate against the expected rate. Hover for the likely range.', val: r => rankVal(estimate(r, t2), cautious), html: r => deltaBar(estimate(r, t2)) },
+    { key: 'exp', label: 'Expected', num: true, title: 'What these runs were expected to win, given their character, ascension, co-op status, date, and the act you got the relic in', val: r => r.e / r.n, html: r => '<span class="n">' + pct(r.e, r.n, 0) + '</span>' },
+    { key: 'lift', label: 'vs expected', title: 'Win rate against the expected rate. Hover for the likely range.', val: r => rankVal(estimate(r, t2), cautious), html: r => deltaBar(estimate(r, t2), cautious) },
     { key: 'rand', label: 'From chest/elite', num: true, title: 'Win rate in the runs where it came from a chest or an elite reward, so you did not choose it. The least biased number here.', val: r => r.rand && r.rand.n ? r.rand.w / r.rand.n : -1, html: r => r.rand ? wrCell(r.rand, t2) : '<span class="low">–</span>' },
     { key: 'floor', label: 'Avg floor', num: true, val: r => (S.relics[r.id] ? S.relics[r.id].floor / S.relics[r.id].n : 0), html: r => S.relics[r.id] ? (S.relics[r.id].floor / S.relics[r.id].n).toFixed(1) : '–' },
     actCol(0), actCol(1), actCol(2)
@@ -2082,9 +2101,11 @@ function renderCampfires() {
   html += '</tbody></table></div>';
   document.getElementById('actCampfireBox').innerHTML = any ? html : '<div class="empty-note" style="padding:24px;">No rest-site data</div>';
 }
+// Only finished acts are compared, and losing runs never finish the last act
+const FINAL_ACT_NOTE = 'An act is left out when only one side has finished it: losing runs never finish the last act, so there is nothing to compare.';
 function renderElites() {
   const groups = actsInOrder(S.acts).map(([name, a]) => ({ title: name, w: a.elites.w, l: a.elites.l }));
-  document.getElementById('actElitesBox').innerHTML = compareBars(groups, v => v.toFixed(1) + ' elites');
+  document.getElementById('actElitesBox').innerHTML = compareBars(groups, v => v.toFixed(1) + ' elites', { bothSides: FINAL_ACT_NOTE });
 }
 function renderDeckSize() {
   const box = document.getElementById('deckSizeBox');
@@ -2102,7 +2123,7 @@ function renderDeckSize() {
 function renderDeckHabits() {
   const groups = actsInOrder(S.acts).map(([name, a]) => ({ title: 'Net cards added in ' + name, w: a.growth.w, l: a.growth.l }));
   groups.push({ title: 'Cards removed per 10 floors', w: S.removals.w, l: S.removals.l });
-  document.getElementById('deckHabitsBox').innerHTML = compareBars(groups, v => v.toFixed(1));
+  document.getElementById('deckHabitsBox').innerHTML = compareBars(groups, v => v.toFixed(1), { bothSides: FINAL_ACT_NOTE });
 }
 function renderGold() {
   const g = S.gold;

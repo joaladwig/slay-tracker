@@ -89,24 +89,24 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 - Count abandoned runs as losses (off by default: abandoned runs are left out of every number, and the count is shown next to the tabs)
 
 **How win rates are shown**
-- Every run gets an expected chance of winning from a small logistic regression refitted on the runs being counted: ascension, character, co-op, run order (so improving over time is not credited to whatever you take more of lately) and game mode when several are counted. A separate fit for runs that reached Act 2 and Act 3 means anything picked up later is judged against runs that also got that far. Below 30 runs it falls back to plain win rates
-- Card, relic, boon and event numbers are coloured by how far their runs beat or missed those expectations ("wins above expected"); characters, ascensions and solo/co-op compare with your plain average
+- Every run gets an expected chance of winning from a small logistic regression refitted on the runs being counted: ascension, character, co-op, run order (so improving over time is not credited to whatever you take more of lately), and game mode when several are counted. A separate fit for runs that reached Act 2 and Act 3 means anything picked up later is judged against runs that also got that far. Below 30 runs it falls back to plain win rates
+- Card, relic, boon, and event numbers are colored by how far their runs beat or missed those expectations ("wins above expected"); characters, ascensions, and solo/co-op compare with your plain average
 - Small samples are pulled toward "as expected" by empirical Bayes: how much items really differ is estimated from the spread of results beyond what luck explains. When the runs are too few to measure that, a 5-point spread is assumed (stated on the page)
 - Hover any number for its 90% likely range; bars show the estimate with the range as a thin line; faded numbers rest mostly on the assumption rather than your runs
-- Cautious ranking (Cards and Relics) sorts by the pessimistic end of each range
+- Cautious ranking (Cards and Relics) sorts by the pessimistic end of each range, and the Lift numbers (Cards) and vs-expected bars (Relics) then show that pessimistic end so the order matches what you see
 
 **Performance**
-- Win rate with a community reference mark (Mega Crit's published figures, dated), last-20-runs form, streaks, highest ascension won, time played
+- Win rate, last-20-runs form, streaks, highest ascension won, time played
 - Results over time: win/loss dots, rolling 10-run win rate, and ascension as a stepped line
 - How far runs get: started → cleared Act 1 → cleared Act 2 → won, with the number of runs that ended at each stage
 - Solo vs co-op, by player count, and by partner character
 - Characters table, Ascension table, starting-act table
-- Records: fastest/longest win, smallest/largest winning deck, most relics, bosses beaten without damage, cards and relics seen
+- Records: fastest/longest win, smallest/largest winning deck, most relics, bosses beaten without damage, and cards and relics seen
 
 **Threats**
 - Deadliest act, most lethal fight, most frequent killer, deaths by fight type
-- Chance a run ends on each floor (a hazard chart: of the runs that reached a floor, the share that ended there, coloured by the usual room type) with the share of runs still going, and death rate by act (deaths ÷ runs that entered the act)
-- Encounter record: fights, deaths, death rate, average damage taken and turns for every boss, elite and hallway fight
+- Chance a run ends on each floor (a hazard chart: of the runs that reached a floor, the share that ended there, colored by the usual room type) with the share of runs still going, and death rate by act (deaths ÷ runs that entered the act)
+- Encounter record: fights, deaths, death rate, average damage taken, and turns for every boss, elite, and hallway fight
 - Average HP by floor (wins vs losses), HP going into each act's boss, damage taken per floor, and where healing comes from
 
 **Drafting**
@@ -119,9 +119,9 @@ Aggregate analytics across all loaded runs, scoped to your character in multipla
 - Blitz merchant options and how often you take each (when Blitz runs are included)
 
 **Playstyle**
-- Pace: seconds per floor, run length and floors climbed, wins vs losses
-- Campfire choices per act, elites fought per act
-- Your deck right after the Act 1 and Act 2 bosses (size, share of attacks and powers, average cost), comparing runs that went on to win and lose, since final deck size mostly measures run length; deck growth per act, removals per 10 floors
+- Pace: seconds per floor, run length, and floors climbed, wins vs. losses
+- Campfire choices per act and elites fought per act (acts that only winning runs finish are left out)
+- Your deck right after the Act 1 and Act 2 bosses (size, share of attacks and powers, and average cost), comparing runs that went on to win and lose, since final deck size mostly measures run length; deck growth per act, removals per 10 floors
 - Gold earned and spent per floor, peak gold and unspent gold; potions used per 10 floors and most-used potions
 - Turns per fight by fight type, and badges earned
 
